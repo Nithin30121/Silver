@@ -1,0 +1,279 @@
+import React, { useState, useMemo } from 'react';
+import { useShop } from '../context/ShopContext';
+import { ProductCard } from './FeaturedProducts';
+import type { ProductCategory } from '../types';
+import { SlidersHorizontal, RotateCcw } from 'lucide-react';
+
+interface CatalogPageProps {
+  genderScope?: 'men' | 'women' | 'all';
+}
+
+export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' }) => {
+  const { products, selectedCategory } = useShop();
+
+  const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>(selectedCategory || 'all');
+  const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
+  const [maxPrice, setMaxPrice] = useState<number>(20000);
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const [showFiltersMobile, setShowFiltersMobile] = useState<boolean>(false);
+
+  // Sync category if updated externally
+  React.useEffect(() => {
+    if (selectedCategory) {
+      setActiveCategory(selectedCategory);
+    }
+  }, [selectedCategory]);
+
+  // Determine categories to show based on gender
+  const availableSubcategories: { id: ProductCategory | 'all'; label: string }[] = useMemo(() => {
+    if (genderScope === 'men') {
+      return [
+        { id: 'all', label: 'All Men\'s Jewellery' },
+        { id: 'rings', label: 'Rings' },
+        { id: 'bracelets', label: 'Bracelets' },
+      ];
+    }
+    if (genderScope === 'women') {
+      return [
+        { id: 'all', label: 'All Women\'s Jewellery' },
+        { id: 'rings', label: 'Rings' },
+        { id: 'bracelets', label: 'Bracelets' },
+        { id: 'necklaces', label: 'Necklaces' },
+        { id: 'earrings', label: 'Earrings' },
+      ];
+    }
+    return [
+      { id: 'all', label: 'All Pieces' },
+      { id: 'rings', label: 'Rings' },
+      { id: 'bracelets', label: 'Bracelets' },
+      { id: 'necklaces', label: 'Necklaces' },
+      { id: 'earrings', label: 'Earrings' },
+    ];
+  }, [genderScope]);
+
+  // Filter and sort products
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      // Gender filter
+      if (genderScope === 'men') {
+        if (p.gender !== 'men' && p.gender !== 'unisex') return false;
+      } else if (genderScope === 'women') {
+        if (p.gender !== 'women' && p.gender !== 'unisex') return false;
+      }
+
+      // Category filter
+      if (activeCategory !== 'all' && p.category !== activeCategory) {
+        return false;
+      }
+
+      // Price filter
+      if (p.price > maxPrice) return false;
+
+      // In stock filter
+      if (inStockOnly && !p.inStock) return false;
+
+      return true;
+    }).sort((a, b) => {
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
+    });
+  }, [products, genderScope, activeCategory, maxPrice, inStockOnly, sortBy]);
+
+  const pageTitle = genderScope === 'men' 
+    ? 'Men\'s Collection' 
+    : genderScope === 'women' 
+    ? 'Women\'s Collection' 
+    : 'The Collection';
+
+  const pageDescription = genderScope === 'men'
+    ? 'Heirloom signet rings and weighty solid curb link bracelets forged in pure 925 sterling silver.'
+    : genderScope === 'women'
+    ? 'Fluid sculptural silver forms, delicate double-chain talismans, and understated everyday adornments.'
+    : 'Our complete archive of certified 925 hallmarked sterling silver ornaments, crafted for longevity.';
+
+  const resetFilters = () => {
+    setActiveCategory('all');
+    setMaxPrice(20000);
+    setInStockOnly(false);
+    setSortBy('featured');
+  };
+
+  return (
+    <div style={{ backgroundColor: 'var(--color-warm-ivory)', minHeight: '80vh', paddingBottom: '6rem' }}>
+      {/* Editorial Header */}
+      <div style={{ backgroundColor: 'var(--color-soft-cream)', borderBottom: '1px solid var(--color-border)', padding: '4.5rem 0 3.5rem' }}>
+        <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
+          <span className="eyebrow">SILVESTO LUXE ATELIER</span>
+          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem' }}>
+            {pageTitle}
+          </h1>
+          <p style={{ fontSize: '1.0625rem', color: 'var(--color-muted-grey)', lineHeight: '1.7' }}>
+            {pageDescription}
+          </p>
+
+          {/* Subcategory Pills */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', flexWrap: 'wrap', marginTop: '2.5rem' }}>
+            {availableSubcategories.map((sub) => (
+              <button
+                key={sub.id}
+                onClick={() => setActiveCategory(sub.id)}
+                style={{
+                  padding: '0.65rem 1.35rem',
+                  fontSize: '0.75rem',
+                  letterSpacing: '0.12em',
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                  border: activeCategory === sub.id ? '1px solid var(--color-deep-charcoal)' : '1px solid var(--color-border)',
+                  backgroundColor: activeCategory === sub.id ? 'var(--color-deep-charcoal)' : 'var(--color-warm-ivory)',
+                  color: activeCategory === sub.id ? 'var(--color-warm-ivory)' : 'var(--color-deep-charcoal)',
+                  transition: 'var(--transition-fast)'
+                }}
+              >
+                {sub.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="container" style={{ marginTop: '2.5rem' }}>
+        {/* Controls Bar */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '1.25rem',
+            paddingBottom: '1.5rem',
+            borderBottom: '1px solid var(--color-border)'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <span style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', letterSpacing: '0.04em' }}>
+              Showing <strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'piece' : 'pieces'}
+            </span>
+
+            {/* Quick Filter toggle for mobile */}
+            <button
+              className="btn-text"
+              onClick={() => setShowFiltersMobile(!showFiltersMobile)}
+              style={{ fontSize: '0.75rem' }}
+            >
+              <SlidersHorizontal size={14} />
+              <span>{showFiltersMobile ? 'Hide Filters' : 'Refine & Filter'}</span>
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+            <label htmlFor="sort-select" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-grey)' }}>
+              Sort by:
+            </label>
+            <select
+              id="sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              style={{
+                backgroundColor: 'transparent',
+                border: '1px solid var(--color-border)',
+                padding: '0.5rem 1rem',
+                fontSize: '0.8125rem',
+                color: 'var(--color-deep-charcoal)',
+                cursor: 'pointer'
+              }}
+            >
+              <option value="featured">Featured Archive</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="name">Alphabetical</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Expandable Filter Tray */}
+        {showFiltersMobile && (
+          <div
+            style={{
+              padding: '1.75rem',
+              backgroundColor: 'var(--color-soft-cream)',
+              borderBottom: '1px solid var(--color-border)',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '2.5rem',
+              alignItems: 'center',
+              animation: 'fadeIn 0.2s ease'
+            }}
+          >
+            {/* Price Slider */}
+            <div style={{ minWidth: '220px' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '0.5rem' }}>
+                Max Price: ₹{maxPrice.toLocaleString('en-IN')}
+              </label>
+              <input
+                type="range"
+                min="4000"
+                max="20000"
+                step="500"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(Number(e.target.value))}
+                style={{ width: '100%', accentColor: 'var(--color-deep-charcoal)', cursor: 'pointer' }}
+              />
+            </div>
+
+            {/* In Stock Only Checkbox */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.8125rem', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={inStockOnly}
+                onChange={(e) => setInStockOnly(e.target.checked)}
+                style={{ accentColor: 'var(--color-deep-charcoal)' }}
+              />
+              <span>In-stock pieces only</span>
+            </label>
+
+            {/* Reset Filters */}
+            <button
+              onClick={resetFilters}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                fontSize: '0.75rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: 'var(--color-champagne)'
+              }}
+            >
+              <RotateCcw size={13} />
+              <span>Reset All Filters</span>
+            </button>
+          </div>
+        )}
+
+        {/* Product Grid or Empty State */}
+        {filteredProducts.length > 0 ? (
+          <div className="product-grid">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '6rem 2rem' }}>
+            <span className="eyebrow">NO MATCHES FOUND</span>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem' }}>
+              No pieces match your selected criteria.
+            </h3>
+            <p style={{ maxWidth: '420px', margin: '0 auto 2rem', color: 'var(--color-muted-grey)' }}>
+              Try adjusting your price range or browsing all categories to discover our full silver collection.
+            </p>
+            <button className="btn-secondary" onClick={resetFilters}>
+              Clear All Filters
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
