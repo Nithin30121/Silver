@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
-import { Search, ShoppingBag, Heart, Menu, X, ChevronDown } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const {
@@ -10,7 +10,8 @@ export const Header: React.FC = () => {
     wishlistCount,
     setIsCartOpen,
     setIsWishlistOpen,
-    setIsSearchOpen
+    setIsSearchOpen,
+    showToast
   } = useShop();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,11 +23,15 @@ export const Header: React.FC = () => {
     setMobileMenuOpen(false);
   };
 
+  const handleAccountClick = () => {
+    showToast('Atelier Concierge: Client profile & private archive active.');
+  };
+
   return (
     <>
       {/* Top Subtle Announcement */}
       <div className="announcement-bar">
-        <span>Complimentary Insured Express Delivery & Signature Silver Box on All Orders</span>
+        <span>Signature Service:</span> Complimentary Insured Express Delivery & Bespoke Velvet Box on All Orders
       </div>
 
       <header className="header-wrapper">
@@ -64,7 +69,7 @@ export const Header: React.FC = () => {
                     navigateTo('collection', { category: 'all', gender: 'all' });
                   }}
                 >
-                  New Arrivals
+                  NEW ARRIVALS
                 </a>
               </li>
 
@@ -79,7 +84,7 @@ export const Header: React.FC = () => {
                   }}
                   aria-haspopup="true"
                 >
-                  Men
+                  MEN
                   <ChevronDown size={13} style={{ strokeWidth: 1.8, marginTop: '1px' }} />
                 </a>
 
@@ -92,7 +97,7 @@ export const Header: React.FC = () => {
                       navigateTo('men', { gender: 'men', category: 'all' });
                     }}
                   >
-                    View All Men's Jewellery
+                    All Men's Jewellery
                   </a>
                   <div className="dropdown-divider" />
                   <a
@@ -129,7 +134,7 @@ export const Header: React.FC = () => {
                   }}
                   aria-haspopup="true"
                 >
-                  Women
+                  WOMEN
                   <ChevronDown size={13} style={{ strokeWidth: 1.8, marginTop: '1px' }} />
                 </a>
 
@@ -142,7 +147,7 @@ export const Header: React.FC = () => {
                       navigateTo('women', { gender: 'women', category: 'all' });
                     }}
                   >
-                    View All Women's Jewellery
+                    All Women's Jewellery
                   </a>
                   <div className="dropdown-divider" />
                   <a
@@ -197,7 +202,7 @@ export const Header: React.FC = () => {
                     navigateTo('collection', { category: 'all', gender: 'all' });
                   }}
                 >
-                  Collections
+                  COLLECTIONS
                 </a>
               </li>
 
@@ -210,7 +215,7 @@ export const Header: React.FC = () => {
                     navigateTo('story');
                   }}
                 >
-                  Our Story
+                  OUR STORY
                 </a>
               </li>
             </ul>
@@ -233,7 +238,7 @@ export const Header: React.FC = () => {
               className="nav-action-btn"
               onClick={() => setIsWishlistOpen(true)}
               aria-label="View wishlist"
-              title="Wishlist"
+              title="Saved Pieces"
             >
               <Heart size={19} style={{ strokeWidth: 1.6 }} />
               {wishlistCount > 0 && (
@@ -241,6 +246,16 @@ export const Header: React.FC = () => {
                   {wishlistCount}
                 </span>
               )}
+            </button>
+
+            {/* Account Icon */}
+            <button
+              className="nav-action-btn"
+              onClick={handleAccountClick}
+              aria-label="Client Account"
+              title="Account"
+            >
+              <User size={19} style={{ strokeWidth: 1.6 }} />
             </button>
 
             {/* Shopping Bag Trigger */}
@@ -328,7 +343,7 @@ export const Header: React.FC = () => {
                       style={{ fontSize: '0.8125rem', textAlign: 'left' }}
                       onClick={() => handleMobileNav(() => navigateTo('men', { gender: 'men', category: 'all' }))}
                     >
-                      View All Men's Jewellery
+                      All Men's Jewellery
                     </button>
                     <button
                       className="btn-text"
@@ -381,7 +396,7 @@ export const Header: React.FC = () => {
                       style={{ fontSize: '0.8125rem', textAlign: 'left' }}
                       onClick={() => handleMobileNav(() => navigateTo('women', { gender: 'women', category: 'all' }))}
                     >
-                      View All Women's Jewellery
+                      All Women's Jewellery
                     </button>
                     <button
                       className="btn-text"

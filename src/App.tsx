@@ -23,7 +23,7 @@ const MainContent: React.FC = () => {
     <>
       <Header />
 
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, backgroundColor: 'var(--color-obsidian-black)' }}>
         {/* Dynamic Page Router */}
         {currentView === 'home' && (
           <>
@@ -32,35 +32,35 @@ const MainContent: React.FC = () => {
             <FeaturedProducts />
 
             {/* Editorial Brand Assurance Banner */}
-            <section style={{ backgroundColor: 'var(--color-warm-ivory)', borderTop: '1px solid var(--color-border)', padding: '4.5rem 0' }}>
+            <section style={{ backgroundColor: '#0c0a09', borderTop: '1px solid rgba(184, 121, 81, 0.2)', borderBottom: '1px solid rgba(184, 121, 81, 0.15)', padding: '5rem 0' }}>
               <div className="container">
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2.5rem', textAlign: 'center' }}>
-                  <div style={{ padding: '1rem' }}>
-                    <ShieldCheck size={26} style={{ color: 'var(--color-champagne)', margin: '0 auto 0.75rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.4rem' }}>
+                  <div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }}>
+                    <ShieldCheck size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
                       Certified 925 Hallmark
                     </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.6' }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
                       Each piece bears the genuine 925 hallmark stamp, guaranteeing 92.5% pure silver content.
                     </p>
                   </div>
 
-                  <div style={{ padding: '1rem' }}>
-                    <Sparkles size={26} style={{ color: 'var(--color-champagne)', margin: '0 auto 0.75rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.4rem' }}>
+                  <div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }}>
+                    <Sparkles size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
                       Anti-Tarnish Rhodium Finish
                     </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.6' }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
                       Shielded with an invisible micro-barrier that preserves brilliant reflectivity against ambient oxidation.
                     </p>
                   </div>
 
-                  <div style={{ padding: '1rem' }}>
-                    <RefreshCw size={26} style={{ color: 'var(--color-champagne)', margin: '0 auto 0.75rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.4rem' }}>
+                  <div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }}>
+                    <RefreshCw size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
                       Complimentary 14-Day Exchange
                     </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.6' }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
                       Insured doorstep delivery and hassle-free size exchanges for total confidence in your selection.
                     </p>
                   </div>
@@ -90,7 +90,7 @@ const MainContent: React.FC = () => {
       {/* Global Notification Toast */}
       {toastMessage && (
         <div className="toast-banner" role="status" aria-live="polite">
-          <Check size={16} style={{ color: 'var(--color-champagne)' }} />
+          <Check size={16} style={{ color: 'var(--color-rose-gold)' }} />
           <span>{toastMessage}</span>
         </div>
       )}

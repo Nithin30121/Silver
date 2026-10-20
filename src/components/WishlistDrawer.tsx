@@ -24,7 +24,7 @@ export const WishlistDrawer: React.FC = () => {
       >
         <div className="drawer-header">
           <h2 className="drawer-title">Saved Pieces ({wishlist.length})</h2>
-          <button onClick={() => setIsWishlistOpen(false)} aria-label="Close wishlist">
+          <button onClick={() => setIsWishlistOpen(false)} aria-label="Close wishlist" style={{ color: 'var(--color-soft-ivory)' }}>
             <X size={20} />
           </button>
         </div>
@@ -33,7 +33,7 @@ export const WishlistDrawer: React.FC = () => {
           {wishlistedProducts.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
               <span className="eyebrow">NO SAVED PIECES</span>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--color-soft-ivory)' }}>
                 Your wishlist is empty.
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', marginBottom: '2rem' }}>
@@ -66,7 +66,7 @@ export const WishlistDrawer: React.FC = () => {
                       gridTemplateColumns: '80px 1fr auto',
                       gap: '1rem',
                       paddingBottom: '1.25rem',
-                      borderBottom: '1px solid var(--color-border)'
+                      borderBottom: '1px solid rgba(184, 121, 81, 0.2)'
                     }}
                   >
                     {/* Thumbnail */}
@@ -74,7 +74,8 @@ export const WishlistDrawer: React.FC = () => {
                       style={{
                         width: '80px',
                         height: '100px',
-                        backgroundColor: 'var(--color-soft-cream)',
+                        backgroundColor: '#100D0B',
+                        border: '1px solid rgba(184, 121, 81, 0.2)',
                         overflow: 'hidden',
                         cursor: 'pointer'
                       }}
@@ -94,7 +95,7 @@ export const WishlistDrawer: React.FC = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                       <div>
                         <h4
-                          style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', cursor: 'pointer' }}
+                          style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', cursor: 'pointer', color: 'var(--color-soft-ivory)' }}
                           onClick={() => {
                             setIsWishlistOpen(false);
                             navigateTo('product', { productId: product.id });
@@ -105,7 +106,7 @@ export const WishlistDrawer: React.FC = () => {
                         <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-grey)' }}>
                           {product.material}
                         </span>
-                        <div style={{ marginTop: '0.25rem', fontWeight: 600, fontSize: '0.875rem' }}>
+                        <div style={{ marginTop: '0.25rem', fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-champagne)' }}>
                           {formattedPrice}
                         </div>
                       </div>
@@ -125,7 +126,7 @@ export const WishlistDrawer: React.FC = () => {
 
                     {/* Remove */}
                     <button
-                      style={{ color: '#9C958E' }}
+                      style={{ color: 'var(--color-muted-grey)' }}
                       onClick={() => toggleWishlist(product.id)}
                       aria-label="Remove from wishlist"
                     >

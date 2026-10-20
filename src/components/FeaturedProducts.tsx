@@ -43,8 +43,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <Heart
             size={16}
             style={{
-              fill: wishlisted ? 'var(--color-champagne)' : 'none',
-              stroke: wishlisted ? 'var(--color-champagne)' : 'currentColor',
+              fill: wishlisted ? 'var(--color-rose-gold)' : 'none',
+              stroke: wishlisted ? 'var(--color-rose-gold)' : 'currentColor',
               strokeWidth: 1.8
             }}
           />
@@ -81,13 +81,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <button
               style={{
                 flex: 1,
-                background: 'var(--color-warm-ivory)',
-                color: 'var(--color-deep-charcoal)',
-                padding: '0.6rem 0.5rem',
+                background: 'rgba(27, 23, 20, 0.95)',
+                border: '1px solid var(--color-metallic-copper)',
+                color: 'var(--color-soft-ivory)',
+                padding: '0.65rem 0.5rem',
                 fontSize: '0.6875rem',
                 fontWeight: 600,
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase'
+                letterSpacing: '0.14em',
+                textTransform: 'uppercase',
+                transition: 'all 0.2s ease'
               }}
               onClick={() => addToCart(product)}
             >
@@ -95,12 +97,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             </button>
             <button
               style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                color: 'var(--color-warm-ivory)',
-                padding: '0.6rem 0.75rem',
+                background: 'rgba(255, 255, 255, 0.08)',
+                border: '1px solid rgba(184, 121, 81, 0.3)',
+                color: 'var(--color-soft-ivory)',
+                padding: '0.65rem 0.75rem',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
               }}
               onClick={() => setQuickViewProduct(product)}
               aria-label="Quick view product details"
@@ -141,8 +145,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   fontSize: '0.625rem',
                   letterSpacing: '0.04em',
                   color: 'var(--color-muted-grey)',
-                  border: '1px solid var(--color-border)',
-                  padding: '1px 5px'
+                  border: '1px solid rgba(184, 121, 81, 0.22)',
+                  backgroundColor: 'rgba(8, 7, 6, 0.5)',
+                  padding: '2px 6px'
                 }}
               >
                 {sz}
@@ -165,7 +170,7 @@ export const FeaturedProducts: React.FC = () => {
   const featured = products.filter((p) => p.isFeatured).slice(0, 4);
 
   return (
-    <section className="section-padding" style={{ backgroundColor: 'var(--color-soft-cream)' }} aria-labelledby="selection-heading">
+    <section className="section-padding" style={{ backgroundColor: 'var(--color-rich-black)', borderBottom: '1px solid rgba(184, 121, 81, 0.2)' }} aria-labelledby="selection-heading">
       <div className="container">
         {/* Section Header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }}>

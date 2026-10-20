@@ -8,15 +8,15 @@ export const CollectionGrid: React.FC = () => {
   const { navigateTo } = useShop();
 
   return (
-    <section className="section-padding" style={{ backgroundColor: 'var(--color-warm-ivory)' }} aria-labelledby="collection-heading">
+    <section className="section-padding collection-section" aria-labelledby="collection-heading">
       <div className="container">
         {/* Section Header */}
-        <div style={{ maxWidth: '640px', marginBottom: '2.5rem' }}>
+        <div style={{ maxWidth: '680px', marginBottom: '2.5rem' }}>
           <span className="eyebrow">OUR COLLECTION</span>
           <h2 id="collection-heading" className="headline-editorial">
             Silver Ornaments for <em>Every Chapter.</em>
           </h2>
-          <p style={{ marginTop: '1rem', fontSize: '1rem', lineHeight: '1.7', color: 'var(--color-muted-grey)' }}>
+          <p style={{ marginTop: '1rem', fontSize: '1.05rem', lineHeight: '1.75', color: 'var(--color-muted-grey)' }}>
             Explore our thoughtfully crafted silver pieces, designed to complement your style, always.
           </p>
         </div>
@@ -41,7 +41,7 @@ export const CollectionGrid: React.FC = () => {
               <div className="category-img-box">
                 <img
                   src={cat.image}
-                  alt={`${cat.name} silver jewellery`}
+                  alt={`${cat.name} fine silver jewellery on dark stone`}
                   loading="lazy"
                   width={600}
                   height={800}
@@ -51,7 +51,7 @@ export const CollectionGrid: React.FC = () => {
               <div className="category-meta">
                 <div>
                   <h3 className="category-title">{cat.name}</h3>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-grey)', display: 'block', marginTop: '2px' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-grey)', display: 'block', marginTop: '2px', letterSpacing: '0.04em' }}>
                     {cat.tagline}
                   </span>
                 </div>

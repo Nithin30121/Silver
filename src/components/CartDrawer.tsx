@@ -44,7 +44,6 @@ export const CartDrawer: React.FC = () => {
 
   const closeDrawer = () => {
     setIsCartOpen(false);
-    // Reset checkout step after slide out
     setTimeout(() => setCheckoutStep('cart'), 400);
   };
 
@@ -62,7 +61,7 @@ export const CartDrawer: React.FC = () => {
             {checkoutStep === 'shipping' && 'Secure Checkout'}
             {checkoutStep === 'confirmation' && 'Order Confirmed'}
           </h2>
-          <button onClick={closeDrawer} aria-label="Close drawer">
+          <button onClick={closeDrawer} aria-label="Close drawer" style={{ color: 'var(--color-soft-ivory)' }}>
             <X size={20} />
           </button>
         </div>
@@ -74,7 +73,7 @@ export const CartDrawer: React.FC = () => {
               {cart.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
                   <span className="eyebrow">YOUR BAG IS EMPTY</span>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1rem' }}>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--color-soft-ivory)' }}>
                     No ornaments in your bag yet.
                   </h3>
                   <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', marginBottom: '2rem' }}>
@@ -93,7 +92,7 @@ export const CartDrawer: React.FC = () => {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   {/* Complimentary Shipping Progress */}
-                  <div style={{ padding: '0.85rem', backgroundColor: 'var(--color-soft-cream)', fontSize: '0.75rem', textAlign: 'center', border: '1px solid var(--color-border)' }}>
+                  <div style={{ padding: '0.85rem', backgroundColor: '#14100E', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(184, 121, 81, 0.25)', color: 'var(--color-champagne)' }}>
                     <span>✨ Complimentary Insured Express Delivery unlocked!</span>
                   </div>
 
@@ -113,7 +112,7 @@ export const CartDrawer: React.FC = () => {
                           gridTemplateColumns: '80px 1fr auto',
                           gap: '1rem',
                           paddingBottom: '1.25rem',
-                          borderBottom: '1px solid var(--color-border)'
+                          borderBottom: '1px solid rgba(184, 121, 81, 0.2)'
                         }}
                       >
                         {/* Thumbnail */}
@@ -121,7 +120,8 @@ export const CartDrawer: React.FC = () => {
                           style={{
                             width: '80px',
                             height: '100px',
-                            backgroundColor: 'var(--color-soft-cream)',
+                            backgroundColor: '#100D0B',
+                            border: '1px solid rgba(184, 121, 81, 0.2)',
                             overflow: 'hidden',
                             cursor: 'pointer'
                           }}
@@ -141,7 +141,7 @@ export const CartDrawer: React.FC = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                           <div>
                             <h4
-                              style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', cursor: 'pointer' }}
+                              style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', cursor: 'pointer', color: 'var(--color-soft-ivory)' }}
                               onClick={() => {
                                 closeDrawer();
                                 navigateTo('product', { productId: item.product.id });
@@ -156,19 +156,19 @@ export const CartDrawer: React.FC = () => {
 
                           {/* Quantity Adjuster */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--color-border)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#100D0B' }}>
                               <button
-                                style={{ padding: '4px 8px' }}
+                                style={{ padding: '4px 8px', color: 'var(--color-soft-ivory)' }}
                                 onClick={() => updateQuantity(item.product.id, item.selectedSize, -1)}
                                 aria-label="Decrease quantity"
                               >
                                 <Minus size={12} />
                               </button>
-                              <span style={{ fontSize: '0.75rem', padding: '0 6px', fontWeight: 600 }}>
+                              <span style={{ fontSize: '0.75rem', padding: '0 6px', fontWeight: 600, color: 'var(--color-soft-ivory)' }}>
                                 {item.quantity}
                               </span>
                               <button
-                                style={{ padding: '4px 8px' }}
+                                style={{ padding: '4px 8px', color: 'var(--color-soft-ivory)' }}
                                 onClick={() => updateQuantity(item.product.id, item.selectedSize, 1)}
                                 aria-label="Increase quantity"
                               >
@@ -177,7 +177,7 @@ export const CartDrawer: React.FC = () => {
                             </div>
 
                             <button
-                              style={{ color: '#9C958E' }}
+                              style={{ color: 'var(--color-muted-grey)' }}
                               onClick={() => removeFromCart(item.product.id, item.selectedSize)}
                               aria-label="Remove item"
                             >
@@ -188,7 +188,7 @@ export const CartDrawer: React.FC = () => {
 
                         {/* Line Total */}
                         <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{itemTotal}</span>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-champagne)' }}>{itemTotal}</span>
                         </div>
                       </div>
                     );
@@ -214,75 +214,75 @@ export const CartDrawer: React.FC = () => {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>Full Name *</label>
+                <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Full Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Aarav Mehta"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-pure-white)', fontSize: '0.8125rem' }}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>Email *</label>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Email *</label>
                   <input
                     type="email"
                     required
                     placeholder="name@domain.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-pure-white)', fontSize: '0.8125rem' }}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>Phone *</label>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Phone *</label>
                   <input
                     type="tel"
                     required
                     placeholder="+91 98765 43210"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-pure-white)', fontSize: '0.8125rem' }}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
                   />
                 </div>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>Street Address *</label>
+                <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Street Address *</label>
                 <input
                   type="text"
                   required
                   placeholder="Apartment, suite, unit, building, street"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-pure-white)', fontSize: '0.8125rem' }}
+                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
                 />
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>City *</label>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>City *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Mumbai"
                     value={formData.city}
                     onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-pure-white)', fontSize: '0.8125rem' }}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>PIN Code *</label>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>PIN Code *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. 400001"
                     value={formData.pincode}
                     onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-pure-white)', fontSize: '0.8125rem' }}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
                   />
                 </div>
               </div>
@@ -303,8 +303,9 @@ export const CartDrawer: React.FC = () => {
                         alignItems: 'center',
                         gap: '0.6rem',
                         padding: '0.65rem 0.85rem',
-                        border: formData.paymentMethod === method.id ? '1px solid var(--color-deep-charcoal)' : '1px solid var(--color-border)',
-                        backgroundColor: formData.paymentMethod === method.id ? 'var(--color-soft-cream)' : 'transparent',
+                        border: formData.paymentMethod === method.id ? '1px solid var(--color-metallic-copper)' : '1px solid rgba(184, 121, 81, 0.2)',
+                        backgroundColor: formData.paymentMethod === method.id ? 'rgba(27, 23, 20, 0.9)' : 'transparent',
+                        color: 'var(--color-soft-ivory)',
                         fontSize: '0.75rem',
                         cursor: 'pointer'
                       }}
@@ -315,7 +316,7 @@ export const CartDrawer: React.FC = () => {
                         value={method.id}
                         checked={formData.paymentMethod === method.id}
                         onChange={() => setFormData({ ...formData, paymentMethod: method.id })}
-                        style={{ accentColor: 'var(--color-deep-charcoal)' }}
+                        style={{ accentColor: 'var(--color-metallic-copper)' }}
                       />
                       <span>{method.label}</span>
                     </label>
@@ -328,20 +329,20 @@ export const CartDrawer: React.FC = () => {
           {/* Confirmation Step */}
           {checkoutStep === 'confirmation' && (
             <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-              <CheckCircle2 size={48} style={{ color: 'var(--color-champagne)', margin: '0 auto 1.25rem' }} />
+              <CheckCircle2 size={48} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 1.25rem' }} />
               <span className="eyebrow">ORDER INITIATED</span>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>
                 Thank You for Choosing Silvesto Luxe
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', marginBottom: '1.5rem' }}>
-                Reference Order Number: <strong>{orderId}</strong>
+                Reference Order Number: <strong style={{ color: 'var(--color-rose-gold)' }}>{orderId}</strong>
               </p>
-              <div style={{ padding: '1rem', backgroundColor: 'var(--color-soft-cream)', fontSize: '0.8125rem', textAlign: 'left', marginBottom: '2rem', border: '1px solid var(--color-border)' }}>
+              <div style={{ padding: '1.25rem', backgroundColor: '#14100E', fontSize: '0.8125rem', textAlign: 'left', marginBottom: '2rem', border: '1px solid rgba(184, 121, 81, 0.25)', color: 'var(--color-soft-ivory)' }}>
                 <p><strong>Customer:</strong> {formData.fullName || 'Valued Client'}</p>
                 <p><strong>Destination:</strong> {formData.city || 'India'}, {formData.pincode}</p>
                 <p><strong>Method:</strong> {formData.paymentMethod.toUpperCase()}</p>
-                <p style={{ marginTop: '0.5rem', color: 'var(--color-champagne)' }}>
-                  Your certified 925 sterling silver piece will be packaged in our signature velvet box and dispatched via insured express courier.
+                <p style={{ marginTop: '0.75rem', color: 'var(--color-champagne)' }}>
+                  Your certified 925 sterling silver piece will be packaged in our signature bespoke presentation box and dispatched via insured express courier.
                 </p>
               </div>
               <button
@@ -362,10 +363,10 @@ export const CartDrawer: React.FC = () => {
         {cart.length > 0 && checkoutStep !== 'confirmation' && (
           <div className="drawer-footer">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Estimated Subtotal
               </span>
-              <span style={{ fontSize: '1.25rem', fontWeight: 600 }}>{formattedSubtotal}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-champagne)' }}>{formattedSubtotal}</span>
             </div>
 
             <p style={{ fontSize: '0.6875rem', color: 'var(--color-muted-grey)', marginBottom: '1.25rem' }}>

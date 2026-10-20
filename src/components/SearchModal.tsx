@@ -37,12 +37,12 @@ export const SearchModal: React.FC = () => {
     <div className={`modal-backdrop open`} onClick={() => setIsSearchOpen(false)}>
       <div
         className="modal-panel"
-        style={{ maxWidth: '640px', padding: '2rem' }}
+        style={{ maxWidth: '640px', padding: '2.25rem', backgroundColor: '#100D0B', border: '1px solid rgba(184, 121, 81, 0.35)', boxShadow: '0 24px 60px rgba(0, 0, 0, 0.9)' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Bar */}
-        <div style={{ display: 'flex', alignItems: 'center', borderBottom: '2px solid var(--color-deep-charcoal)', paddingBottom: '0.75rem', gap: '0.75rem' }}>
-          <Search size={20} style={{ color: 'var(--color-champagne)' }} />
+        <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-metallic-copper)', paddingBottom: '0.85rem', gap: '0.85rem' }}>
+          <Search size={20} style={{ color: 'var(--color-rose-gold)' }} />
           <input
             ref={inputRef}
             type="text"
@@ -53,38 +53,39 @@ export const SearchModal: React.FC = () => {
               flex: 1,
               border: 'none',
               backgroundColor: 'transparent',
-              fontSize: '1.15rem',
+              fontSize: '1.2rem',
               fontFamily: 'var(--font-serif)',
-              color: 'var(--color-deep-charcoal)'
+              color: 'var(--color-soft-ivory)'
             }}
           />
           {query && (
-            <button onClick={() => setQuery('')} aria-label="Clear query">
+            <button onClick={() => setQuery('')} aria-label="Clear query" style={{ color: 'var(--color-muted-grey)' }}>
               <X size={16} />
             </button>
           )}
-          <button onClick={() => setIsSearchOpen(false)} aria-label="Close search">
+          <button onClick={() => setIsSearchOpen(false)} aria-label="Close search" style={{ color: 'var(--color-soft-ivory)' }}>
             <X size={20} />
           </button>
         </div>
 
         {/* Suggestions or Results */}
-        <div style={{ marginTop: '1.5rem', maxHeight: '55vh', overflowY: 'auto' }}>
+        <div style={{ marginTop: '1.75rem', maxHeight: '55vh', overflowY: 'auto' }}>
           {!query.trim() ? (
             <div>
-              <span className="eyebrow" style={{ marginBottom: '0.75rem' }}>POPULAR SEARCHES</span>
+              <span className="eyebrow" style={{ marginBottom: '0.85rem' }}>POPULAR SEARCHES</span>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 {popularSearches.map((term) => (
                   <button
                     key={term}
                     onClick={() => setQuery(term.replace('925 ', ''))}
                     style={{
-                      padding: '0.45rem 0.85rem',
-                      backgroundColor: 'var(--color-soft-cream)',
-                      border: '1px solid var(--color-border)',
+                      padding: '0.5rem 0.95rem',
+                      backgroundColor: '#14100E',
+                      border: '1px solid rgba(184, 121, 81, 0.25)',
                       fontSize: '0.75rem',
-                      letterSpacing: '0.04em',
-                      color: 'var(--color-deep-charcoal)'
+                      letterSpacing: '0.06em',
+                      color: 'var(--color-soft-ivory)',
+                      transition: 'all 0.2s ease'
                     }}
                   >
                     {term}
@@ -94,10 +95,10 @@ export const SearchModal: React.FC = () => {
             </div>
           ) : searchResults.length > 0 ? (
             <div>
-              <span className="eyebrow" style={{ marginBottom: '0.75rem' }}>
+              <span className="eyebrow" style={{ marginBottom: '0.85rem' }}>
                 {searchResults.length} {searchResults.length === 1 ? 'RESULT' : 'RESULTS'} FOUND
               </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                 {searchResults.map((product) => (
                   <div
                     key={product.id}
@@ -109,8 +110,9 @@ export const SearchModal: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: '1rem',
-                      padding: '0.65rem',
-                      backgroundColor: 'var(--color-soft-cream)',
+                      padding: '0.75rem 1rem',
+                      backgroundColor: '#14100E',
+                      border: '1px solid rgba(184, 121, 81, 0.18)',
                       cursor: 'pointer',
                       transition: 'var(--transition-fast)'
                     }}
@@ -121,12 +123,12 @@ export const SearchModal: React.FC = () => {
                       style={{ width: '56px', height: '70px', objectFit: 'cover' }}
                     />
                     <div style={{ flex: 1 }}>
-                      <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem' }}>{product.name}</h4>
+                      <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--color-soft-ivory)' }}>{product.name}</h4>
                       <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-grey)' }}>
-                        {product.material} • ₹{product.price.toLocaleString('en-IN')}
+                        {product.material} • <strong style={{ color: 'var(--color-champagne)' }}>₹{product.price.toLocaleString('en-IN')}</strong>
                       </span>
                     </div>
-                    <ArrowRight size={14} style={{ color: 'var(--color-champagne)' }} />
+                    <ArrowRight size={14} style={{ color: 'var(--color-rose-gold)' }} />
                   </div>
                 ))}
               </div>
@@ -135,7 +137,7 @@ export const SearchModal: React.FC = () => {
             <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
               <span className="eyebrow">NO MATCHES</span>
               <p style={{ fontSize: '0.9375rem', color: 'var(--color-muted-grey)' }}>
-                We couldn't find any silver ornament matching "<strong>{query}</strong>".
+                We couldn't find any silver ornament matching "<strong style={{ color: 'var(--color-soft-ivory)' }}>{query}</strong>".
               </p>
             </div>
           )}

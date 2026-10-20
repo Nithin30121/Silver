@@ -24,7 +24,7 @@ export const Footer: React.FC = () => {
             <a
               href="#home"
               className="brand-logo"
-              style={{ fontSize: '1.4rem', marginBottom: '1.25rem' }}
+              style={{ fontSize: '1.45rem', marginBottom: '1.25rem' }}
               onClick={(e) => {
                 e.preventDefault();
                 navigateTo('home');
@@ -32,12 +32,12 @@ export const Footer: React.FC = () => {
             >
               SILVESTO <span className="brand-logo-mark">LUXE</span>
             </a>
-            <p style={{ fontSize: '0.875rem', lineHeight: '1.7', color: 'var(--color-muted-grey)', maxWidth: '320px', marginBottom: '1.5rem' }}>
-              Distinctive 925 sterling silver ornaments, crafted for moments that stay with you. Understated luxury through form, whitespace, and authentic metal.
+            <p style={{ fontSize: '0.875rem', lineHeight: '1.75', color: 'var(--color-muted-grey)', maxWidth: '340px', marginBottom: '1.5rem' }}>
+              Distinctive 925 sterling silver ornaments, crafted for moments that stay with you. Understated luxury through form, whitespace, and authentic noble metal.
             </p>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', color: 'var(--color-deep-charcoal)', fontWeight: 600 }}>
-              <ShieldCheck size={18} style={{ color: 'var(--color-champagne)' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', color: 'var(--color-soft-ivory)', fontWeight: 600 }}>
+              <ShieldCheck size={18} style={{ color: 'var(--color-rose-gold)' }} />
               <span>Certified 925 BIS Hallmarked Silver</span>
             </div>
           </div>
@@ -114,17 +114,17 @@ export const Footer: React.FC = () => {
           {/* Col 3: Newsletter */}
           <div>
             <h4 className="footer-heading">The Atelier Gazette</h4>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.6', marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65', marginBottom: '1.25rem' }}>
               Subscribe to receive private archive previews, craftsmanship notes, and seasonal releases.
             </p>
 
             {subscribed ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--color-deep-charcoal)', fontWeight: 600, padding: '0.75rem 0' }}>
-                <Check size={16} style={{ color: 'var(--color-champagne)' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--color-soft-ivory)', fontWeight: 600, padding: '0.75rem 0' }}>
+                <Check size={16} style={{ color: 'var(--color-rose-gold)' }} />
                 <span>You are now subscribed to the Gazette.</span>
               </div>
             ) : (
-              <form onSubmit={handleSubscribe} style={{ display: 'flex', borderBottom: '1px solid var(--color-deep-charcoal)' }}>
+              <form onSubmit={handleSubscribe} style={{ display: 'flex', borderBottom: '1px solid var(--color-metallic-copper)' }}>
                 <input
                   type="email"
                   required
@@ -137,12 +137,12 @@ export const Footer: React.FC = () => {
                     border: 'none',
                     backgroundColor: 'transparent',
                     fontSize: '0.8125rem',
-                    color: 'var(--color-deep-charcoal)'
+                    color: 'var(--color-soft-ivory)'
                   }}
                 />
                 <button
                   type="submit"
-                  style={{ padding: '0 0.5rem', color: 'var(--color-deep-charcoal)' }}
+                  style={{ padding: '0 0.5rem', color: 'var(--color-rose-gold)' }}
                   aria-label="Subscribe to newsletter"
                 >
                   <ArrowRight size={16} />

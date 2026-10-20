@@ -101,15 +101,15 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--color-warm-ivory)', minHeight: '80vh', paddingBottom: '6rem' }}>
+    <div style={{ backgroundColor: 'var(--color-obsidian-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
       {/* Editorial Header */}
-      <div style={{ backgroundColor: 'var(--color-soft-cream)', borderBottom: '1px solid var(--color-border)', padding: '4.5rem 0 3.5rem' }}>
+      <div style={{ backgroundColor: '#0d0a09', borderBottom: '1px solid rgba(184, 121, 81, 0.22)', padding: '5rem 0 3.5rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">SILVESTO LUXE ATELIER</span>
-          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem' }}>
+          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-soft-ivory)' }}>
             {pageTitle}
           </h1>
-          <p style={{ fontSize: '1.0625rem', color: 'var(--color-muted-grey)', lineHeight: '1.7' }}>
+          <p style={{ fontSize: '1.0625rem', color: 'var(--color-muted-grey)', lineHeight: '1.75' }}>
             {pageDescription}
           </p>
 
@@ -120,14 +120,15 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
                 key={sub.id}
                 onClick={() => setActiveCategory(sub.id)}
                 style={{
-                  padding: '0.65rem 1.35rem',
+                  padding: '0.65rem 1.45rem',
                   fontSize: '0.75rem',
-                  letterSpacing: '0.12em',
+                  letterSpacing: '0.14em',
                   textTransform: 'uppercase',
                   fontWeight: 500,
-                  border: activeCategory === sub.id ? '1px solid var(--color-deep-charcoal)' : '1px solid var(--color-border)',
-                  backgroundColor: activeCategory === sub.id ? 'var(--color-deep-charcoal)' : 'var(--color-warm-ivory)',
-                  color: activeCategory === sub.id ? 'var(--color-warm-ivory)' : 'var(--color-deep-charcoal)',
+                  border: activeCategory === sub.id ? '1px solid var(--color-metallic-copper)' : '1px solid rgba(184, 121, 81, 0.25)',
+                  backgroundColor: activeCategory === sub.id ? 'rgba(27, 23, 20, 0.95)' : 'rgba(16, 13, 11, 0.6)',
+                  color: activeCategory === sub.id ? 'var(--color-champagne)' : 'var(--color-muted-grey)',
+                  boxShadow: activeCategory === sub.id ? '0 0 15px rgba(184, 121, 81, 0.2)' : 'none',
                   transition: 'var(--transition-fast)'
                 }}
               >
@@ -148,12 +149,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
             flexWrap: 'wrap',
             gap: '1.25rem',
             paddingBottom: '1.5rem',
-            borderBottom: '1px solid var(--color-border)'
+            borderBottom: '1px solid rgba(184, 121, 81, 0.2)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <span style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', letterSpacing: '0.04em' }}>
-              Showing <strong>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'piece' : 'pieces'}
+              Showing <strong style={{ color: 'var(--color-soft-ivory)' }}>{filteredProducts.length}</strong> {filteredProducts.length === 1 ? 'piece' : 'pieces'}
             </span>
 
             {/* Quick Filter toggle for mobile */}
@@ -168,7 +169,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            <label htmlFor="sort-select" style={{ fontSize: '0.75rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-muted-grey)' }}>
+            <label htmlFor="sort-select" style={{ fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--color-muted-grey)' }}>
               Sort by:
             </label>
             <select
@@ -176,11 +177,11 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               style={{
-                backgroundColor: 'transparent',
-                border: '1px solid var(--color-border)',
-                padding: '0.5rem 1rem',
+                backgroundColor: '#100D0B',
+                border: '1px solid rgba(184, 121, 81, 0.3)',
+                padding: '0.55rem 1.25rem',
                 fontSize: '0.8125rem',
-                color: 'var(--color-deep-charcoal)',
+                color: 'var(--color-soft-ivory)',
                 cursor: 'pointer'
               }}
             >
@@ -197,8 +198,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
           <div
             style={{
               padding: '1.75rem',
-              backgroundColor: 'var(--color-soft-cream)',
-              borderBottom: '1px solid var(--color-border)',
+              backgroundColor: '#100D0B',
+              border: '1px solid rgba(184, 121, 81, 0.25)',
+              borderTop: 'none',
               display: 'flex',
               flexWrap: 'wrap',
               gap: '2.5rem',
@@ -208,7 +210,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
           >
             {/* Price Slider */}
             <div style={{ minWidth: '220px' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600, marginBottom: '0.5rem' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>
                 Max Price: ₹{maxPrice.toLocaleString('en-IN')}
               </label>
               <input
@@ -218,17 +220,17 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
                 step="500"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(Number(e.target.value))}
-                style={{ width: '100%', accentColor: 'var(--color-deep-charcoal)', cursor: 'pointer' }}
+                style={{ width: '100%', accentColor: 'var(--color-metallic-copper)', cursor: 'pointer' }}
               />
             </div>
 
             {/* In Stock Only Checkbox */}
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.8125rem', cursor: 'pointer' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.8125rem', cursor: 'pointer', color: 'var(--color-soft-ivory)' }}>
               <input
                 type="checkbox"
                 checked={inStockOnly}
                 onChange={(e) => setInStockOnly(e.target.checked)}
-                style={{ accentColor: 'var(--color-deep-charcoal)' }}
+                style={{ accentColor: 'var(--color-metallic-copper)' }}
               />
               <span>In-stock pieces only</span>
             </label>
@@ -241,9 +243,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
                 alignItems: 'center',
                 gap: '0.4rem',
                 fontSize: '0.75rem',
-                letterSpacing: '0.08em',
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase',
-                color: 'var(--color-champagne)'
+                color: 'var(--color-rose-gold)'
               }}
             >
               <RotateCcw size={13} />
@@ -262,7 +264,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
         ) : (
           <div style={{ textAlign: 'center', padding: '6rem 2rem' }}>
             <span className="eyebrow">NO MATCHES FOUND</span>
-            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem' }}>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-soft-ivory)' }}>
               No pieces match your selected criteria.
             </h3>
             <p style={{ maxWidth: '420px', margin: '0 auto 2rem', color: 'var(--color-muted-grey)' }}>
