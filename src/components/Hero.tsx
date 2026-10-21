@@ -43,6 +43,19 @@ export const Hero: React.FC = () => {
         </defs>
       </svg>
 
+      {/* Full-bleed SILVESTO LUXE artwork behind the editorial hero copy */}
+      <div className="hero-fullscreen-visual" aria-hidden="true">
+        <img
+          src="/images/hero_silvesto_luxe.png"
+          alt=""
+          loading="eager"
+          fetchPriority="high"
+          width={1600}
+          height={1000}
+        />
+      </div>
+      <div className="hero-artwork-scrim" aria-hidden="true" />
+
       <div className="container" style={{ position: 'relative', zIndex: 2 }}>
         <div className="hero-grid">
           {/* Left: Editorial Content */}
@@ -66,20 +79,6 @@ export const Hero: React.FC = () => {
               <span>EXPLORE COLLECTION</span>
               <ArrowRight size={15} style={{ strokeWidth: 1.8 }} />
             </button>
-          </div>
-
-          {/* Right: Substantial Luxury Product Photograph on Dark Stone */}
-          <div className="hero-visual">
-            <div className="hero-image-frame">
-              <img
-                src="/images/hero_silver_ring.jpg"
-                alt="Finely engraved 925 sterling silver ring resting on natural dark obsidian slate stone"
-                loading="eager"
-                fetchPriority="high"
-                width={800}
-                height={600}
-              />
-            </div>
           </div>
         </div>
       </div>

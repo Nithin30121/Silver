@@ -14,6 +14,8 @@ import { WishlistDrawer } from './components/WishlistDrawer';
 import { SearchModal } from './components/SearchModal';
 import { QuickViewModal } from './components/QuickViewModal';
 import { Footer } from './components/Footer';
+import { BrandIntro } from './components/BrandIntro';
+import { GenderCategories } from './components/GenderCategories';
 import { Sparkles, ShieldCheck, RefreshCw, Check } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -21,6 +23,7 @@ const MainContent: React.FC = () => {
 
   return (
     <>
+      <BrandIntro />
       <Header />
 
       <main style={{ flex: 1, backgroundColor: 'var(--color-obsidian-black)' }}>
@@ -28,8 +31,9 @@ const MainContent: React.FC = () => {
         {currentView === 'home' && (
           <>
             <Hero />
-            <CollectionGrid />
+            <GenderCategories />
             <FeaturedProducts />
+            <CollectionGrid />
 
             {/* Editorial Brand Assurance Banner */}
             <section style={{ backgroundColor: '#0c0a09', borderTop: '1px solid rgba(184, 121, 81, 0.2)', borderBottom: '1px solid rgba(184, 121, 81, 0.15)', padding: '5rem 0' }}>

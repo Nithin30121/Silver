@@ -12,11 +12,15 @@ export const QuickViewModal: React.FC = () => {
     navigateTo
   } = useShop();
 
-  if (!quickViewProduct) return null;
+  const [selectedSize, setSelectedSize] = useState<string>('Standard');
 
-  const [selectedSize, setSelectedSize] = useState<string>(
-    quickViewProduct.availableSizes ? quickViewProduct.availableSizes[0] : 'Standard'
-  );
+  React.useEffect(() => {
+    if (quickViewProduct?.availableSizes?.[0]) {
+      setSelectedSize(quickViewProduct.availableSizes[0]);
+    }
+  }, [quickViewProduct]);
+
+  if (!quickViewProduct) return null;
 
   const wishlisted = isWishlisted(quickViewProduct.id);
 

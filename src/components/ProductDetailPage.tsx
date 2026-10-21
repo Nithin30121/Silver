@@ -17,6 +17,20 @@ import {
 export const ProductDetailPage: React.FC = () => {
   const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo } = useShop();
 
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [selectedSize, setSelectedSize] = useState<string>('Standard');
+  const [quantity, setQuantity] = useState(1);
+  const [activeAccordion, setActiveAccordion] = useState<'details' | 'care' | 'shipping' | null>('details');
+  const [sizeModalOpen, setSizeModalOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (currentProduct?.availableSizes?.[0]) {
+      setSelectedSize(currentProduct.availableSizes[0]);
+    }
+    setActiveImageIndex(0);
+    setQuantity(1);
+  }, [currentProduct]);
+
   if (!currentProduct) {
     return (
       <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center', backgroundColor: 'var(--color-obsidian-black)' }}>
@@ -33,13 +47,6 @@ export const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [selectedSize, setSelectedSize] = useState<string>(
-    currentProduct.availableSizes ? currentProduct.availableSizes[0] : 'Standard'
-  );
-  const [quantity, setQuantity] = useState(1);
-  const [activeAccordion, setActiveAccordion] = useState<'details' | 'care' | 'shipping' | null>('details');
-  const [sizeModalOpen, setSizeModalOpen] = useState(false);
 
   const wishlisted = isWishlisted(currentProduct.id);
 

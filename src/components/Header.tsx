@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown } from 'lucide-react';
+import { LiveSilverRate } from './LiveSilverRate';
 
 export const Header: React.FC = () => {
   const {
@@ -29,10 +30,26 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      {/* Top Subtle Announcement */}
-      <div className="announcement-bar">
-        <span>Signature Service:</span> Complimentary Insured Express Delivery & Bespoke Velvet Box on All Orders
+      {/* Top Luxury Utility Strip & Live Silver Rate */}
+      <div className="top-utility-bar" role="complementary" aria-label="Atelier market updates and services">
+        <div className="container top-utility-container">
+          {/* Top-Left: Live Silver Rate Indicator */}
+          <div className="top-utility-left">
+            <LiveSilverRate />
+          </div>
+
+          {/* Top-Center: Atelier Service Announcement */}
+          <div className="top-utility-center">
+            <span className="announcement-highlight">Signature Service:</span> Complimentary Insured Express Delivery &amp; Bespoke Velvet Box
+          </div>
+
+          {/* Top-Right: Certified Hallmark Assurance */}
+          <div className="top-utility-right">
+            <span className="top-utility-assurance">Certified 925 Hallmark</span>
+          </div>
+        </div>
       </div>
+
 
       <header className="header-wrapper">
         <div className="container header-container">
