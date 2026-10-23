@@ -25,7 +25,7 @@ export const CarePage: React.FC = () => {
             <Sparkles size={24} style={{ color: 'var(--color-rose-gold)', marginBottom: '1rem' }} />
             <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.45rem', marginBottom: '0.75rem', color: 'var(--color-soft-ivory)' }}>Regular Polishing</h3>
             <p style={{ fontSize: '0.875rem', lineHeight: '1.75', color: 'var(--color-muted-grey)' }}>
-              Use the micro-fibre polishing cloth provided with every SILVESTO LUXE order. Gently buff along the natural grain of the silver. Avoid circular scrubbing on satin-brushed surfaces.
+              Use the micro-fibre polishing cloth provided with every SILVORA order. Gently buff along the natural grain of the silver. Avoid circular scrubbing on satin-brushed surfaces.
             </p>
           </div>
 

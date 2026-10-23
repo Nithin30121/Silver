@@ -43,7 +43,7 @@ export const Hero: React.FC = () => {
         </defs>
       </svg>
 
-      {/* Full-bleed SILVESTO LUXE artwork behind the editorial hero copy */}
+      {/* Full-bleed brand artwork behind the editorial hero copy */}
       <div className="hero-fullscreen-visual" aria-hidden="true">
         <img
           src="/images/hero_silvesto_luxe.png"

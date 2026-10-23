@@ -30,7 +30,7 @@ export const Footer: React.FC = () => {
                 navigateTo('home');
               }}
             >
-              SILVESTO <span className="brand-logo-mark">LUXE</span>
+              SILVORA
             </a>
             <p style={{ fontSize: '0.875rem', lineHeight: '1.75', color: 'var(--color-muted-grey)', maxWidth: '340px', marginBottom: '1.5rem' }}>
               Distinctive 925 sterling silver ornaments, crafted for moments that stay with you. Understated luxury through form, whitespace, and authentic noble metal.
@@ -154,7 +154,7 @@ export const Footer: React.FC = () => {
 
         {/* Footer Bottom */}
         <div className="footer-bottom">
-          <span>&copy; {new Date().getFullYear()} SILVESTO LUXE. All Rights Reserved. Crafted in Pure 925 Sterling Silver.</span>
+          <span>&copy; {new Date().getFullYear()} SILVORA. All Rights Reserved. Crafted in Pure 925 Sterling Silver.</span>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
             <a href="#privacy" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('faq'); }}>Privacy Policy</a>
             <a href="#terms" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('shipping'); }}>Terms & Conditions</a>

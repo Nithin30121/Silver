@@ -332,7 +332,7 @@ export const CartDrawer: React.FC = () => {
               <CheckCircle2 size={48} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 1.25rem' }} />
               <span className="eyebrow">ORDER INITIATED</span>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>
-                Thank You for Choosing Silvesto Luxe
+                Thank You for Choosing SILVORA
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', marginBottom: '1.5rem' }}>
                 Reference Order Number: <strong style={{ color: 'var(--color-rose-gold)' }}>{orderId}</strong>

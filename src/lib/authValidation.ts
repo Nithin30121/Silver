@@ -1,4 +1,4 @@
-// SILVESTO LUXE | Account Form Validation
+// SILVORA | Account Form Validation
 // Instant feedback for customers. Supabase enforces its own rules on the server as well, so these
 // checks are for a better experience, not for security.
 

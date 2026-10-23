@@ -94,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else if (type === 'recovery' && initialSession) {
         setIsPasswordRecovery(true);
       } else if ((type === 'signup' || type === 'email') && initialSession) {
-        setNotice({ kind: 'success', origin: 'email-link', message: 'Thank you, your email address is confirmed. Welcome to SILVESTO LUXE.' });
+        setNotice({ kind: 'success', origin: 'email-link', message: 'Thank you, your email address is confirmed. Welcome to SILVORA.' });
       } else if (type === 'email_change' && initialSession) {
         setNotice({ kind: 'success', origin: 'email-link', message: 'Your new email address is confirmed.' });
       }

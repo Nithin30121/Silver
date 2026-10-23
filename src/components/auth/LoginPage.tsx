@@ -75,10 +75,10 @@ export const LoginPage: React.FC = () => {
           Welcome <em>back</em>
         </>
       }
-      intro="Sign in to your SILVESTO LUXE client account."
+      intro="Sign in to your SILVORA client account."
       footer={
         <>
-          New to SILVESTO LUXE? <AuthLink to="signup">Create an account</AuthLink>
+          New to SILVORA? <AuthLink to="signup">Create an account</AuthLink>
         </>
       }
     >

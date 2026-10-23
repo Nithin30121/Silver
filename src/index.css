@@ -1,5 +1,5 @@
 /* ==========================================================================
-   SILVESTO LUXE | Master Editorial Luxury Dark Design System
+   SILVORA | Master Editorial Luxury Dark Design System
    Obsidian Black, Polished Silver, Metallic Copper & Rose Gold
    ========================================================================== */
 
@@ -602,7 +602,7 @@ img {
   position: relative;
   width: 100%;
   max-width: 600px;
-  /* Preserve the supplied SILVESTO LUXE artwork without cropping its mark. */
+  /* Preserve the supplied brand artwork without cropping its mark. */
   aspect-ratio: 8 / 5;
   overflow: hidden;
   background-color: var(--color-rich-black);

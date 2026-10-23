@@ -165,11 +165,11 @@ export const LiveSilverRate: React.FC = () => {
           className="silver-rate-popover"
           role="dialog"
           aria-modal="false"
-          aria-label="Silvesto Luxe Live Silver Rate Details"
+          aria-label="SILVORA Live Silver Rate Details"
         >
           <div className="silver-popover-header">
             <div>
-              <span className="popover-eyebrow">SILVESTO LUXE ATELIER</span>
+              <span className="popover-eyebrow">SILVORA ATELIER</span>
               <h4 className="popover-title">Live Bullion Benchmark</h4>
             </div>
             <button

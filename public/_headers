@@ -1,4 +1,4 @@
-# SILVESTO LUXE: HTTP security headers (Netlify and Cloudflare Pages both read this file).
+# SILVORA: HTTP security headers (Netlify and Cloudflare Pages both read this file).
 #
 # Content-Security-Policy limits what the browser may load or contact, the main defence
 # against injected scripts stealing a signed-in customer's session. Allowed:

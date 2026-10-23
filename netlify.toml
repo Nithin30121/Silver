@@ -1,4 +1,4 @@
-# SILVESTO LUXE: Netlify deployment settings.
+# SILVORA: Netlify deployment settings.
 # The site is a static build; Supabase provides authentication and the database,
 # so no server of ours needs to run. Security headers live in public/_headers.
 

@@ -74,7 +74,7 @@ export const SignupPage: React.FC = () => {
           setValues(EMPTY_FORM);
         } else {
           const firstName = firstNameOf(values.fullName);
-          showToast(`Welcome to SILVESTO LUXE, ${firstName}.`);
+          showToast(`Welcome to SILVORA, ${firstName}.`);
           navigateTo(destinationAfterSignIn(returnView));
         }
       } catch (error) {
@@ -139,7 +139,7 @@ export const SignupPage: React.FC = () => {
           Create your <em>account</em>
         </>
       }
-      intro="Join SILVESTO LUXE for a more personal way to discover fine sterling silver."
+      intro="Join SILVORA for a more personal way to discover fine sterling silver."
       footer={
         <>
           Already have an account? <AuthLink to="login">Sign in</AuthLink>

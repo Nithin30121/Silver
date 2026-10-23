@@ -105,7 +105,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
       {/* Editorial Header */}
       <div style={{ backgroundColor: '#0d0a09', borderBottom: '1px solid rgba(184, 121, 81, 0.22)', padding: '5rem 0 3.5rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
-          <span className="eyebrow">SILVESTO LUXE ATELIER</span>
+          <span className="eyebrow">SILVORA ATELIER</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-soft-ivory)' }}>
             {pageTitle}
           </h1>

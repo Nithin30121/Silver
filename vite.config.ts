@@ -34,7 +34,7 @@ function silverRateApiPlugin(): Plugin {
       const controller = new AbortController()
       const timeout = setTimeout(() => controller.abort(), 7000)
       const res = await fetch('https://api.gold-api.com/price/XAG/INR', {
-        headers: { 'Accept': 'application/json', 'User-Agent': 'SILVESTO-LUXE-Atelier/1.0' },
+        headers: { 'Accept': 'application/json', 'User-Agent': 'SILVORA-Atelier/1.0' },
         signal: controller.signal
       })
       clearTimeout(timeout)
@@ -77,7 +77,7 @@ function silverRateApiPlugin(): Plugin {
         }
       }
     } catch (e) {
-      console.warn('[SILVESTO LUXE API] Primary provider gold-api failed, attempting secondary source...', e)
+      console.warn('[SILVORA API] Primary provider gold-api failed, attempting secondary source...', e)
     }
 
     // 2. Secondary Market Data Provider: Yahoo Finance COMEX Silver (SI=F) + USD/INR (INR=X)
@@ -138,7 +138,7 @@ function silverRateApiPlugin(): Plugin {
         }
       }
     } catch (e) {
-      console.warn('[SILVESTO LUXE API] Secondary market provider failed:', e)
+      console.warn('[SILVORA API] Secondary market provider failed:', e)
     }
 
     throw new Error('All silver rate data providers unavailable')

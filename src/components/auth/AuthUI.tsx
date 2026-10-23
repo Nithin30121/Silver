@@ -176,7 +176,7 @@ export const AlreadySignedIn: React.FC = () => {
   const continueTo = destinationAfterSignIn(returnView) === 'account' ? 'collection' : returnView;
 
   return (
-    <AuthLayout eyebrow="CLIENT ACCOUNT" title="You are signed in" intro={`Signed in as ${displayName ?? 'a SILVESTO LUXE client'}.`}>
+    <AuthLayout eyebrow="CLIENT ACCOUNT" title="You are signed in" intro={`Signed in as ${displayName ?? 'a SILVORA client'}.`}>
       {/* e.g. an expired email link followed while already signed in */}
       {notice && <AuthAlert kind={notice.kind}>{notice.message}</AuthAlert>}
       <div className="auth-actions">

@@ -1,4 +1,4 @@
-// SILVESTO LUXE | Live Silver Bullion Rate Service
+// SILVORA | Live Silver Bullion Rate Service
 // Official Bullion Standard: 1 Troy Ounce = 31.1034768 Grams
 
 export interface SilverRateData {

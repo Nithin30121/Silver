@@ -134,7 +134,7 @@ export const AccountPage: React.FC = () => {
           Welcome, <em>{firstNameOf(fullName) || 'valued client'}</em>.
         </>
       }
-      intro="Your private client details at SILVESTO LUXE."
+      intro="Your private client details at SILVORA."
     >
       {notice && (
         <AuthAlert

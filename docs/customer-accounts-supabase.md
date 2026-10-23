@@ -1,6 +1,6 @@
 # Customer Accounts with Supabase
 
-Setup, testing and deployment guide for SILVESTO LUXE customer accounts: sign-up, sign-in,
+Setup, testing and deployment guide for SILVORA customer accounts: sign-up, sign-in,
 sign-out, password reset and the account page.
 
 > **Status:** implemented and tested end to end against a **local** Supabase stack.
@@ -143,9 +143,9 @@ if a label differs):
 2. **Password settings**: set the **minimum password length to 8** (matching the website).
    Optionally enable **leaked password protection** if your plan offers it.
 3. **URL Configuration**:
-   - **Site URL**: your production address, e.g. `https://silvestoluxe.com`.
+   - **Site URL**: your production address, e.g. `https://www.your-domain.com`.
    - **Redirect URLs**: add every address that should receive email links:
-     - `https://silvestoluxe.com/` (production, with the trailing slash)
+     - `https://www.your-domain.com/` (production, with the trailing slash)
      - `http://localhost:5173/` (local development, optional)
      - preview deploys, if you use them, e.g. `https://*--your-site.netlify.app/`
    The website sends customers back to `<current site address>/`, so that exact URL must be listed.

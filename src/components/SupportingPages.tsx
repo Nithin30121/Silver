@@ -11,7 +11,7 @@ export const ShippingPage: React.FC = () => {
             Shipping & <em>Returns.</em>
           </h1>
           <p style={{ fontSize: '1.0625rem', color: 'var(--color-muted-grey)', lineHeight: '1.75' }}>
-            Every SILVESTO LUXE ornament is dispatched in tamper-evident, fully insured luxury packaging.
+            Every SILVORA ornament is dispatched in tamper-evident, fully insured luxury packaging.
           </p>
         </div>
       </div>
@@ -100,7 +100,7 @@ export const ContactPage: React.FC = () => {
                 <MapPin size={18} style={{ color: 'var(--color-rose-gold)', marginTop: '2px' }} />
                 <div>
                   <strong style={{ color: 'var(--color-soft-ivory)', display: 'block' }}>Boutique & Showroom</strong>
-                  <span>The Silvesto Atelier, Nariman Point, Mumbai 400021, India</span>
+                  <span>The SILVORA Atelier, Nariman Point, Mumbai 400021, India</span>
                 </div>
               </div>
             </div>
@@ -180,7 +180,7 @@ export const FAQPage: React.FC = () => {
   const faqs = [
     {
       q: 'What is 925 Sterling Silver, and how is it verified?',
-      a: 'Sterling silver is an alloy composed of 92.5% pure silver and 7.5% copper or strengthening elements. Pure 99.9% silver is too soft to withstand daily jewellery wear. Every SILVESTO LUXE piece is stamped with the internationally recognized 925 hallmark and conforms to BIS hallmarking standards.'
+      a: 'Sterling silver is an alloy composed of 92.5% pure silver and 7.5% copper or strengthening elements. Pure 99.9% silver is too soft to withstand daily jewellery wear. Every SILVORA piece is stamped with the internationally recognized 925 hallmark and conforms to BIS hallmarking standards.'
     },
     {
       q: 'Will my silver ornaments tarnish over time?',

@@ -86,7 +86,7 @@ export const Header: React.FC = () => {
               navigateTo('home');
             }}
           >
-            SILVESTO <span className="brand-logo-mark">LUXE</span>
+            SILVORA
           </a>
 
           {/* Centre: Main Navigation */}
@@ -320,7 +320,7 @@ export const Header: React.FC = () => {
         >
           <div className="drawer-header">
             <span className="brand-logo" style={{ fontSize: '1.25rem' }}>
-              SILVESTO <span className="brand-logo-mark">LUXE</span>
+              SILVORA
             </span>
             <button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
               <X size={20} />

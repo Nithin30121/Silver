@@ -79,7 +79,7 @@ export const BrandIntro: React.FC = () => {
       className={`brand-intro-overlay ${fadingOut ? 'fade-out' : ''}`}
       role="dialog"
       aria-modal="true"
-      aria-label="Welcome to SILVESTO LUXE"
+      aria-label="Welcome to SILVORA"
       onClick={dismiss}
     >
       {/* Background Ambient Glow & Vignette */}
@@ -101,11 +101,11 @@ export const BrandIntro: React.FC = () => {
 
       {/* Main Centered Brand Lockup */}
       <div className="brand-intro-content" onClick={(e) => e.stopPropagation()}>
-        {/* Approved SILVESTO LUXE Artwork Supplied by User */}
+        {/* Approved Brand Artwork Supplied by User */}
         <div className="brand-intro-artwork-wrapper">
           <img
             src="/images/brand_intro_bg.jpg"
-            alt="SILVESTO LUXE ~ a brand by NADITHOKA"
+            alt="SILVORA ~ a brand by NADITHOKA"
             className="brand-intro-artwork-img"
           />
         </div>

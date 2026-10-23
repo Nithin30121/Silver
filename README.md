@@ -1,8 +1,8 @@
-# SILVESTO LUXE | Fine Sterling Silver Ornaments
+# SILVORA | Fine Sterling Silver Ornaments
 
-A luxury e-commerce storefront for **SILVESTO LUXE**, a contemporary silver ornaments brand. Crafted with quiet confidence, generous whitespace, refined editorial typography, and certified 925 sterling silver photography.
+A luxury e-commerce storefront for **SILVORA**, a contemporary silver ornaments brand. Crafted with quiet confidence, generous whitespace, refined editorial typography, and certified 925 sterling silver photography.
 
-![SILVESTO LUXE Preview](/public/images/hero_silver_ring.jpg)
+![SILVORA Preview](/public/images/hero_silver_ring.jpg)
 
 ---
 
@@ -147,4 +147,4 @@ deployed to Netlify (configured in `netlify.toml`) or Cloudflare Pages; see the 
 
 ## License
 
-Crafted for **SILVESTO LUXE**. All rights reserved.
+Crafted for **SILVORA**. All rights reserved.

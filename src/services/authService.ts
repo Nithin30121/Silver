@@ -1,4 +1,4 @@
-// SILVESTO LUXE | Customer Authentication Service
+// SILVORA | Customer Authentication Service
 // All Supabase Auth calls live here. Supabase stores and verifies passwords (hashed with bcrypt);
 // this app never stores a password anywhere. Errors are translated into messages that are safe
 // to show customers: raw server errors, tokens and internals are never displayed.
@@ -46,7 +46,7 @@ export function toAccountError(error: unknown, context: string): AccountError {
   if (error instanceof AccountError) return error;
   if (import.meta.env.DEV) {
     // Development only: technical details help debugging and contain no secrets.
-    console.warn(`[SILVESTO LUXE] ${context} failed`, error);
+    console.warn(`[SILVORA] ${context} failed`, error);
   }
 
   if (isAuthRetryableFetchError(error) || error instanceof TypeError) {
@@ -198,5 +198,5 @@ export async function updatePassword(newPassword: string): Promise<void> {
   // After a reset, end sessions elsewhere in case someone else knew the old password.
   // Best effort: the password is already changed even if this call fails.
   const { error } = await client.auth.signOut({ scope: 'others' });
-  if (error && import.meta.env.DEV) console.warn('[SILVESTO LUXE] Could not end other sessions', error);
+  if (error && import.meta.env.DEV) console.warn('[SILVORA] Could not end other sessions', error);
 }

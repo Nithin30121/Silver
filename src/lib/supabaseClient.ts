@@ -1,4 +1,4 @@
-// SILVESTO LUXE | Supabase Client
+// SILVORA | Supabase Client
 // The single place where the Supabase client is created. Only the project URL and the
 // publishable (public) key belong in the browser. Secret and service-role keys bypass all
 // database security rules and must never appear in frontend code or VITE_ variables.
@@ -44,7 +44,7 @@ function findConfigurationProblem(): string | null {
 
 const configurationProblem = findConfigurationProblem();
 if (configurationProblem) {
-  console.error(`[SILVESTO LUXE] Customer accounts are disabled: ${configurationProblem} See .env.example.`);
+  console.error(`[SILVORA] Customer accounts are disabled: ${configurationProblem} See .env.example.`);
 }
 
 /** What an email link (sign-up confirmation, password reset) put in the URL. */

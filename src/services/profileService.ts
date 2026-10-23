@@ -1,4 +1,4 @@
-// SILVESTO LUXE | Customer Profile Service
+// SILVORA | Customer Profile Service
 // Reads and updates rows in the "profiles" table. The database's Row Level Security rules are what
 // actually protect this data: a customer can only ever read or change their own row, whatever
 // this code asks for.
@@ -25,7 +25,7 @@ function toProfile(row: ProfileRow): CustomerProfile {
 
 function toProfileError(error: PostgrestError, context: string): AccountError {
   if (import.meta.env.DEV) {
-    console.warn(`[SILVESTO LUXE] ${context} failed`, error);
+    console.warn(`[SILVORA] ${context} failed`, error);
   }
   switch (error.code) {
     case '42501': // insufficient privilege: blocked by database permissions
