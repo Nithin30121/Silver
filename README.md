@@ -83,6 +83,12 @@ The visual identity is rooted in warm light, natural stone textures, and authent
 - **Client Concierge**: Contact inquiry form.
 - **FAQ Accordion**: Common questions on purity, sizing, and care.
 
+### 9. Customer Accounts
+- **Create Account** with email confirmation, **Sign In**, **Sign Out**, and **Forgotten Password** with a secure reset link.
+- **Client Account** page with profile details and an editable name; sessions are restored on reload.
+- Powered by **Supabase** (managed authentication and PostgreSQL). Customer data is protected by Row Level Security in the database.
+- Bag and wishlist stay on the device and are unaffected by signing in or out.
+
 ---
 
 ## Technical Stack
@@ -92,13 +98,14 @@ The visual identity is rooted in warm light, natural stone textures, and authent
 - **Styling**: Vanilla CSS Design System with CSS variables
 - **Icons**: Lucide React
 - **Typography**: Google Fonts (Cormorant Garamond & Manrope)
+- **Accounts & Database**: Supabase Auth + PostgreSQL (`@supabase/supabase-js`), schema in `supabase/migrations`
 
 ---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v18 or higher recommended)
+- Node.js 20.19+ or 22.12+ (required by Vite 8)
 - npm, pnpm, or yarn
 
 ### Installation
@@ -118,11 +125,23 @@ npm run dev
 
 The application will be live at `http://localhost:5173/`.
 
+### Customer Accounts (Supabase)
+The storefront runs without any configuration; account pages stay disabled until Supabase is connected.
+To enable them, copy `.env.example` to `.env.local` and add your Supabase project URL and **publishable** key:
+
+```bash
+cp .env.example .env.local
+```
+
+Creating the Supabase project, applying the database migrations, email settings, deployment and
+testing are covered step by step in **[docs/customer-accounts-supabase.md](docs/customer-accounts-supabase.md)**.
+
 ### Production Build
 ```bash
 npm run build
 ```
-Generates an optimized production bundle in the `dist/` directory.
+Generates an optimized production bundle in the `dist/` directory. The site is fully static and can be
+deployed to Netlify (configured in `netlify.toml`) or Cloudflare Pages; see the guide above.
 
 ---
 

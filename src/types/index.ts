@@ -44,7 +44,26 @@ export type ViewType =
   | 'contact' 
   | 'faq'
   | 'privacy'
-  | 'terms';
+  | 'terms'
+  | AccountView;
+
+/** Pages belonging to customer accounts (sign-in, sign-up, password reset, account details). */
+export type AccountView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'account';
+
+export const ACCOUNT_VIEWS: readonly AccountView[] = ['login', 'signup', 'forgot-password', 'reset-password', 'account'];
+
+export const isAccountView = (view: ViewType): view is AccountView =>
+  (ACCOUNT_VIEWS as readonly ViewType[]).includes(view);
+
+/** A customer's profile row from Supabase (see supabase/migrations). */
+export interface CustomerProfile {
+  id: string;
+  fullName: string;
+  email: string | null;
+  role: 'customer' | 'admin';
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface NavigationState {
   view: ViewType;
