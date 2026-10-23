@@ -7,7 +7,12 @@
 -- so the test users below never persist.
 
 begin;
+-- Run as the project's main "postgres" role, as local tests do. On the cloud, the CLI connects
+-- with a temporary login role that may act as postgres but cannot use the extensions schema.
+set local role postgres;
 create extension if not exists pgtap with schema extensions;
+-- pgTAP lives in the "extensions" schema, which SET ROLE does not add to the search path.
+set local search_path = public, extensions;
 
 select plan(24);
 
@@ -151,7 +156,7 @@ select throws_ok(
 -- -----------------------------------------------------------------------------
 -- Logged-out visitor
 -- -----------------------------------------------------------------------------
-reset role;
+set local role postgres;
 set local role anon;
 select set_config('request.jwt.claims', '{"role": "anon"}', true);
 
@@ -170,7 +175,7 @@ select throws_ok(
 -- -----------------------------------------------------------------------------
 -- Changes made by Supabase Auth
 -- -----------------------------------------------------------------------------
-reset role;
+set local role postgres;
 
 update auth.users set email = 'asha.new@example.test' where id = '11111111-1111-1111-1111-111111111111';
 select is(

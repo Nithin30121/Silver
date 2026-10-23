@@ -113,11 +113,14 @@ npx supabase@2.122.0 link --project-ref <project-ref>
 ```
 
 ```bash
-npx supabase@2.122.0 db push
+npx supabase@2.122.0 db push --linked
 ```
 
-Then run the security tests against your project (they run in a transaction that is rolled
-back, so they leave no data behind):
+(`--linked` makes the target explicit; a future CLI version will push to the local database by
+default. With a recent CLI, linking may not ask for the database password at all.)
+
+Then run the security tests against your project. They run in a transaction that is rolled
+back, so they leave no data behind. The test runner itself needs **Docker Desktop** running:
 
 ```bash
 npx supabase@2.122.0 test db --linked
