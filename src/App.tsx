@@ -1,5 +1,6 @@
 import React from 'react';
 import { ShopProvider, useShop } from './context/ShopContext';
+import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { CollectionGrid } from './components/CollectionGrid';
@@ -16,6 +17,12 @@ import { QuickViewModal } from './components/QuickViewModal';
 import { Footer } from './components/Footer';
 import { BrandIntro } from './components/BrandIntro';
 import { GenderCategories } from './components/GenderCategories';
+import { LoginPage } from './components/auth/LoginPage';
+import { SignupPage } from './components/auth/SignupPage';
+import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage';
+import { ResetPasswordPage } from './components/auth/ResetPasswordPage';
+import { AccountPage } from './components/auth/AccountPage';
+import { AuthFlowCoordinator } from './components/auth/AuthFlowCoordinator';
 import { Sparkles, ShieldCheck, RefreshCw, Check } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -83,7 +90,16 @@ const MainContent: React.FC = () => {
         {currentView === 'shipping' && <ShippingPage />}
         {currentView === 'contact' && <ContactPage />}
         {currentView === 'faq' && <FAQPage />}
+
+        {/* Customer Accounts */}
+        {currentView === 'login' && <LoginPage />}
+        {currentView === 'signup' && <SignupPage />}
+        {currentView === 'forgot-password' && <ForgotPasswordPage />}
+        {currentView === 'reset-password' && <ResetPasswordPage />}
+        {currentView === 'account' && <AccountPage />}
       </main>
+
+      <AuthFlowCoordinator />
 
       {/* Global Drawers & Modals */}
       <CartDrawer />
@@ -107,7 +123,9 @@ const MainContent: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <ShopProvider>
-      <MainContent />
+      <AuthProvider>
+        <MainContent />
+      </AuthProvider>
     </ShopProvider>
   );
 };

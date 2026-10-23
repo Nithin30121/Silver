@@ -1,0 +1,18 @@
+# SILVESTO LUXE: HTTP security headers (Netlify and Cloudflare Pages both read this file).
+#
+# Content-Security-Policy limits what the browser may load or contact, the main defence
+# against injected scripts stealing a signed-in customer's session. Allowed:
+#   - our own files, Google Fonts,
+#   - *.supabase.co (authentication and database; add your custom domain here if you use one),
+#   - api.gold-api.com (live silver rate when no server-side endpoint is deployed).
+# If you add a new third-party service, add its origin to the matching directive.
+
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.gold-api.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

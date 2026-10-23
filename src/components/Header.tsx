@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
+import { useAuth } from '../context/AuthContext';
+import { toAccountError } from '../services/authService';
 import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown } from 'lucide-react';
 import { LiveSilverRate } from './LiveSilverRate';
+import { useCustomerSignOut } from './auth/authHelpers';
 
 export const Header: React.FC = () => {
   const {
@@ -14,6 +17,9 @@ export const Header: React.FC = () => {
     setIsSearchOpen,
     showToast
   } = useShop();
+  const { status, displayName } = useAuth();
+  const signOutCustomer = useCustomerSignOut();
+  const isSignedIn = status === 'authenticated';
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileMenExpanded, setMobileMenExpanded] = useState(false);
@@ -25,7 +31,16 @@ export const Header: React.FC = () => {
   };
 
   const handleAccountClick = () => {
-    showToast('Atelier Concierge: Client profile & private archive active.');
+    navigateTo(isSignedIn ? 'account' : 'login');
+  };
+
+  const handleMobileSignOut = async () => {
+    setMobileMenuOpen(false);
+    try {
+      await signOutCustomer();
+    } catch (error) {
+      showToast(toAccountError(error, 'Sign-out').message);
+    }
   };
 
   return (
@@ -269,10 +284,13 @@ export const Header: React.FC = () => {
             <button
               className="nav-action-btn"
               onClick={handleAccountClick}
-              aria-label="Client Account"
-              title="Account"
+              aria-label={isSignedIn ? `My account (signed in as ${displayName})` : 'Sign in or create an account'}
+              title={isSignedIn ? 'My Account' : 'Sign In'}
             >
-              <User size={19} style={{ strokeWidth: 1.6 }} />
+              <User
+                size={19}
+                style={{ strokeWidth: 1.6, color: isSignedIn ? 'var(--color-champagne)' : undefined }}
+              />
             </button>
 
             {/* Shopping Bag Trigger */}
@@ -478,6 +496,45 @@ export const Header: React.FC = () => {
               >
                 Shipping & Returns
               </button>
+
+              {/* Customer Account */}
+              <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                {isSignedIn ? (
+                  <>
+                    <button
+                      className="btn-text"
+                      style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
+                      onClick={() => handleMobileNav(() => navigateTo('account'))}
+                    >
+                      My Account
+                    </button>
+                    <button
+                      className="btn-text"
+                      style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
+                      onClick={handleMobileSignOut}
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className="btn-text"
+                      style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
+                      onClick={() => handleMobileNav(() => navigateTo('login'))}
+                    >
+                      Sign In
+                    </button>
+                    <button
+                      className="btn-text"
+                      style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
+                      onClick={() => handleMobileNav(() => navigateTo('signup'))}
+                    >
+                      Create Account
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

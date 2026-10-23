@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import type { Product, CartItem, ViewType, ProductCategory } from '../types';
+import { isAccountView, type Product, type CartItem, type ViewType, type ProductCategory } from '../types';
 import { PRODUCTS } from '../data/products';
 
 interface ShopContextType {
@@ -9,7 +9,9 @@ interface ShopContextType {
   selectedCategory: ProductCategory | 'all';
   selectedGender: 'men' | 'women' | 'all';
   navigateTo: (view: ViewType, params?: { productId?: string; category?: ProductCategory | 'all'; gender?: 'men' | 'women' | 'all' }) => void;
-  
+  /** The last shopping page visited before any account page (sign-in returns customers here). */
+  returnView: ViewType;
+
   // Products
   products: Product[];
   currentProduct: Product | null;
@@ -55,6 +57,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
   const [selectedGender, setSelectedGender] = useState<'men' | 'women' | 'all'>('all');
+  const [returnView, setReturnView] = useState<ViewType>('home');
 
   // Load cart from localStorage
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -117,6 +120,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     view: ViewType,
     params?: { productId?: string; category?: ProductCategory | 'all'; gender?: 'men' | 'women' | 'all' }
   ) => {
+    if (!isAccountView(currentView)) setReturnView(currentView);
     setCurrentView(view);
     if (params?.productId) setSelectedProductId(params.productId);
     if (params?.category !== undefined) setSelectedCategory(params.category);
@@ -192,6 +196,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
         selectedCategory,
         selectedGender,
         navigateTo,
+        returnView,
         products: PRODUCTS,
         currentProduct,
         cart,
