@@ -5,6 +5,55 @@ export type Database = {
   
   "public": {
           Tables: {
+            "categories": {
+                  Row: {
+                    "category_type": string,"created_at": string,"display_order": number,"id": string,"is_active": boolean,"name": string,"parent_id": string | null,"slug": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category_type"?: string,"created_at"?: string,"display_order"?: number,"id"?: string,"is_active"?: boolean,"name": string,"parent_id"?: string | null,"slug": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "category_type"?: string,"created_at"?: string,"display_order"?: number,"id"?: string,"is_active"?: boolean,"name"?: string,"parent_id"?: string | null,"slug"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+                      foreignKeyName: "categories_parent_id_fkey"
+                      columns: ["parent_id"]
+                      isOneToOne: false
+                      referencedRelation: "categories"
+                      referencedColumns: ["id"]
+                    }
+                  ]
+                }
+            "category_products": {
+                  Row: {
+                    "category_id": string,"display_order": number,"product_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "category_id": string,"display_order"?: number,"product_id": string
+                  }
+                  Update: {
+                    "category_id"?: string,"display_order"?: number,"product_id"?: string
+                  }
+                  Relationships: [
+                    {
+                      foreignKeyName: "category_products_category_id_fkey"
+                      columns: ["category_id"]
+                      isOneToOne: false
+                      referencedRelation: "categories"
+                      referencedColumns: ["id"]
+                    },
+                    {
+                      foreignKeyName: "category_products_product_id_fkey"
+                      columns: ["product_id"]
+                      isOneToOne: false
+                      referencedRelation: "products"
+                      referencedColumns: ["id"]
+                    }
+                  ]
+                }
             "profiles": {
                   Row: {
                     "created_at": string,"email": string | null,"full_name": string,"id": string,"role": string,"updated_at": string
@@ -15,6 +64,21 @@ export type Database = {
                   }
                   Update: {
                     "created_at"?: string,"email"?: string | null,"full_name"?: string,"id"?: string,"role"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+
+                  ]
+                }
+            "products": {
+                  Row: {
+                    "created_at": string,"description": string,"id": string,"image_url": string | null,"is_active": boolean,"name": string,"price": number,"slug": string,"stock_quantity": number,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"description"?: string,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"name": string,"price": number,"slug": string,"stock_quantity"?: number,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"description"?: string,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"name"?: string,"price"?: number,"slug"?: string,"stock_quantity"?: number,"updated_at"?: string
                   }
                   Relationships: [
                     
