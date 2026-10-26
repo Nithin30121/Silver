@@ -15,6 +15,15 @@ import org.springframework.web.server.ResponseStatusException;
 public class ApiExceptionHandler {
     record ErrorResponse(Instant timestamp, int status, String code, String message, Map<String, String> fields) { }
 
+    private record KnownConflict(String field, String message) { }
+
+    /** Unique rules in the catalogue schema, so a conflict names the field to change. */
+    private static final Map<String, KnownConflict> KNOWN_CONFLICTS = Map.of(
+            "products_slug_key", new KnownConflict("slug", "Another product already uses this URL slug. Choose a different one."),
+            "products_sku_unique", new KnownConflict("sku", "Another product already uses this SKU. Choose a different one."),
+            "categories_root_slug_unique", new KnownConflict("slug", "Another top-level category already uses this URL slug."),
+            "categories_sibling_slug_unique", new KnownConflict("slug", "Another category under the same parent already uses this URL slug."));
+
     @ExceptionHandler(ResponseStatusException.class)
     ResponseEntity<ErrorResponse> responseStatus(ResponseStatusException exception) {
         HttpStatus status = HttpStatus.valueOf(exception.getStatusCode().value());
@@ -41,7 +50,15 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<ErrorResponse> conflict(DataIntegrityViolationException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(Instant.now(), 409, "CONFLICT",
-                "This value is already in use or conflicts with existing catalogue data.", Map.of()));
+        // PostgreSQL names the violated rule in quotes; the offending value itself is never echoed back.
+        String detail = String.valueOf(exception.getMostSpecificCause().getMessage());
+        KnownConflict known = KNOWN_CONFLICTS.entrySet().stream()
+                .filter(entry -> detail.contains("\"" + entry.getKey() + "\""))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
+        String message = known == null ? "This value is already in use or conflicts with existing catalogue data." : known.message();
+        Map<String, String> fields = known == null ? Map.of() : Map.of(known.field(), known.message());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(Instant.now(), 409, "CONFLICT", message, fields));
     }
 }
