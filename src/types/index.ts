@@ -60,6 +60,7 @@ export type ViewType =
   | 'faq'
   | 'privacy'
   | 'terms'
+  | 'admin'
   | AccountView;
 
 /** Pages belonging to customer accounts (sign-in, sign-up, password reset, account details). */

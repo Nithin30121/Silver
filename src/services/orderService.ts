@@ -24,6 +24,15 @@ export interface OrderResponse {
   paymentStatus: string;
   paymentMethod: PaymentMethod;
   totalAmount: number | string;
+  shippingFullName?: string;
+  shippingEmail?: string;
+  shippingPhone?: string;
+  shippingAddress?: string;
+  shippingCity?: string;
+  shippingState?: string;
+  shippingPostalCode?: string;
+  createdAt?: string;
+  items?: Array<{ productId: string | null; productName: string; productSku: string | null; unitPrice: number | string; quantity: number; lineTotal: number | string }>;
 }
 
 export interface OrderPage {

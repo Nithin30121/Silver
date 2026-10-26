@@ -23,6 +23,7 @@ import { ForgotPasswordPage } from './components/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './components/auth/ResetPasswordPage';
 import { AccountPage } from './components/auth/AccountPage';
 import { AuthFlowCoordinator } from './components/auth/AuthFlowCoordinator';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 import { Sparkles, ShieldCheck, RefreshCw, Check } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -121,10 +122,11 @@ const MainContent: React.FC = () => {
 };
 
 export const App: React.FC = () => {
+  const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin';
   return (
     <ShopProvider>
       <AuthProvider>
-        <MainContent />
+        {isAdminRoute ? <AdminDashboard /> : <MainContent />}
       </AuthProvider>
     </ShopProvider>
   );
