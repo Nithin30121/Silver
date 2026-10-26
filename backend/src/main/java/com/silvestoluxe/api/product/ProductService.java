@@ -26,7 +26,16 @@ public class ProductService {
     }
 
     public Page<Response> activeProducts(UUID categoryId, String query, Pageable pageable) {
-        Specification<Product> spec = (root, criteria, builder) -> builder.isTrue(root.get("isActive"));
+        return matchingProducts(categoryId, query, pageable, true);
+    }
+
+    public Page<Response> allProducts(UUID categoryId, String query, Pageable pageable) {
+        return matchingProducts(categoryId, query, pageable, null);
+    }
+
+    private Page<Response> matchingProducts(UUID categoryId, String query, Pageable pageable, Boolean active) {
+        Specification<Product> spec = (root, criteria, builder) -> builder.conjunction();
+        if (active != null) spec = spec.and((root, criteria, builder) -> builder.equal(root.get("isActive"), active));
         if (categoryId != null) spec = spec.and((root, criteria, builder) -> {
             criteria.distinct(true);
             Join<Product, Category> category = root.join("categories");
@@ -105,6 +114,7 @@ public class ProductService {
     private Response response(Product product) {
         return new Response(product.getId(), product.getName(), product.getSlug(), product.getSku(), product.getDescription(),
                 product.getPrice(), product.getImageUrl(), product.getWeightGrams(), product.getStockQuantity(), product.isActive(),
-                product.getCategories().stream().map(Category::getId).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)));
+                product.getCategories().stream().map(Category::getId).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
+                product.getImages().stream().map(image -> new ImageResponse(image.getId(), image.getImageUrl(), image.getAltText(), image.getDisplayOrder())).toList());
     }
 }

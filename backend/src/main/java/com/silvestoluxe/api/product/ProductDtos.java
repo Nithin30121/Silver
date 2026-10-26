@@ -2,6 +2,7 @@ package com.silvestoluxe.api.product;
 
 import java.math.BigDecimal;
 import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
@@ -26,7 +27,9 @@ public final class ProductDtos {
 
     public record Status(boolean isActive) { }
 
+    public record ImageResponse(UUID id, String imageUrl, String altText, int displayOrder) { }
+
     public record Response(UUID id, String name, String slug, String sku, String description,
                            BigDecimal price, String imageUrl, BigDecimal weightGrams, int stockQuantity,
-                           boolean isActive, Set<UUID> categoryIds) { }
+                           boolean isActive, Set<UUID> categoryIds, List<ImageResponse> images) { }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface CategoryRepository extends JpaRepository<Category, UUID> {
     List<Category> findByIsActiveTrueOrderByDisplayOrderAscNameAsc();
+    List<Category> findAllByOrderByDisplayOrderAscNameAsc();
     boolean existsByParentId(UUID parentId);
 
     @Query(value = "select exists (select 1 from public.category_products where category_id = :categoryId)", nativeQuery = true)

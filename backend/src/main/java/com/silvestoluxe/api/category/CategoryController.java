@@ -18,7 +18,15 @@ public class CategoryController {
     public List<Response> categories() { return categories.activeTree(); }
 
     @GetMapping("/categories/{id}")
-    public Response category(@PathVariable UUID id) { return categories.byId(id); }
+    public Response category(@PathVariable UUID id) { return categories.activeById(id); }
+
+    @GetMapping("/admin/categories")
+    @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
+    public List<Response> allCategories() { return categories.allTree(); }
+
+    @GetMapping("/admin/categories/{id}")
+    @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
+    public Response adminCategory(@PathVariable UUID id) { return categories.byId(id); }
 
     @PostMapping("/admin/categories")
     @ResponseStatus(HttpStatus.CREATED)

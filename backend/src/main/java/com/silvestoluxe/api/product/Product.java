@@ -2,12 +2,16 @@ package com.silvestoluxe.api.product;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import com.silvestoluxe.api.category.Category;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
 @Table(name = "products", schema = "public")
@@ -23,14 +27,18 @@ public class Product {
     @Column(precision = 10, scale = 3) private BigDecimal weightGrams;
     @Column(nullable = false) private int stockQuantity;
     @Column(nullable = false) private boolean isActive;
-    @Column(nullable = false, updatable = false) private Instant createdAt;
-    @Column(nullable = false) private Instant updatedAt;
+    @CreationTimestamp @Column(nullable = false, updatable = false) private Instant createdAt;
+    @UpdateTimestamp @Column(nullable = false) private Instant updatedAt;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(schema = "public", name = "category_products",
             joinColumns = @JoinColumn(name = "product_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<Category> categories = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    @OrderBy("displayOrder ASC, createdAt ASC")
+    private List<ProductImage> images = new ArrayList<>();
 
     protected Product() { }
     public UUID getId() { return id; }
@@ -54,4 +62,5 @@ public class Product {
     public void setActive(boolean active) { isActive = active; }
     public Set<Category> getCategories() { return categories; }
     public void setCategories(Set<Category> categories) { this.categories = categories; }
+    public List<ProductImage> getImages() { return images; }
 }

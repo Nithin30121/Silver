@@ -23,6 +23,18 @@ public class CategoryService {
 
     public List<Response> activeTree() { return asTree(categories.findByIsActiveTrueOrderByDisplayOrderAscNameAsc()); }
 
+    /** The storefront must never receive categories that an administrator has unpublished. */
+    public Response activeById(UUID id) {
+        Category category = find(id);
+        if (!category.isActive()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found.");
+        }
+        return toResponse(category, List.of());
+    }
+
+    /** Administrators need inactive entries in order to manage their taxonomy. */
+    public List<Response> allTree() { return asTree(categories.findAllByOrderByDisplayOrderAscNameAsc()); }
+
     public Response byId(UUID id) { return toResponse(find(id), List.of()); }
 
     @Transactional

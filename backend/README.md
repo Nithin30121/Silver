@@ -25,9 +25,9 @@ The API starts at `http://localhost:8080`. Its health check is `GET /actuator/he
 
 ## Flyway and the existing Supabase schema
 
-The Supabase CLI already applied the profiles/catalogue baseline. On its first connection to this non-empty database, Flyway records baseline version `1` and then runs `V2__evolve_catalogue_for_backend.sql`. It does not recreate or delete current tables.
+The Supabase CLI already applied the profiles/catalogue baseline. On its first connection to this non-empty database, Flyway records baseline version `1` and then runs later backend migrations. These migrations are additive: they do not recreate or delete current tables.
 
-For an isolated database, first run the repository's Supabase migrations to establish the baseline, then start this API so Flyway applies V2. Do not manually run the V2 file through the Supabase dashboard; let Flyway own post-backend migrations.
+For an isolated database, first run the repository's Supabase migrations to establish the baseline, then start this API so Flyway applies the backend migrations. Do not manually run those files through the Supabase dashboard; let Flyway own post-backend migrations.
 
 ## Current endpoints
 
@@ -45,8 +45,33 @@ Authenticated:
 Admin (valid Supabase user token + `profiles.role = 'admin'`):
 
 - `POST`, `PUT`, `PATCH /api/admin/categories...`
+- `GET /api/admin/categories` — full tree, including inactive categories
+- `GET /api/admin/categories/{id}` — includes an inactive category when needed for editing
 - `DELETE /api/admin/categories/{id}` when it has no children or product assignments
 - `POST`, `PUT`, `PATCH /api/admin/products...`
 - `POST` / `DELETE /api/admin/products/{id}/categories/{categoryId}`
 
-Product image upload and React API integration are intentionally separate next steps; the database support for `product_images` is included, but no service-role credential or storage upload endpoint has been added yet.
+Category management is dynamic: a category can be placed below any valid parent, ordered, published or unpublished, and products can be assigned through the administrator product endpoints. The database prevents self-references and longer parent-child cycles; it permits equal slugs only in different branches, such as `men/rings` and `women/rings`.
+
+React API integration is intentionally a separate next step.
+
+## Product images
+
+Flyway migration V3 creates a public `product-images` Supabase Storage bucket. Public reads are intentional: product photography must be visible to the storefront and can be CDN cached. It does **not** grant browser upload, update, or delete access.
+
+Set these server-only values in `backend/.env` before using image endpoints:
+
+```bash
+SUPABASE_URL=https://<project-ref>.supabase.co
+SUPABASE_STORAGE_SECRET_KEY=<Supabase secret key>
+SUPABASE_PRODUCT_IMAGE_BUCKET=product-images
+```
+
+The secret key never belongs in `.env.local`, `VITE_` variables, commits, browser code, or an HTTP request from the storefront. The API accepts JPEG, PNG, and WebP files up to 5 MB; it checks their binary signature as well as Storage's bucket-level restriction.
+
+Additional admin endpoints (valid Supabase user token + admin profile):
+
+- `GET /api/admin/products` — includes inactive products and supports the same query/category/page filters
+- `GET /api/admin/products/{id}/images`
+- `POST /api/admin/products/{id}/images` — multipart fields: `file`, optional `altText`, optional `displayOrder`
+- `DELETE /api/admin/products/{productId}/images/{imageId}`

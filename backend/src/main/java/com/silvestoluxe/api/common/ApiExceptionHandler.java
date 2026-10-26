@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -28,5 +29,11 @@ public class ApiExceptionHandler {
                         (first, ignored) -> first));
         return ResponseEntity.badRequest().body(new ErrorResponse(Instant.now(), 400, "VALIDATION_ERROR",
                 "Please correct the highlighted fields.", fields));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ResponseEntity<ErrorResponse> conflict(DataIntegrityViolationException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResponse(Instant.now(), 409, "CONFLICT",
+                "This value is already in use or conflicts with existing catalogue data.", Map.of()));
     }
 }
