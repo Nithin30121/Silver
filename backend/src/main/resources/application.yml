@@ -31,5 +31,8 @@ server:
     include-stacktrace: never
 
 app:
+  admin:
+    # Server-only, one-time bootstrap. A matching profile is promoted only if no admin exists.
+    initial-email: ${APP_INITIAL_ADMIN_EMAIL:}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
