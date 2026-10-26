@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { LogOut } from 'lucide-react';
+import { LayoutDashboard, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useShop } from '../../context/ShopContext';
 import { toAccountError } from '../../services/authService';
@@ -241,6 +241,12 @@ export const AccountPage: React.FC = () => {
         >
           Continue Shopping
         </button>
+        {profile?.role === 'admin' && (
+          <a className="btn-secondary" href="/admin">
+            <LayoutDashboard size={15} aria-hidden="true" />
+            <span>Admin Dashboard</span>
+          </a>
+        )}
         <button type="button" className="btn-secondary" onClick={handleSignOut} disabled={isSigningOut}>
           <LogOut size={15} aria-hidden="true" />
           <span>{isSigningOut ? 'Signing Out…' : 'Sign Out'}</span>
