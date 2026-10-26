@@ -1,0 +1,6 @@
+# Never send local credentials or build output into an image build.
+.env
+.env.*
+!.env.example
+target/
+*.log
