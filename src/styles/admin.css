@@ -58,6 +58,8 @@
 .admin-access, .admin-loading { max-width: 42rem; padding: clamp(2rem,8vw,6rem); margin: 10vh auto; text-align: center; }
 .admin-access h1 { font: clamp(2rem,6vw,4rem) var(--font-serif); margin: .7rem 0; }
 .admin-access p { color: var(--color-muted-grey); margin: 0 auto 2rem; line-height: 1.7; }
+.admin-access-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .7rem; }
+.admin-sign-in { max-width: 26rem; margin: 0 auto; text-align: left; }
 .admin-modal-backdrop { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 1rem; background: rgba(0,0,0,.73); backdrop-filter: blur(4px); }
 .admin-modal { width: min(50rem, 100%); max-height: calc(100vh - 2rem); overflow: auto; background: #14100e; border: 1px solid rgba(184,121,81,.47); padding: 1.3rem; box-shadow: 0 2rem 5rem rgba(0,0,0,.55); }
 .admin-modal > header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid rgba(184,121,81,.2); }

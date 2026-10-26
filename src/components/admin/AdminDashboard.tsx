@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Boxes, FolderTree, LayoutDashboard, LogOut, Package, Plus, Search, ShoppingBag, Users, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { toAccountError } from '../../services/authService';
 import type { CatalogueCategory } from '../../types';
 import type { ApiProduct } from '../../services/catalogService';
 import type { OrderResponse } from '../../services/orderService';
@@ -27,10 +28,10 @@ const flatten = (categories: CatalogueCategory[], depth = 0): Array<CatalogueCat
   categories.flatMap((category) => [{ ...category, depth }, ...flatten(category.children, depth + 1)]);
 
 export const AdminDashboard: React.FC = () => {
-  const { status, signOut } = useAuth();
+  const { status, user, signOut } = useAuth();
   const [identity, setIdentity] = useState<{ fullName: string; email: string } | null>(null);
-  const [accessState, setAccessState] = useState<'checking' | 'allowed' | 'denied'>('checking');
-  const [accessError, setAccessError] = useState('');
+  // The result of the server's role check, remembered per account so switching accounts re-checks.
+  const [access, setAccess] = useState<{ userId: string; allowed: boolean; error: string } | null>(null);
   const [section, setSection] = useState<Section>('overview');
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [productTotal, setProductTotal] = useState<number | null>(null);
@@ -43,24 +44,22 @@ export const AdminDashboard: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<ApiProduct | null | undefined>(undefined);
   const [editingCategory, setEditingCategory] = useState<CatalogueCategory | null | undefined>(undefined);
 
+  const userId = status === 'authenticated' ? user?.id ?? null : null;
   useEffect(() => {
-    if (status === 'loading') return;
-    if (status !== 'authenticated') {
-      setAccessState('denied');
-      setAccessError('Sign in with an administrator account to access the atelier dashboard.');
-      return;
-    }
+    if (!userId) return;
     let cancelled = false;
     getAdminIdentity()
-      .then((admin) => { if (!cancelled) { setIdentity(admin); setAccessState('allowed'); } })
+      .then((admin) => { if (!cancelled) { setIdentity(admin); setAccess({ userId, allowed: true, error: '' }); } })
       .catch((error: unknown) => {
         if (!cancelled) {
-          setAccessState('denied');
-          setAccessError(error instanceof Error ? error.message : 'Unable to verify administrative access.');
+          setAccess({ userId, allowed: false, error: error instanceof Error ? error.message : 'Unable to verify administrative access.' });
         }
       });
     return () => { cancelled = true; };
-  }, [status]);
+  }, [userId]);
+  const accessState = status === 'anonymous' ? 'signed-out'
+    : !userId || access?.userId !== userId ? 'checking'
+    : access.allowed ? 'allowed' : 'denied';
 
   const reload = async (query = search) => {
     setIsLoading(true);
@@ -85,8 +84,9 @@ export const AdminDashboard: React.FC = () => {
 
   const lowStock = useMemo(() => products.filter((product) => product.stockQuantity <= 3), [products]);
 
+  if (accessState === 'signed-out') return <DashboardShell><AdminSignIn /></DashboardShell>;
   if (accessState === 'checking') return <DashboardShell><div className="admin-loading">Verifying secure dashboard access…</div></DashboardShell>;
-  if (accessState === 'denied') return <DashboardShell><AccessDenied message={accessError} /></DashboardShell>;
+  if (accessState === 'denied') return <DashboardShell><AccessDenied message={access?.error ?? ''} onSwitchAccount={() => void signOut().catch(() => undefined)} /></DashboardShell>;
 
   const navigate = (next: Section) => { setSection(next); setEditingProduct(undefined); setEditingCategory(undefined); };
   return (
@@ -130,7 +130,38 @@ export const AdminDashboard: React.FC = () => {
 
 const DashboardShell: React.FC<{ children: React.ReactNode }> = ({ children }) => <div className="admin-page">{children}</div>;
 const NavButton: React.FC<{ active: boolean; icon: React.ReactNode; onClick: () => void; children: React.ReactNode }> = ({ active, icon, onClick, children }) => <button className={`admin-nav-button ${active ? 'is-active' : ''}`} onClick={onClick}>{icon}{children}</button>;
-const AccessDenied: React.FC<{ message: string }> = ({ message }) => <div className="admin-access"><span className="admin-eyebrow">RESTRICTED</span><h1>Atelier access required.</h1><p>{message}</p><a href="/" className="admin-primary">Return to storefront</a></div>;
+const AccessDenied: React.FC<{ message: string; onSwitchAccount: () => void }> = ({ message, onSwitchAccount }) => <div className="admin-access"><span className="admin-eyebrow">RESTRICTED</span><h1>Atelier access required.</h1><p>{message}</p><div className="admin-access-actions"><button className="admin-primary" onClick={onSwitchAccount}>Sign in with another account</button><a href="/" className="admin-secondary">Return to storefront</a></div></div>;
+
+/** Signing in here keeps the admin on /admin; the server then decides whether the account is an administrator. */
+const AdminSignIn: React.FC = () => {
+  const { isConfigured, signIn } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await signIn(email.trim(), password);
+    } catch (cause) {
+      setError(toAccountError(cause, 'Sign-in').message);
+      setPassword('');
+      setBusy(false);
+    }
+  };
+  return <div className="admin-access"><span className="admin-eyebrow">RESTRICTED</span><h1>Atelier sign in.</h1><p>Sign in with your administrator account. Customer accounts cannot open the dashboard.</p>
+    <form className="admin-form admin-sign-in" onSubmit={submit}>
+      <FormField label="Email address" wide><input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} disabled={!isConfigured} /></FormField>
+      <FormField label="Password" wide><input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} disabled={!isConfigured} /></FormField>
+      {!isConfigured && <p className="admin-form-error" role="alert">Sign-in is not configured for this site.</p>}
+      {error && <p className="admin-form-error" role="alert">{error}</p>}
+      <div className="admin-form-actions"><a href="/" className="admin-secondary">Return to storefront</a><button className="admin-primary" disabled={busy || !isConfigured}>{busy ? 'Signing in…' : 'Sign in'}</button></div>
+    </form>
+  </div>;
+};
 
 const Overview: React.FC<{ productTotal: number | null; orderTotal: number | null; lowStock: ApiProduct[]; onProducts: () => void }> = ({ productTotal, orderTotal, lowStock, onProducts }) => <>
   <div className="admin-stats">

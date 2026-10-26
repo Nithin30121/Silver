@@ -2,13 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { toAccountError } from '../services/authService';
-import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { LiveSilverRate } from './LiveSilverRate';
 import { useCustomerSignOut } from './auth/authHelpers';
 
 export const Header: React.FC = () => {
   const { currentView, navigateTo, cartCount, wishlistCount, setIsCartOpen, setIsWishlistOpen, setIsSearchOpen, showToast, categories } = useShop();
-  const { status, displayName } = useAuth();
+  const { status, displayName, profile } = useAuth();
   const signOutCustomer = useCustomerSignOut();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
@@ -17,6 +17,8 @@ export const Header: React.FC = () => {
     return audiences.length > 0 ? audiences : categories;
   }, [categories]);
   const isSignedIn = status === 'authenticated';
+  // Only a convenience: the dashboard and its API check the admin role again on the server.
+  const isAdmin = isSignedIn && profile?.role === 'admin';
   const navigateToCategory = (rootId: string, categoryId: string | 'all' = 'all') =>
     navigateTo('collection', { rootCategoryId: rootId, category: categoryId });
   const handleMobileNav = (action: () => void) => { action(); setMobileMenuOpen(false); };
@@ -73,6 +75,7 @@ export const Header: React.FC = () => {
             <Heart size={19} style={{ strokeWidth: 1.6 }} />
             {wishlistCount > 0 && <span className="badge-count" aria-label={`${wishlistCount} items in wishlist`}>{wishlistCount}</span>}
           </button>
+          {isAdmin && <a className="nav-action-btn" href="/admin" aria-label="Open the admin dashboard" title="Admin Dashboard"><LayoutDashboard size={19} style={{ strokeWidth: 1.6 }} /></a>}
           <button className="nav-action-btn" onClick={() => navigateTo(isSignedIn ? 'account' : 'login')}
             aria-label={isSignedIn ? `My account (signed in as ${displayName})` : 'Sign in or create an account'} title={isSignedIn ? 'My Account' : 'Sign In'}>
             <User size={19} style={{ strokeWidth: 1.6, color: isSignedIn ? 'var(--color-champagne)' : undefined }} />
@@ -110,6 +113,7 @@ export const Header: React.FC = () => {
             <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {isSignedIn ? <>
                 <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('account'))}>My Account</button>
+                {isAdmin && <a className="btn-text" href="/admin" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}>Admin Dashboard</a>}
                 <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={handleMobileSignOut}>Sign Out</button>
               </> : <>
                 <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('login'))}>Sign In</button>
