@@ -41,6 +41,8 @@ Public:
 Authenticated:
 
 - `GET /api/me` — returns the profile for the bearer token's own Supabase account
+- `POST /api/orders` — creates a pending-payment order from product IDs and quantities; the server locks stock, snapshots each name/SKU/price, and records the shipping destination
+- `GET /api/orders` and `GET /api/orders/{id}` — private order history, always scoped to the token's own profile
 
 Admin (valid Supabase user token + `profiles.role = 'admin'`):
 
@@ -75,3 +77,9 @@ Additional admin endpoints (valid Supabase user token + admin profile):
 - `GET /api/admin/products/{id}/images`
 - `POST /api/admin/products/{id}/images` — multipart fields: `file`, optional `altText`, optional `displayOrder`
 - `DELETE /api/admin/products/{productId}/images/{imageId}`
+
+## Orders and payment boundaries
+
+Flyway V4 adds `orders`, `order_items`, and `order_status_history` without changing existing catalogue data. A checkout request never includes a price or any card data. The server recalculates totals from the locked product rows, atomically reserves stock, and writes immutable item snapshots. Cancelling an order through the admin status endpoint returns that reserved stock once.
+
+The order tables have RLS enabled and no browser-role policies: all access goes through authenticated API endpoints. The customer sees only their own orders; an administrator may use `GET /api/admin/orders` and `PATCH /api/admin/orders/{id}/status`. There is deliberately no payment gateway integration in this phase, and raw card numbers/CVV must never be sent to this API or stored in the database.

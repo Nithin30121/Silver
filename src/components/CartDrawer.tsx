@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
+import { useAuth } from '../context/AuthContext';
+import { createOrder, type PaymentMethod } from '../services/orderService';
 import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export const CartDrawer: React.FC = () => {
@@ -12,8 +14,10 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     removeFromCart,
     clearCart,
-    navigateTo
+    navigateTo,
+    showToast
   } = useShop();
+  const { status, user } = useAuth();
 
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'shipping' | 'confirmation'>('cart');
   const [formData, setFormData] = useState({
@@ -27,6 +31,8 @@ export const CartDrawer: React.FC = () => {
     paymentMethod: 'upi'
   });
   const [orderId, setOrderId] = useState<string>('');
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formattedSubtotal = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -34,12 +40,36 @@ export const CartDrawer: React.FC = () => {
     maximumFractionDigits: 0
   }).format(cartSubtotal);
 
-  const handleCheckoutSubmit = (e: React.FormEvent) => {
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const generatedId = 'SL-' + Math.floor(100000 + Math.random() * 900000);
-    setOrderId(generatedId);
-    setCheckoutStep('confirmation');
-    clearCart();
+    if (status !== 'authenticated' || !user) {
+      closeDrawer();
+      navigateTo('login');
+      showToast('Please sign in before placing an order.');
+      return;
+    }
+    setIsSubmitting(true);
+    setCheckoutError(null);
+    try {
+      const order = await createOrder({
+        items: cart.map((item) => ({ productId: item.product.id, quantity: item.quantity })),
+        paymentMethod: formData.paymentMethod.toUpperCase() as PaymentMethod,
+        shippingFullName: formData.fullName,
+        shippingEmail: formData.email,
+        shippingPhone: formData.phone,
+        shippingAddress: formData.address,
+        shippingCity: formData.city,
+        shippingState: formData.state,
+        shippingPostalCode: formData.pincode,
+      });
+      setOrderId(order.orderNumber);
+      setCheckoutStep('confirmation');
+      clearCart();
+    } catch (error) {
+      setCheckoutError(error instanceof Error ? error.message : 'We could not create your order. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const closeDrawer = () => {
@@ -59,7 +89,7 @@ export const CartDrawer: React.FC = () => {
           <h2 className="drawer-title">
             {checkoutStep === 'cart' && `Shopping Bag (${cartCount})`}
             {checkoutStep === 'shipping' && 'Secure Checkout'}
-            {checkoutStep === 'confirmation' && 'Order Confirmed'}
+            {checkoutStep === 'confirmation' && 'Order Request Recorded'}
           </h2>
           <button onClick={closeDrawer} aria-label="Close drawer" style={{ color: 'var(--color-soft-ivory)' }}>
             <X size={20} />
@@ -238,6 +268,17 @@ export const CartDrawer: React.FC = () => {
                   />
                 </div>
                 <div>
+                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>State *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Maharashtra"
+                    value={formData.state}
+                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
+                  />
+                </div>
+                <div>
                   <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Phone *</label>
                   <input
                     type="tel"
@@ -249,6 +290,12 @@ export const CartDrawer: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {checkoutError && (
+                <p role="alert" style={{ margin: 0, color: '#f4a2a2', fontSize: '0.75rem', lineHeight: 1.5 }}>
+                  {checkoutError}
+                </p>
+              )}
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Street Address *</label>
@@ -322,6 +369,9 @@ export const CartDrawer: React.FC = () => {
                     </label>
                   ))}
                 </div>
+                <p style={{ margin: '0.75rem 0 0', color: 'var(--color-muted-grey)', fontSize: '0.6875rem', lineHeight: 1.5 }}>
+                  Payment details are confirmed separately; we never collect card numbers or CVV here.
+                </p>
               </div>
             </form>
           )}
@@ -330,7 +380,7 @@ export const CartDrawer: React.FC = () => {
           {checkoutStep === 'confirmation' && (
             <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
               <CheckCircle2 size={48} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 1.25rem' }} />
-              <span className="eyebrow">ORDER INITIATED</span>
+              <span className="eyebrow">ORDER REQUEST RECORDED</span>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>
                 Thank You for Choosing SILVORA
               </h3>
@@ -342,7 +392,7 @@ export const CartDrawer: React.FC = () => {
                 <p><strong>Destination:</strong> {formData.city || 'India'}, {formData.pincode}</p>
                 <p><strong>Method:</strong> {formData.paymentMethod.toUpperCase()}</p>
                 <p style={{ marginTop: '0.75rem', color: 'var(--color-champagne)' }}>
-                  Your certified 925 sterling silver piece will be packaged in our signature bespoke presentation box and dispatched via insured express courier.
+                  Your order is pending payment confirmation. We will confirm the payment and dispatch steps separately; no payment details were collected here.
                 </p>
               </div>
               <button
@@ -377,7 +427,16 @@ export const CartDrawer: React.FC = () => {
               <button
                 className="btn-primary"
                 style={{ width: '100%' }}
-                onClick={() => setCheckoutStep('shipping')}
+                onClick={() => {
+                  if (status !== 'authenticated' || !user) {
+                    closeDrawer();
+                    navigateTo('login');
+                    showToast('Please sign in before placing an order.');
+                    return;
+                  }
+                  setCheckoutError(null);
+                  setCheckoutStep('shipping');
+                }}
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight size={15} />
@@ -388,8 +447,9 @@ export const CartDrawer: React.FC = () => {
                 form="checkout-form"
                 className="btn-primary"
                 style={{ width: '100%' }}
+                disabled={isSubmitting}
               >
-                <span>Confirm & Place Order</span>
+                <span>{isSubmitting ? 'Recording Order…' : 'Record Order Request'}</span>
                 <ShieldCheck size={16} />
               </button>
             )}

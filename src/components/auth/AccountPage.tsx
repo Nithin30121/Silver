@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useShop } from '../../context/ShopContext';
@@ -6,6 +6,7 @@ import { toAccountError } from '../../services/authService';
 import { MAX_NAME_LENGTH, validateFullName } from '../../lib/authValidation';
 import { AuthAlert, AuthLayout, SubmitButton, TextField } from './AuthUI';
 import { firstNameOf, useCustomerSignOut, useSubmission } from './authHelpers';
+import { loadOrderHistory, type OrderResponse } from '../../services/orderService';
 
 const formatDate = (iso: string) =>
   new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
@@ -77,6 +78,21 @@ export const AccountPage: React.FC = () => {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
+  const [orders, setOrders] = useState<OrderResponse[]>([]);
+  const [ordersError, setOrdersError] = useState<string | null>(null);
+  const [isOrdersLoading, setIsOrdersLoading] = useState(false);
+
+  useEffect(() => {
+    if (status !== 'authenticated' || !user) return;
+    let cancelled = false;
+    setIsOrdersLoading(true);
+    setOrdersError(null);
+    loadOrderHistory()
+      .then((history) => { if (!cancelled) setOrders(history); })
+      .catch(() => { if (!cancelled) setOrdersError('Order history is temporarily unavailable.'); })
+      .finally(() => { if (!cancelled) setIsOrdersLoading(false); });
+    return () => { cancelled = true; };
+  }, [status, user?.id]);
 
   if (status === 'loading') {
     return (
@@ -193,6 +209,27 @@ export const AccountPage: React.FC = () => {
         Your shopping bag ({pieces(cartCount)}) and saved pieces ({pieces(wishlistCount)}) are kept on this device.
         Signing out does not remove them.
       </p>
+
+      <h2 className="account-section-title">Order history</h2>
+      {isOrdersLoading ? (
+        <p className="account-note">Loading your orders…</p>
+      ) : ordersError ? (
+        <AuthAlert kind="error">{ordersError}</AuthAlert>
+      ) : orders.length === 0 ? (
+        <p className="account-note">Orders you place while signed in will appear here.</p>
+      ) : (
+        <div className="account-details">
+          {orders.map((order) => (
+            <div className="account-detail" key={order.id}>
+              <dt>{order.orderNumber}</dt>
+              <dd>
+                <span>{order.status.replaceAll('_', ' ')}</span>
+                <span className="account-badge account-badge--muted">Payment: {order.paymentStatus}</span>
+              </dd>
+            </div>
+          ))}
+        </div>
+      )}
 
       {signOutError && <AuthAlert kind="error">{signOutError}</AuthAlert>}
 
