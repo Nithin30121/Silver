@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Server-only connection credentials.
+.env
