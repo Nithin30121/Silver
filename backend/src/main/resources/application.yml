@@ -23,6 +23,16 @@ spring:
       resourceserver:
         jwt:
           jwk-set-uri: ${SUPABASE_JWKS_URL}
+          # Spring trusts only RS256 unless told otherwise, but Supabase signs access tokens with
+          # ES256 (an ECC P-256 key) by default, so every login was rejected with 401. Both
+          # asymmetric algorithms are accepted so rotating the Supabase signing key between ECC and
+          # RSA keeps working; tokens must still verify against the keys published at the JWKS URL.
+          jws-algorithms: ${SUPABASE_JWT_ALGORITHMS:ES256,RS256}
+  servlet:
+    multipart:
+      # Matches the 5 MB product-image rule and the Storage bucket limit (Spring's default is 1 MB).
+      max-file-size: 5MB
+      max-request-size: 6MB
 
 server:
   port: ${SERVER_PORT:8080}
