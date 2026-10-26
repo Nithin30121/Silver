@@ -1,5 +1,19 @@
-export type ProductCategory = 'rings' | 'bracelets' | 'necklaces' | 'earrings';
+/** Category identifiers are database UUIDs, so new collections require no frontend release. */
+export type ProductCategory = string;
 export type GenderCategory = 'men' | 'women' | 'all';
+
+export interface CatalogueCategory {
+  id: string;
+  name: string;
+  slug: string;
+  parentId: string | null;
+  categoryType: 'audience' | 'collection' | 'items' | 'landing_page';
+  description: string;
+  imageUrl: string | null;
+  displayOrder: number;
+  isActive: boolean;
+  children: CatalogueCategory[];
+}
 
 export interface Product {
   id: string;
@@ -7,7 +21,8 @@ export interface Product {
   subtitle: string;
   slug: string;
   category: ProductCategory;
-  gender: 'men' | 'women' | 'unisex';
+  categoryIds: string[];
+  gender: string;
   price: number;
   originalPrice?: number;
   inStock: boolean;

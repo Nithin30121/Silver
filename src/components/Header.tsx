@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { toAccountError } from '../services/authService';
@@ -7,538 +7,118 @@ import { LiveSilverRate } from './LiveSilverRate';
 import { useCustomerSignOut } from './auth/authHelpers';
 
 export const Header: React.FC = () => {
-  const {
-    currentView,
-    navigateTo,
-    cartCount,
-    wishlistCount,
-    setIsCartOpen,
-    setIsWishlistOpen,
-    setIsSearchOpen,
-    showToast
-  } = useShop();
+  const { currentView, navigateTo, cartCount, wishlistCount, setIsCartOpen, setIsWishlistOpen, setIsSearchOpen, showToast, categories } = useShop();
   const { status, displayName } = useAuth();
   const signOutCustomer = useCustomerSignOut();
-  const isSignedIn = status === 'authenticated';
-
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileMenExpanded, setMobileMenExpanded] = useState(false);
-  const [mobileWomenExpanded, setMobileWomenExpanded] = useState(false);
-
-  const handleMobileNav = (action: () => void) => {
-    action();
-    setMobileMenuOpen(false);
-  };
-
-  const handleAccountClick = () => {
-    navigateTo(isSignedIn ? 'account' : 'login');
-  };
-
+  const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  const rootCategories = useMemo(() => {
+    const audiences = categories.filter((category) => category.categoryType === 'audience');
+    return audiences.length > 0 ? audiences : categories;
+  }, [categories]);
+  const isSignedIn = status === 'authenticated';
+  const navigateToCategory = (rootId: string, categoryId: string | 'all' = 'all') =>
+    navigateTo('collection', { rootCategoryId: rootId, category: categoryId });
+  const handleMobileNav = (action: () => void) => { action(); setMobileMenuOpen(false); };
   const handleMobileSignOut = async () => {
     setMobileMenuOpen(false);
-    try {
-      await signOutCustomer();
-    } catch (error) {
-      showToast(toAccountError(error, 'Sign-out').message);
-    }
+    try { await signOutCustomer(); } catch (error) { showToast(toAccountError(error, 'Sign-out').message); }
   };
 
-  return (
-    <>
-      {/* Top Luxury Utility Strip & Live Silver Rate */}
-      <div className="top-utility-bar" role="complementary" aria-label="Atelier market updates and services">
-        <div className="container top-utility-container">
-          {/* Top-Left: Live Silver Rate Indicator */}
-          <div className="top-utility-left">
-            <LiveSilverRate />
-          </div>
+  return <>
+    <div className="top-utility-bar" role="complementary" aria-label="Atelier market updates and services">
+      <div className="container top-utility-container">
+        <div className="top-utility-left"><LiveSilverRate /></div>
+        <div className="top-utility-center"><span className="announcement-highlight">Signature Service:</span> Complimentary Insured Express Delivery &amp; Bespoke Velvet Box</div>
+        <div className="top-utility-right"><span className="top-utility-assurance">Certified 925 Hallmark</span></div>
+      </div>
+    </div>
 
-          {/* Top-Center: Atelier Service Announcement */}
-          <div className="top-utility-center">
-            <span className="announcement-highlight">Signature Service:</span> Complimentary Insured Express Delivery &amp; Bespoke Velvet Box
-          </div>
+    <header className="header-wrapper">
+      <div className="container header-container">
+        <button className="mobile-menu-trigger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle navigation menu">
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
+        <a href="#home" className="brand-logo" onClick={(event) => { event.preventDefault(); navigateTo('home'); }}>SILVORA</a>
 
-          {/* Top-Right: Certified Hallmark Assurance */}
-          <div className="top-utility-right">
-            <span className="top-utility-assurance">Certified 925 Hallmark</span>
-          </div>
+        <nav className="nav-container" aria-label="Main Navigation">
+          <ul className="nav-links">
+            <li className="nav-item">
+              <a href="#new" className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
+                onClick={(event) => { event.preventDefault(); navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }); }}>NEW ARRIVALS</a>
+            </li>
+            {rootCategories.map((root) => <li className="nav-item" key={root.id}>
+              <a href={`#${root.slug}`} className="nav-link" aria-haspopup="true"
+                onClick={(event) => { event.preventDefault(); navigateToCategory(root.id); }}>
+                {root.name.toUpperCase()} <ChevronDown size={13} style={{ strokeWidth: 1.8, marginTop: '1px' }} />
+              </a>
+              <div className="dropdown-menu">
+                <a href={`#${root.slug}-all`} className="dropdown-link" onClick={(event) => { event.preventDefault(); navigateToCategory(root.id); }}>All {root.name}</a>
+                {root.children.length > 0 && <div className="dropdown-divider" />}
+                {root.children.map((child) => <a key={child.id} href={`#${root.slug}-${child.slug}`} className="dropdown-link"
+                  onClick={(event) => { event.preventDefault(); navigateToCategory(root.id, child.id); }}>{child.name}</a>)}
+              </div>
+            </li>)}
+            <li className="nav-item">
+              <a href="#collections" className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
+                onClick={(event) => { event.preventDefault(); navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }); }}>COLLECTIONS</a>
+            </li>
+            <li className="nav-item"><a href="#story" className={`nav-link ${currentView === 'story' ? 'active' : ''}`} onClick={(event) => { event.preventDefault(); navigateTo('story'); }}>OUR STORY</a></li>
+          </ul>
+        </nav>
+
+        <div className="nav-actions">
+          <button className="nav-action-btn" onClick={() => setIsSearchOpen(true)} aria-label="Search catalog" title="Search"><Search size={19} style={{ strokeWidth: 1.6 }} /></button>
+          <button className="nav-action-btn" onClick={() => setIsWishlistOpen(true)} aria-label="View wishlist" title="Saved Pieces">
+            <Heart size={19} style={{ strokeWidth: 1.6 }} />
+            {wishlistCount > 0 && <span className="badge-count" aria-label={`${wishlistCount} items in wishlist`}>{wishlistCount}</span>}
+          </button>
+          <button className="nav-action-btn" onClick={() => navigateTo(isSignedIn ? 'account' : 'login')}
+            aria-label={isSignedIn ? `My account (signed in as ${displayName})` : 'Sign in or create an account'} title={isSignedIn ? 'My Account' : 'Sign In'}>
+            <User size={19} style={{ strokeWidth: 1.6, color: isSignedIn ? 'var(--color-champagne)' : undefined }} />
+          </button>
+          <button className="nav-action-btn" onClick={() => setIsCartOpen(true)} aria-label="View shopping bag" title="Shopping Bag">
+            <ShoppingBag size={19} style={{ strokeWidth: 1.6 }} />
+            {cartCount > 0 && <span className="badge-count" aria-label={`${cartCount} items in bag`}>{cartCount}</span>}
+          </button>
         </div>
       </div>
+    </header>
 
-
-      <header className="header-wrapper">
-        <div className="container header-container">
-          {/* Mobile Menu Button */}
-          <button
-            className="mobile-menu-trigger"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle navigation menu"
-          >
-            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
-
-          {/* Left: Brand Monogram / Logo */}
-          <a
-            href="#home"
-            className="brand-logo"
-            onClick={(e) => {
-              e.preventDefault();
-              navigateTo('home');
-            }}
-          >
-            SILVORA
-          </a>
-
-          {/* Centre: Main Navigation */}
-          <nav className="nav-container" aria-label="Main Navigation">
-            <ul className="nav-links">
-              <li className="nav-item">
-                <a
-                  href="#new"
-                  className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('collection', { category: 'all', gender: 'all' });
-                  }}
-                >
-                  NEW ARRIVALS
-                </a>
-              </li>
-
-              {/* Men with Dropdown */}
-              <li className="nav-item">
-                <a
-                  href="#men"
-                  className={`nav-link ${currentView === 'men' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('men', { gender: 'men', category: 'all' });
-                  }}
-                  aria-haspopup="true"
-                >
-                  MEN
-                  <ChevronDown size={13} style={{ strokeWidth: 1.8, marginTop: '1px' }} />
-                </a>
-
-                <div className="dropdown-menu">
-                  <a
-                    href="#men-all"
-                    className="dropdown-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('men', { gender: 'men', category: 'all' });
-                    }}
-                  >
-                    All Men's Jewellery
-                  </a>
-                  <div className="dropdown-divider" />
-                  <a
-                    href="#men-rings"
-                    className="dropdown-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('men', { gender: 'men', category: 'rings' });
-                    }}
-                  >
-                    Rings
-                  </a>
-                  <a
-                    href="#men-bracelets"
-                    className="dropdown-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('men', { gender: 'men', category: 'bracelets' });
-                    }}
-                  >
-                    Bracelets
-                  </a>
-                </div>
-              </li>
-
-              {/* Women with Dropdown */}
-              <li className="nav-item">
-                <a
-                  href="#women"
-                  className={`nav-link ${currentView === 'women' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('women', { gender: 'women', category: 'all' });
-                  }}
-                  aria-haspopup="true"
-                >
-                  WOMEN
-                  <ChevronDown size={13} style={{ strokeWidth: 1.8, marginTop: '1px' }} />
-                </a>
-
-                <div className="dropdown-menu">
-                  <a
-                    href="#women-all"
-                    className="dropdown-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('women', { gender: 'women', category: 'all' });
-                    }}
-                  >
-                    All Women's Jewellery
-                  </a>
-                  <div className="dropdown-divider" />
-                  <a
-                    href="#women-rings"
-                    className="dropdown-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('women', { gender: 'women', category: 'rings' });
-                    }}
-                  >
-                    Rings
-                  </a>
-                  <a
-                    href="#women-bracelets"
-                    className="dropdown-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('women', { gender: 'women', category: 'bracelets' });
-                    }}
-                  >
-                    Bracelets
-                  </a>
-                  <a
-                    href="#women-necklaces"
-                    className="dropdown-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('women', { gender: 'women', category: 'necklaces' });
-                    }}
-                  >
-                    Necklaces
-                  </a>
-                  <a
-                    href="#women-earrings"
-                    className="dropdown-link"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigateTo('women', { gender: 'women', category: 'earrings' });
-                    }}
-                  >
-                    Earrings
-                  </a>
-                </div>
-              </li>
-
-              <li className="nav-item">
-                <a
-                  href="#collections"
-                  className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('collection', { category: 'all', gender: 'all' });
-                  }}
-                >
-                  COLLECTIONS
-                </a>
-              </li>
-
-              <li className="nav-item">
-                <a
-                  href="#story"
-                  className={`nav-link ${currentView === 'story' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigateTo('story');
-                  }}
-                >
-                  OUR STORY
-                </a>
-              </li>
-            </ul>
-          </nav>
-
-          {/* Right: Actions */}
-          <div className="nav-actions">
-            {/* Search Trigger */}
-            <button
-              className="nav-action-btn"
-              onClick={() => setIsSearchOpen(true)}
-              aria-label="Search catalog"
-              title="Search"
-            >
-              <Search size={19} style={{ strokeWidth: 1.6 }} />
-            </button>
-
-            {/* Wishlist Trigger */}
-            <button
-              className="nav-action-btn"
-              onClick={() => setIsWishlistOpen(true)}
-              aria-label="View wishlist"
-              title="Saved Pieces"
-            >
-              <Heart size={19} style={{ strokeWidth: 1.6 }} />
-              {wishlistCount > 0 && (
-                <span className="badge-count" aria-label={`${wishlistCount} items in wishlist`}>
-                  {wishlistCount}
-                </span>
-              )}
-            </button>
-
-            {/* Account Icon */}
-            <button
-              className="nav-action-btn"
-              onClick={handleAccountClick}
-              aria-label={isSignedIn ? `My account (signed in as ${displayName})` : 'Sign in or create an account'}
-              title={isSignedIn ? 'My Account' : 'Sign In'}
-            >
-              <User
-                size={19}
-                style={{ strokeWidth: 1.6, color: isSignedIn ? 'var(--color-champagne)' : undefined }}
-              />
-            </button>
-
-            {/* Shopping Bag Trigger */}
-            <button
-              className="nav-action-btn"
-              onClick={() => setIsCartOpen(true)}
-              aria-label="View shopping bag"
-              title="Shopping Bag"
-            >
-              <ShoppingBag size={19} style={{ strokeWidth: 1.6 }} />
-              {cartCount > 0 && (
-                <span className="badge-count" aria-label={`${cartCount} items in bag`}>
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Menu Drawer */}
-      <div className={`drawer-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)}>
-        <div
-          className={`drawer-panel ${mobileMenuOpen ? 'open' : ''}`}
-          onClick={(e) => e.stopPropagation()}
-          style={{ left: 0, right: 'auto', transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}
-        >
-          <div className="drawer-header">
-            <span className="brand-logo" style={{ fontSize: '1.25rem' }}>
-              SILVORA
-            </span>
-            <button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
-              <X size={20} />
-            </button>
-          </div>
-
-          <div className="drawer-body" style={{ padding: '1.5rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <button
-                className="btn-text"
-                style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                onClick={() => handleMobileNav(() => navigateTo('home'))}
-              >
-                Home
+    <div className={`drawer-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+      <div className={`drawer-panel ${mobileMenuOpen ? 'open' : ''}`} onClick={(event) => event.stopPropagation()}
+        style={{ left: 0, right: 'auto', transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}>
+        <div className="drawer-header"><span className="brand-logo" style={{ fontSize: '1.25rem' }}>SILVORA</span><button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu"><X size={20} /></button></div>
+        <div className="drawer-body" style={{ padding: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('home'))}>Home</button>
+            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }))}>New Arrivals</button>
+            {rootCategories.map((root) => <div key={root.id}>
+              <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingBottom: '0.5rem', borderBottom: '1px solid var(--color-border)', fontSize: '0.9375rem', textTransform: 'uppercase', fontWeight: 500, letterSpacing: '0.1em' }}
+                onClick={() => setExpandedCategoryId(expandedCategoryId === root.id ? null : root.id)}>
+                <span>{root.name}</span><ChevronDown size={16} style={{ transform: expandedCategoryId === root.id ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
               </button>
-
-              <button
-                className="btn-text"
-                style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', gender: 'all' }))}
-              >
-                New Arrivals
-              </button>
-
-              {/* Mobile Men Accordion */}
-              <div>
-                <button
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    paddingBottom: '0.5rem',
-                    borderBottom: '1px solid var(--color-border)',
-                    fontSize: '0.9375rem',
-                    textTransform: 'uppercase',
-                    fontWeight: 500,
-                    letterSpacing: '0.1em'
-                  }}
-                  onClick={() => setMobileMenExpanded(!mobileMenExpanded)}
-                >
-                  <span>Men</span>
-                  <ChevronDown
-                    size={16}
-                    style={{
-                      transform: mobileMenExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.2s ease'
-                    }}
-                  />
-                </button>
-                {mobileMenExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.75rem 0 0.5rem 1rem' }}>
-                    <button
-                      className="btn-text"
-                      style={{ fontSize: '0.8125rem', textAlign: 'left' }}
-                      onClick={() => handleMobileNav(() => navigateTo('men', { gender: 'men', category: 'all' }))}
-                    >
-                      All Men's Jewellery
-                    </button>
-                    <button
-                      className="btn-text"
-                      style={{ fontSize: '0.8125rem', textAlign: 'left' }}
-                      onClick={() => handleMobileNav(() => navigateTo('men', { gender: 'men', category: 'rings' }))}
-                    >
-                      Rings
-                    </button>
-                    <button
-                      className="btn-text"
-                      style={{ fontSize: '0.8125rem', textAlign: 'left' }}
-                      onClick={() => handleMobileNav(() => navigateTo('men', { gender: 'men', category: 'bracelets' }))}
-                    >
-                      Bracelets
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              {/* Mobile Women Accordion */}
-              <div>
-                <button
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    width: '100%',
-                    paddingBottom: '0.5rem',
-                    borderBottom: '1px solid var(--color-border)',
-                    fontSize: '0.9375rem',
-                    textTransform: 'uppercase',
-                    fontWeight: 500,
-                    letterSpacing: '0.1em'
-                  }}
-                  onClick={() => setMobileWomenExpanded(!mobileWomenExpanded)}
-                >
-                  <span>Women</span>
-                  <ChevronDown
-                    size={16}
-                    style={{
-                      transform: mobileWomenExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                      transition: 'transform 0.2s ease'
-                    }}
-                  />
-                </button>
-                {mobileWomenExpanded && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.75rem 0 0.5rem 1rem' }}>
-                    <button
-                      className="btn-text"
-                      style={{ fontSize: '0.8125rem', textAlign: 'left' }}
-                      onClick={() => handleMobileNav(() => navigateTo('women', { gender: 'women', category: 'all' }))}
-                    >
-                      All Women's Jewellery
-                    </button>
-                    <button
-                      className="btn-text"
-                      style={{ fontSize: '0.8125rem', textAlign: 'left' }}
-                      onClick={() => handleMobileNav(() => navigateTo('women', { gender: 'women', category: 'rings' }))}
-                    >
-                      Rings
-                    </button>
-                    <button
-                      className="btn-text"
-                      style={{ fontSize: '0.8125rem', textAlign: 'left' }}
-                      onClick={() => handleMobileNav(() => navigateTo('women', { gender: 'women', category: 'bracelets' }))}
-                    >
-                      Bracelets
-                    </button>
-                    <button
-                      className="btn-text"
-                      style={{ fontSize: '0.8125rem', textAlign: 'left' }}
-                      onClick={() => handleMobileNav(() => navigateTo('women', { gender: 'women', category: 'necklaces' }))}
-                    >
-                      Necklaces
-                    </button>
-                    <button
-                      className="btn-text"
-                      style={{ fontSize: '0.8125rem', textAlign: 'left' }}
-                      onClick={() => handleMobileNav(() => navigateTo('women', { gender: 'women', category: 'earrings' }))}
-                    >
-                      Earrings
-                    </button>
-                  </div>
-                )}
-              </div>
-
-              <button
-                className="btn-text"
-                style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', gender: 'all' }))}
-              >
-                Collections
-              </button>
-
-              <button
-                className="btn-text"
-                style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                onClick={() => handleMobileNav(() => navigateTo('story'))}
-              >
-                Our Story
-              </button>
-
-              <button
-                className="btn-text"
-                style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                onClick={() => handleMobileNav(() => navigateTo('care'))}
-              >
-                Jewellery Care
-              </button>
-
-              <button
-                className="btn-text"
-                style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                onClick={() => handleMobileNav(() => navigateTo('shipping'))}
-              >
-                Shipping & Returns
-              </button>
-
-              {/* Customer Account */}
-              <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                {isSignedIn ? (
-                  <>
-                    <button
-                      className="btn-text"
-                      style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                      onClick={() => handleMobileNav(() => navigateTo('account'))}
-                    >
-                      My Account
-                    </button>
-                    <button
-                      className="btn-text"
-                      style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                      onClick={handleMobileSignOut}
-                    >
-                      Sign Out
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      className="btn-text"
-                      style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                      onClick={() => handleMobileNav(() => navigateTo('login'))}
-                    >
-                      Sign In
-                    </button>
-                    <button
-                      className="btn-text"
-                      style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}
-                      onClick={() => handleMobileNav(() => navigateTo('signup'))}
-                    >
-                      Create Account
-                    </button>
-                  </>
-                )}
-              </div>
+              {expandedCategoryId === root.id && <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.75rem 0 0.5rem 1rem' }}>
+                <button className="btn-text" style={{ fontSize: '0.8125rem', textAlign: 'left' }} onClick={() => handleMobileNav(() => navigateToCategory(root.id))}>All {root.name}</button>
+                {root.children.map((child) => <button key={child.id} className="btn-text" style={{ fontSize: '0.8125rem', textAlign: 'left' }} onClick={() => handleMobileNav(() => navigateToCategory(root.id, child.id))}>{child.name}</button>)}
+              </div>}
+            </div>)}
+            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }))}>Collections</button>
+            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('story'))}>Our Story</button>
+            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('care'))}>Jewellery Care</button>
+            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('shipping'))}>Shipping &amp; Returns</button>
+            <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {isSignedIn ? <>
+                <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('account'))}>My Account</button>
+                <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={handleMobileSignOut}>Sign Out</button>
+              </> : <>
+                <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('login'))}>Sign In</button>
+                <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('signup'))}>Create Account</button>
+              </>}
             </div>
           </div>
         </div>
       </div>
-    </>
-  );
+    </div>
+  </>;
 };

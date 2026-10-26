@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from './FeaturedProducts';
-import type { ProductCategory } from '../types';
+import type { CatalogueCategory, ProductCategory } from '../types';
 import { SlidersHorizontal, RotateCcw } from 'lucide-react';
 
-interface CatalogPageProps {
-  genderScope?: 'men' | 'women' | 'all';
+function categoryIds(category: CatalogueCategory): string[] {
+  return [category.id, ...category.children.flatMap(categoryIds)];
 }
 
-export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' }) => {
-  const { products, selectedCategory } = useShop();
+export const CatalogPage: React.FC = () => {
+  const { products, categories, selectedCategory, selectedRootCategoryId, catalogueStatus, catalogueError, reloadCatalogue } = useShop();
 
   const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>(selectedCategory || 'all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
@@ -24,45 +24,25 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
     }
   }, [selectedCategory]);
 
-  // Determine categories to show based on gender
+  const rootCategory = useMemo(() => categories.find((category) => category.id === selectedRootCategoryId), [categories, selectedRootCategoryId]);
+
+  // Categories come directly from the database tree, not a fixed frontend list.
   const availableSubcategories: { id: ProductCategory | 'all'; label: string }[] = useMemo(() => {
-    if (genderScope === 'men') {
-      return [
-        { id: 'all', label: 'All Men\'s Jewellery' },
-        { id: 'rings', label: 'Rings' },
-        { id: 'bracelets', label: 'Bracelets' },
-      ];
-    }
-    if (genderScope === 'women') {
-      return [
-        { id: 'all', label: 'All Women\'s Jewellery' },
-        { id: 'rings', label: 'Rings' },
-        { id: 'bracelets', label: 'Bracelets' },
-        { id: 'necklaces', label: 'Necklaces' },
-        { id: 'earrings', label: 'Earrings' },
-      ];
-    }
+    const directCollections = rootCategory ? rootCategory.children : categories.flatMap((category) => category.children);
     return [
-      { id: 'all', label: 'All Pieces' },
-      { id: 'rings', label: 'Rings' },
-      { id: 'bracelets', label: 'Bracelets' },
-      { id: 'necklaces', label: 'Necklaces' },
-      { id: 'earrings', label: 'Earrings' },
+      { id: 'all', label: rootCategory ? `All ${rootCategory.name}` : 'All Pieces' },
+      ...directCollections.filter((category) => category.categoryType === 'collection')
+        .map((category) => ({ id: category.id, label: category.name })),
     ];
-  }, [genderScope]);
+  }, [categories, rootCategory]);
+
+  const scopedCategoryIds = useMemo(() => rootCategory ? new Set(categoryIds(rootCategory)) : null, [rootCategory]);
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
     return products.filter((p) => {
-      // Gender filter
-      if (genderScope === 'men') {
-        if (p.gender !== 'men' && p.gender !== 'unisex') return false;
-      } else if (genderScope === 'women') {
-        if (p.gender !== 'women' && p.gender !== 'unisex') return false;
-      }
-
-      // Category filter
-      if (activeCategory !== 'all' && p.category !== activeCategory) {
+      if (scopedCategoryIds && !p.categoryIds.some((id) => scopedCategoryIds.has(id))) return false;
+      if (activeCategory !== 'all' && !p.categoryIds.includes(activeCategory)) {
         return false;
       }
 
@@ -79,19 +59,10 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
       if (sortBy === 'name') return a.name.localeCompare(b.name);
       return (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0);
     });
-  }, [products, genderScope, activeCategory, maxPrice, inStockOnly, sortBy]);
+  }, [products, scopedCategoryIds, activeCategory, maxPrice, inStockOnly, sortBy]);
 
-  const pageTitle = genderScope === 'men' 
-    ? 'Men\'s Collection' 
-    : genderScope === 'women' 
-    ? 'Women\'s Collection' 
-    : 'The Collection';
-
-  const pageDescription = genderScope === 'men'
-    ? 'Heirloom signet rings and weighty solid curb link bracelets forged in pure 925 sterling silver.'
-    : genderScope === 'women'
-    ? 'Fluid sculptural silver forms, delicate double-chain talismans, and understated everyday adornments.'
-    : 'Our complete archive of certified 925 hallmarked sterling silver ornaments, crafted for longevity.';
+  const pageTitle = rootCategory ? `${rootCategory.name} Collection` : 'The Collection';
+  const pageDescription = rootCategory?.description || 'Our complete archive of certified 925 hallmarked sterling silver ornaments, crafted for longevity.';
 
   const resetFilters = () => {
     setActiveCategory('all');
@@ -254,8 +225,18 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({ genderScope = 'all' })
           </div>
         )}
 
-        {/* Product Grid or Empty State */}
-        {filteredProducts.length > 0 ? (
+        {/* Product Grid, loading/error states, or empty state */}
+        {catalogueStatus === 'loading' ? (
+          <div style={{ textAlign: 'center', padding: '6rem 2rem', color: 'var(--color-muted-grey)' }} aria-live="polite">
+            Loading the latest collection…
+          </div>
+        ) : catalogueStatus === 'error' ? (
+          <div style={{ textAlign: 'center', padding: '6rem 2rem' }} role="alert">
+            <span className="eyebrow">CATALOGUE UNAVAILABLE</span>
+            <p style={{ maxWidth: '420px', margin: '1rem auto 2rem', color: 'var(--color-muted-grey)' }}>{catalogueError}</p>
+            <button className="btn-secondary" onClick={() => void reloadCatalogue()}>Try Again</button>
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="product-grid">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />

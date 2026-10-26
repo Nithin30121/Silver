@@ -1,16 +1,24 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useShop } from '../context/ShopContext';
-import { CATEGORIES } from '../data/products';
-import type { ProductCategory } from '../types';
 import { ArrowUpRight } from 'lucide-react';
 
+const fallbackImages = [
+  '/images/category_rings.jpg',
+  '/images/category_bracelets.jpg',
+  '/images/category_necklaces.jpg',
+  '/images/category_earrings.jpg',
+];
+
 export const CollectionGrid: React.FC = () => {
-  const { navigateTo } = useShop();
+  const { categories, catalogueStatus, navigateTo } = useShop();
+  const collections = useMemo(() => categories.flatMap((root) => root.children)
+    .filter((category) => category.categoryType === 'collection'), [categories]);
+
+  if (catalogueStatus === 'error' || collections.length === 0) return null;
 
   return (
     <section className="section-padding collection-section" aria-labelledby="collection-heading">
       <div className="container">
-        {/* Section Header */}
         <div style={{ maxWidth: '680px', marginBottom: '2.5rem' }}>
           <span className="eyebrow">OUR COLLECTION</span>
           <h2 id="collection-heading" className="headline-editorial">
@@ -20,44 +28,29 @@ export const CollectionGrid: React.FC = () => {
             Explore our thoughtfully crafted silver pieces, designed to complement your style, always.
           </p>
         </div>
-
-        {/* 4-Category Single Row Grid */}
         <div className="category-grid">
-          {CATEGORIES.map((cat) => (
-            <div
-              key={cat.id}
-              className="category-card"
-              role="button"
-              tabIndex={0}
-              onClick={() => navigateTo('collection', { category: cat.id as ProductCategory, gender: 'all' })}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigateTo('collection', { category: cat.id as ProductCategory, gender: 'all' });
+          {collections.map((category, index) => (
+            <div key={category.id} className="category-card" role="button" tabIndex={0}
+              onClick={() => navigateTo('collection', { category: category.id, rootCategoryId: category.parentId ?? 'all' })}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  navigateTo('collection', { category: category.id, rootCategoryId: category.parentId ?? 'all' });
                 }
               }}
-              aria-label={`Browse ${cat.name} collection`}
-            >
+              aria-label={`Browse ${category.name} collection`}>
               <div className="category-img-box">
-                <img
-                  src={cat.image}
-                  alt={`${cat.name} fine silver jewellery on dark stone`}
-                  loading="lazy"
-                  width={600}
-                  height={800}
-                />
+                <img src={category.imageUrl || fallbackImages[index % fallbackImages.length]}
+                  alt={`${category.name} fine silver jewellery`} loading="lazy" width={600} height={800} />
               </div>
-
               <div className="category-meta">
                 <div>
-                  <h3 className="category-title">{cat.name}</h3>
+                  <h3 className="category-title">{category.name}</h3>
                   <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-grey)', display: 'block', marginTop: '2px', letterSpacing: '0.04em' }}>
-                    {cat.tagline}
+                    {category.description || 'Explore the collection'}
                   </span>
                 </div>
-                <span className="category-arrow" aria-hidden="true">
-                  <ArrowUpRight size={18} />
-                </span>
+                <span className="category-arrow" aria-hidden="true"><ArrowUpRight size={18} /></span>
               </div>
             </div>
           ))}

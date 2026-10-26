@@ -3,7 +3,7 @@ import { useShop } from '../context/ShopContext';
 import { ShieldCheck, ArrowRight, Check } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { navigateTo } = useShop();
+  const { navigateTo, categories } = useShop();
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -51,31 +51,20 @@ export const Footer: React.FC = () => {
                   New Arrivals
                 </a>
               </li>
-              <li>
-                <a href="#men" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('men', { gender: 'men', category: 'all' }); }}>
-                  Men's Jewellery
-                </a>
-              </li>
-              <li>
-                <a href="#women" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('women', { gender: 'women', category: 'all' }); }}>
-                  Women's Jewellery
-                </a>
-              </li>
-              <li>
-                <a href="#rings" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('collection', { category: 'rings' }); }}>
-                  Silver Rings
-                </a>
-              </li>
-              <li>
-                <a href="#bracelets" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('collection', { category: 'bracelets' }); }}>
-                  Cuffs & Bracelets
-                </a>
-              </li>
-              <li>
-                <a href="#necklaces" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('collection', { category: 'necklaces' }); }}>
-                  Pendants & Necklaces
-                </a>
-              </li>
+              {categories.filter((category) => category.categoryType === 'audience').flatMap((root) => [
+                <li key={root.id}>
+                  <a href={`#${root.slug}`} className="footer-link" onClick={(event) => { event.preventDefault(); navigateTo('collection', { rootCategoryId: root.id, category: 'all' }); }}>
+                    {root.name}
+                  </a>
+                </li>,
+                ...root.children.filter((child) => child.categoryType === 'collection').map((child) => (
+                  <li key={child.id}>
+                    <a href={`#${root.slug}-${child.slug}`} className="footer-link" onClick={(event) => { event.preventDefault(); navigateTo('collection', { rootCategoryId: root.id, category: child.id }); }}>
+                      {child.name}
+                    </a>
+                  </li>
+                )),
+              ])}
             </ul>
           </div>
 

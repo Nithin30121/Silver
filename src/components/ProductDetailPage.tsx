@@ -71,7 +71,7 @@ export const ProductDetailPage: React.FC = () => {
             href="#collection"
             onClick={(e) => {
               e.preventDefault();
-              navigateTo('collection', { category: currentProduct.category, gender: 'all' });
+              navigateTo('collection', { category: currentProduct.categoryIds[0] ?? 'all', gender: 'all' });
             }}
             style={{ color: 'var(--color-muted-grey)' }}
           >

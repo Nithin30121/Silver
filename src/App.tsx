@@ -81,9 +81,9 @@ const MainContent: React.FC = () => {
           </>
         )}
 
-        {currentView === 'collection' && <CatalogPage genderScope="all" />}
-        {currentView === 'men' && <CatalogPage genderScope="men" />}
-        {currentView === 'women' && <CatalogPage genderScope="women" />}
+        {currentView === 'collection' && <CatalogPage />}
+        {currentView === 'men' && <CatalogPage />}
+        {currentView === 'women' && <CatalogPage />}
         {currentView === 'product' && <ProductDetailPage />}
         {currentView === 'story' && <StoryPage />}
         {currentView === 'care' && <CarePage />}

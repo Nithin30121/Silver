@@ -166,7 +166,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 };
 
 export const FeaturedProducts: React.FC = () => {
-  const { products, navigateTo } = useShop();
+  const { products, navigateTo, catalogueStatus, catalogueError, reloadCatalogue } = useShop();
   const featured = products.filter((p) => p.isFeatured).slice(0, 4);
 
   return (
@@ -190,12 +190,20 @@ export const FeaturedProducts: React.FC = () => {
           </button>
         </div>
 
-        {/* 4-Column Product Grid */}
-        <div className="product-grid">
-          {featured.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {catalogueStatus === 'loading' ? (
+          <p style={{ color: 'var(--color-muted-grey)', padding: '2rem 0' }} aria-live="polite">Loading the latest pieces…</p>
+        ) : catalogueStatus === 'error' ? (
+          <div style={{ color: 'var(--color-muted-grey)', padding: '2rem 0' }} role="alert">
+            <p>{catalogueError}</p>
+            <button className="btn-text" style={{ marginTop: '0.75rem' }} onClick={() => void reloadCatalogue()}>Try Again</button>
+          </div>
+        ) : featured.length > 0 ? (
+          <div className="product-grid">
+            {featured.map((product) => <ProductCard key={product.id} product={product} />)}
+          </div>
+        ) : (
+          <p style={{ color: 'var(--color-muted-grey)', padding: '2rem 0' }}>New pieces will appear here when they are published.</p>
+        )}
       </div>
     </section>
   );

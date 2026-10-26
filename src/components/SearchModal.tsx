@@ -3,7 +3,7 @@ import { useShop } from '../context/ShopContext';
 import { Search, X, ArrowRight } from 'lucide-react';
 
 export const SearchModal: React.FC = () => {
-  const { isSearchOpen, setIsSearchOpen, products, navigateTo } = useShop();
+  const { isSearchOpen, setIsSearchOpen, products, categories, navigateTo } = useShop();
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -29,7 +29,10 @@ export const SearchModal: React.FC = () => {
     });
   }, [query, products]);
 
-  const popularSearches = ['925 Silver Rings', 'Cuban Chain', 'Signet Ring', 'Earrings', 'Hammered Pendant', 'Solid Cuff'];
+  const popularSearches = useMemo(() => categories.flatMap((root) => root.children)
+    .filter((category) => category.categoryType === 'collection')
+    .map((category) => category.name)
+    .slice(0, 6), [categories]);
 
   if (!isSearchOpen) return null;
 
@@ -77,7 +80,7 @@ export const SearchModal: React.FC = () => {
                 {popularSearches.map((term) => (
                   <button
                     key={term}
-                    onClick={() => setQuery(term.replace('925 ', ''))}
+                    onClick={() => setQuery(term)}
                     style={{
                       padding: '0.5rem 0.95rem',
                       backgroundColor: '#14100E',
