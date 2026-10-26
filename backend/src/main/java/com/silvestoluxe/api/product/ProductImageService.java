@@ -48,7 +48,7 @@ public class ProductImageService {
             storage.upload(path, image.content(), image.contentType());
             url = storage.publicUrl(path);
         } catch (SupabaseStorageException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Product image upload failed.");
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Product image upload failed. " + exception.getMessage());
         }
 
         try {
@@ -72,7 +72,7 @@ public class ProductImageService {
         try {
             storage.delete(image.getStoragePath());
         } catch (SupabaseStorageException exception) {
-            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Product image deletion failed.");
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Product image deletion failed. " + exception.getMessage());
         }
         Product product = findProduct(productId);
         boolean wasPrimary = image.getImageUrl().equals(product.getImageUrl());

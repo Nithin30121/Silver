@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Component;
 /** Minimal server-only client for the Supabase Storage REST API. */
 @Component
 public class SupabaseStorageClient {
+    private static final Logger log = LoggerFactory.getLogger(SupabaseStorageClient.class);
+
     private final HttpClient httpClient;
     private final String projectUrl;
     private final String serviceKey;
@@ -71,12 +75,15 @@ public class SupabaseStorageClient {
 
     private void send(HttpRequest request, String operation) {
         try {
-            HttpResponse<Void> response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new SupabaseStorageException("Image storage " + operation + " failed.");
+                // Storage explains rejections (for example an invalid key or a disallowed file type) in the body.
+                log.warn("Supabase Storage {} was rejected: HTTP {} {}", operation, response.statusCode(), summary(response.body()));
+                throw new SupabaseStorageException("Supabase Storage rejected the " + operation + " (HTTP " + response.statusCode() + ").");
             }
         } catch (IOException exception) {
-            throw new SupabaseStorageException("Image storage " + operation + " failed.", exception);
+            log.warn("Supabase Storage {} could not be reached: {}", operation, exception.toString());
+            throw new SupabaseStorageException("Supabase Storage could not be reached.", exception);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new SupabaseStorageException("Image storage " + operation + " was interrupted.", exception);
@@ -85,8 +92,16 @@ public class SupabaseStorageClient {
 
     private void requireConfiguration() {
         if (projectUrl.isBlank() || serviceKey.isBlank()) {
-            throw new SupabaseStorageException("Image storage is not configured.");
+            log.warn("Image storage is not configured: SUPABASE_URL set = {}, SUPABASE_STORAGE_SECRET_KEY set = {}",
+                    !projectUrl.isBlank(), !serviceKey.isBlank());
+            throw new SupabaseStorageException("Image storage is not configured on the server.");
         }
+    }
+
+    private static String summary(String body) {
+        if (body == null || body.isBlank()) return "(no details)";
+        String singleLine = body.replaceAll("\\s+", " ").trim();
+        return singleLine.length() > 300 ? singleLine.substring(0, 300) + "…" : singleLine;
     }
 
     private static String removeTrailingSlash(String value) {
