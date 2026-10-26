@@ -8,6 +8,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
@@ -29,6 +30,13 @@ public class ApiExceptionHandler {
                         (first, ignored) -> first));
         return ResponseEntity.badRequest().body(new ErrorResponse(Instant.now(), 400, "VALIDATION_ERROR",
                 "Please correct the highlighted fields.", fields));
+    }
+
+    /** Uploads over spring.servlet.multipart.max-file-size are refused before reaching a controller. */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ErrorResponse> uploadTooLarge(MaxUploadSizeExceededException exception) {
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body(new ErrorResponse(Instant.now(),
+                HttpStatus.CONTENT_TOO_LARGE.value(), "UPLOAD_TOO_LARGE", "Images must be 5 MB or smaller.", Map.of()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
