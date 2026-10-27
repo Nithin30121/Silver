@@ -30,9 +30,10 @@ export const SearchModal: React.FC = () => {
     });
   }, [query, products]);
 
-  const popularSearches = useMemo(() => categories.flatMap((root) => root.children)
+  // Men's and women's collections can share a name (both have Rings), so each name is offered once.
+  const popularSearches = useMemo(() => [...new Set(categories.flatMap((root) => root.children)
     .filter((category) => category.categoryType === 'collection')
-    .map((category) => category.name)
+    .map((category) => category.name))]
     .slice(0, 6), [categories]);
 
   return (
