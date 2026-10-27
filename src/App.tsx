@@ -24,6 +24,8 @@ import { ResetPasswordPage } from './components/auth/ResetPasswordPage';
 import { AccountPage } from './components/auth/AccountPage';
 import { AuthFlowCoordinator } from './components/auth/AuthFlowCoordinator';
 import { AdminDashboard } from './components/admin/AdminDashboard';
+import { AnimatePresence, MotionConfig, motion } from 'motion/react';
+import { luxeEase, revealOnScroll } from './lib/motion';
 import { Sparkles, ShieldCheck, RefreshCw, Check } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -46,8 +48,8 @@ const MainContent: React.FC = () => {
             {/* Editorial Brand Assurance Banner */}
             <section style={{ backgroundColor: '#0c0a09', borderTop: '1px solid rgba(184, 121, 81, 0.2)', borderBottom: '1px solid rgba(184, 121, 81, 0.15)', padding: '5rem 0' }}>
               <div className="container">
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2.5rem', textAlign: 'center' }}>
-                  <div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }}>
+                <div className="assurance-grid">
+                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }} {...revealOnScroll()}>
                     <ShieldCheck size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
                     <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
                       Certified 925 Hallmark
@@ -55,9 +57,9 @@ const MainContent: React.FC = () => {
                     <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
                       Each piece bears the genuine 925 hallmark stamp, guaranteeing 92.5% pure silver content.
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }}>
+                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }} {...revealOnScroll(0.1)}>
                     <Sparkles size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
                     <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
                       Anti-Tarnish Rhodium Finish
@@ -65,9 +67,9 @@ const MainContent: React.FC = () => {
                     <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
                       Shielded with an invisible micro-barrier that preserves brilliant reflectivity against ambient oxidation.
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }}>
+                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }} {...revealOnScroll(0.2)}>
                     <RefreshCw size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
                     <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
                       Complimentary 14-Day Exchange
@@ -75,7 +77,7 @@ const MainContent: React.FC = () => {
                     <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
                       Insured doorstep delivery and hassle-free size exchanges for total confidence in your selection.
                     </p>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </section>
@@ -109,12 +111,23 @@ const MainContent: React.FC = () => {
       <QuickViewModal />
 
       {/* Global Notification Toast */}
-      {toastMessage && (
-        <div className="toast-banner" role="status" aria-live="polite">
-          <Check size={16} style={{ color: 'var(--color-rose-gold)' }} />
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            key={toastMessage}
+            className="toast-banner"
+            role="status"
+            aria-live="polite"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            transition={{ duration: 0.3, ease: luxeEase }}
+          >
+            <Check size={16} style={{ color: 'var(--color-rose-gold)' }} />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <Footer />
     </>
@@ -124,11 +137,13 @@ const MainContent: React.FC = () => {
 export const App: React.FC = () => {
   const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin';
   return (
-    <ShopProvider>
-      <AuthProvider>
-        {isAdminRoute ? <AdminDashboard /> : <MainContent />}
-      </AuthProvider>
-    </ShopProvider>
+    <MotionConfig reducedMotion="user">
+      <ShopProvider>
+        <AuthProvider>
+          {isAdminRoute ? <AdminDashboard /> : <MainContent />}
+        </AuthProvider>
+      </ShopProvider>
+    </MotionConfig>
   );
 };
 

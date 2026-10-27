@@ -238,8 +238,8 @@ export const CatalogPage: React.FC = () => {
           </div>
         ) : filteredProducts.length > 0 ? (
           <div className="product-grid">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {filteredProducts.map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
             ))}
           </div>
         ) : (

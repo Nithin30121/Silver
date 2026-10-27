@@ -37,6 +37,65 @@ export interface CategoryInput {
   isActive: boolean;
 }
 
+export type CustomerRole = 'customer' | 'admin';
+
+/** orderValue leaves out cancelled orders. It is not money received: the shop has no payment provider yet. */
+export interface AdminCustomer {
+  id: string;
+  fullName: string;
+  email: string | null;
+  role: CustomerRole;
+  joinedAt: string;
+  orderCount: number;
+  orderValue: number | string;
+  lastOrderAt: string | null;
+}
+
+export interface CustomerPage {
+  customers: AdminCustomer[];
+  total: number;
+  totalPages: number;
+}
+
+export interface AdminOrderPage {
+  orders: OrderResponse[];
+  total: number;
+  totalPages: number;
+}
+
+/** Order value leaves out cancelled orders; "paid" only reflects what an admin has marked. */
+export interface SalesPeriod {
+  from: string | null;
+  orderCount: number;
+  orderValue: number | string;
+  paidValue: number | string;
+}
+
+export interface SalesSummary {
+  timeZone: string;
+  thisWeek: SalesPeriod;
+  thisMonth: SalesPeriod;
+  allTime: SalesPeriod;
+  ordersByStatus: Record<string, number>;
+  bestSellers: Array<{ productId: string | null; name: string; sku: string | null; quantity: number; orderValue: number | string }>;
+}
+
+export type StockReason = 'INITIAL' | 'MANUAL' | 'SALE' | 'CANCELLATION';
+
+export interface StockMovement {
+  id: string;
+  productId: string;
+  productName: string;
+  productSku: string | null;
+  quantityChange: number;
+  quantityAfter: number;
+  reason: StockReason;
+  orderId: string | null;
+  orderNumber: string | null;
+  actorName: string | null;
+  createdAt: string;
+}
+
 interface ApiPage<T> {
   content: T[];
   totalElements?: number;
@@ -62,19 +121,90 @@ export async function getAdminIdentity(): Promise<AdminIdentity> {
   return identity;
 }
 
-export async function getAdminProducts(query = ''): Promise<{ products: ApiProduct[]; total: number }> {
-  const search = new URLSearchParams({ page: '0', size: '100', sort: 'name,asc' });
-  if (query.trim()) search.set('query', query.trim());
-  const page = await adminRequest<ApiPage<ApiProduct>>(`/admin/products?${search}`);
-  return { products: page.content, total: page.totalElements ?? page.page?.totalElements ?? page.content.length };
+const PRODUCT_PAGE_SIZE = 100;
+const MAX_PRODUCT_PAGES = 50;
+
+/** Every product, a page at a time, so stock and low-stock figures cover the whole catalogue. */
+export async function getAdminProducts(): Promise<{ products: ApiProduct[]; total: number }> {
+  const products: ApiProduct[] = [];
+  for (let page = 0; page < MAX_PRODUCT_PAGES; page += 1) {
+    const search = new URLSearchParams({ page: String(page), size: String(PRODUCT_PAGE_SIZE), sort: 'name,asc' });
+    const result = await adminRequest<ApiPage<ApiProduct>>(`/admin/products?${search}`);
+    products.push(...result.content);
+    const totalPages = result.totalPages ?? result.page?.totalPages ?? 1;
+    if (page + 1 >= totalPages || result.content.length === 0) break;
+  }
+  return { products, total: products.length };
 }
 
 export const getAdminCategories = () => adminRequest<CatalogueCategory[]>('/admin/categories');
-export const getAdminOrders = () => adminRequest<ApiPage<OrderResponse>>('/admin/orders?page=0&size=100&sort=createdAt,desc');
+/** Newest first. The query matches part of an order number, customer name, email or phone. */
+export async function getAdminOrders(options: { query?: string; status?: string; page?: number; size?: number } = {}): Promise<AdminOrderPage> {
+  const search = new URLSearchParams({ page: String(options.page ?? 0), size: String(options.size ?? 25), sort: 'createdAt,desc' });
+  if (options.query?.trim()) search.set('query', options.query.trim());
+  if (options.status) search.set('status', options.status);
+  const page = await adminRequest<ApiPage<OrderResponse>>(`/admin/orders?${search}`);
+  return {
+    orders: page.content,
+    total: page.totalElements ?? page.page?.totalElements ?? page.content.length,
+    totalPages: page.totalPages ?? page.page?.totalPages ?? 1
+  };
+}
 
-export function updateOrderStatus(id: string, status: string, paymentStatus: string, note = '') {
+export const getSalesSummary = () => adminRequest<SalesSummary>('/admin/reports/summary');
+export const getEmailStatus = () => adminRequest<{ enabled: boolean }>('/admin/notifications/email');
+
+/** Newest first; without a product id it lists changes across the whole catalogue. */
+export async function getStockMovements(productId?: string, size = 20): Promise<{ movements: StockMovement[]; total: number }> {
+  const path = productId ? `/admin/products/${productId}/stock-movements` : '/admin/stock-movements';
+  const page = await adminRequest<ApiPage<StockMovement>>(`${path}?page=0&size=${size}`);
+  return { movements: page.content, total: page.totalElements ?? page.page?.totalElements ?? page.content.length };
+}
+
+/** Downloads a server-made spreadsheet. The access token travels in a header, so a plain link can't be used. */
+export async function downloadAdminCsv(kind: 'orders' | 'customers', filters: Record<string, string | undefined>, filename: string): Promise<void> {
+  const search = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => { if (value?.trim()) search.set(key, value.trim()); });
+  const token = await accessToken();
+  const response = await fetch(`${API_BASE_URL}/admin/reports/${kind}.csv?${search}`, {
+    headers: { Accept: 'text/csv', Authorization: `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    throw new AdminApiError(response.status === 404 ? "Your server doesn't have downloads yet. Deploy the latest backend, then try again."
+      : response.status === 401 ? 'Please sign in again.' : `The download failed (${response.status}).`, response.status);
+  }
+  const url = URL.createObjectURL(await response.blob());
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  // Revoked a moment later: some browsers cancel a download whose address disappears straight away.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export async function getAdminCustomers(options: { query?: string; role?: CustomerRole; page?: number; size?: number } = {}): Promise<CustomerPage> {
+  const search = new URLSearchParams({ page: String(options.page ?? 0), size: String(options.size ?? 25) });
+  if (options.query?.trim()) search.set('query', options.query.trim());
+  if (options.role) search.set('role', options.role);
+  const page = await adminRequest<ApiPage<AdminCustomer>>(`/admin/customers?${search}`);
+  return {
+    customers: page.content,
+    total: page.totalElements ?? page.page?.totalElements ?? page.content.length,
+    totalPages: page.totalPages ?? page.page?.totalPages ?? 1
+  };
+}
+
+export async function getCustomerOrders(customerId: string): Promise<{ orders: OrderResponse[]; total: number }> {
+  const page = await adminRequest<ApiPage<OrderResponse>>(`/admin/customers/${customerId}/orders?page=0&size=50`);
+  return { orders: page.content, total: page.totalElements ?? page.page?.totalElements ?? page.content.length };
+}
+
+/** notifyCustomer asks the server to email the customer about a status change, when email is set up there. */
+export function updateOrderStatus(id: string, status: string, paymentStatus: string, notifyCustomer = true) {
   return adminRequest<OrderResponse>(`/admin/orders/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ status, paymentStatus, note })
+    method: 'PATCH', body: JSON.stringify({ status, paymentStatus, notifyCustomer })
   });
 }
 

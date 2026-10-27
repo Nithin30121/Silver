@@ -1,6 +1,7 @@
 package com.silvestoluxe.api.product;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Set;
 import java.util.List;
 import java.util.UUID;
@@ -32,4 +33,9 @@ public final class ProductDtos {
     public record Response(UUID id, String name, String slug, String sku, String description,
                            BigDecimal price, String imageUrl, BigDecimal weightGrams, int stockQuantity,
                            boolean isActive, Set<UUID> categoryIds, List<ImageResponse> images) { }
+
+    /** actorName is the admin who changed stock, or the customer whose checkout reserved it. */
+    public record StockMovementResponse(UUID id, UUID productId, String productName, String productSku,
+                                        int quantityChange, int quantityAfter, StockMovementReason reason,
+                                        UUID orderId, String orderNumber, String actorName, Instant createdAt) { }
 }

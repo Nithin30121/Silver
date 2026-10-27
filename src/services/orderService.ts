@@ -23,6 +23,8 @@ export interface OrderResponse {
   status: string;
   paymentStatus: string;
   paymentMethod: PaymentMethod;
+  subtotal?: number | string;
+  shippingAmount?: number | string;
   totalAmount: number | string;
   shippingFullName?: string;
   shippingEmail?: string;

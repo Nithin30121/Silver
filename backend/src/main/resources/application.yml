@@ -52,3 +52,17 @@ app:
   storage:
     product-images:
       bucket: ${SUPABASE_PRODUCT_IMAGE_BUCKET:product-images}
+  reports:
+    # "This week" and "this month" on the dashboard, and times in spreadsheet downloads, use this zone.
+    time-zone: ${APP_REPORTS_TIME_ZONE:Asia/Kolkata}
+  mail:
+    # Customer order emails stay off until SMTP_HOST and APP_MAIL_FROM are both set. Any SMTP
+    # provider works; SMTP_PASSWORD is a server-only secret like the database password.
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    from: ${APP_MAIL_FROM:}
+    shop-name: ${APP_SHOP_NAME:SILVORA}
+    # Optional link at the bottom of each email, for example the storefront address.
+    shop-url: ${APP_SHOP_URL:}

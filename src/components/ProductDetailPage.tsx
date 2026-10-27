@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from './FeaturedProducts';
+import { AnimatedModal } from './AnimatedModal';
 import { 
   Heart, 
   ShoppingBag, 
@@ -424,8 +425,8 @@ export const ProductDetailPage: React.FC = () => {
               You May Also <em>Admire.</em>
             </h2>
             <div className="product-grid" style={{ marginTop: '0' }}>
-              {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
+              {relatedProducts.map((p, index) => (
+                <ProductCard key={p.id} product={p} index={index} />
               ))}
             </div>
           </div>
@@ -433,43 +434,41 @@ export const ProductDetailPage: React.FC = () => {
       </div>
 
       {/* Size Guide Modal */}
-      <div className={`modal-backdrop ${sizeModalOpen ? 'open' : ''}`} onClick={() => setSizeModalOpen(false)}>
-        <div className="modal-panel" style={{ padding: '2.5rem' }} onClick={(e) => e.stopPropagation()}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(184, 121, 81, 0.25)', paddingBottom: '1rem' }}>
-            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', color: 'var(--color-soft-ivory)' }}>Silver Jewellery Sizing Chart</h3>
-            <button onClick={() => setSizeModalOpen(false)} aria-label="Close size guide" style={{ color: 'var(--color-soft-ivory)' }}>
-              <X size={20} />
-            </button>
-          </div>
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', marginBottom: '1.5rem' }}>
-            Our rings and cuffs adhere to standardized precision dimensions. If you are between sizes, we recommend selecting the larger size.
-          </p>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid var(--color-metallic-copper)', backgroundColor: '#100D0B', color: 'var(--color-soft-ivory)' }}>
-                <th style={{ padding: '0.75rem' }}>US Size</th>
-                <th style={{ padding: '0.75rem' }}>Inner Diameter (mm)</th>
-                <th style={{ padding: '0.75rem' }}>Circumference (mm)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 6</td><td style={{ padding: '0.65rem' }}>16.5 mm</td><td style={{ padding: '0.65rem' }}>51.8 mm</td></tr>
-              <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 7</td><td style={{ padding: '0.65rem' }}>17.3 mm</td><td style={{ padding: '0.65rem' }}>54.4 mm</td></tr>
-              <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 8</td><td style={{ padding: '0.65rem' }}>18.1 mm</td><td style={{ padding: '0.65rem' }}>57.0 mm</td></tr>
-              <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 9</td><td style={{ padding: '0.65rem' }}>19.0 mm</td><td style={{ padding: '0.65rem' }}>59.5 mm</td></tr>
-              <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 10</td><td style={{ padding: '0.65rem' }}>19.8 mm</td><td style={{ padding: '0.65rem' }}>62.1 mm</td></tr>
-              <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 11</td><td style={{ padding: '0.65rem' }}>20.6 mm</td><td style={{ padding: '0.65rem' }}>64.6 mm</td></tr>
-            </tbody>
-          </table>
-          <button
-            className="btn-primary"
-            style={{ marginTop: '2rem', width: '100%' }}
-            onClick={() => setSizeModalOpen(false)}
-          >
-            Understood
+      <AnimatedModal open={sizeModalOpen} onClose={() => setSizeModalOpen(false)} panelStyle={{ padding: '2.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(184, 121, 81, 0.25)', paddingBottom: '1rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', color: 'var(--color-soft-ivory)' }}>Silver Jewellery Sizing Chart</h3>
+          <button onClick={() => setSizeModalOpen(false)} aria-label="Close size guide" style={{ color: 'var(--color-soft-ivory)' }}>
+            <X size={20} />
           </button>
         </div>
-      </div>
+        <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', marginBottom: '1.5rem' }}>
+          Our rings and cuffs adhere to standardized precision dimensions. If you are between sizes, we recommend selecting the larger size.
+        </p>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem', textAlign: 'left' }}>
+          <thead>
+            <tr style={{ borderBottom: '2px solid var(--color-metallic-copper)', backgroundColor: '#100D0B', color: 'var(--color-soft-ivory)' }}>
+              <th style={{ padding: '0.75rem' }}>US Size</th>
+              <th style={{ padding: '0.75rem' }}>Inner Diameter (mm)</th>
+              <th style={{ padding: '0.75rem' }}>Circumference (mm)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 6</td><td style={{ padding: '0.65rem' }}>16.5 mm</td><td style={{ padding: '0.65rem' }}>51.8 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 7</td><td style={{ padding: '0.65rem' }}>17.3 mm</td><td style={{ padding: '0.65rem' }}>54.4 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 8</td><td style={{ padding: '0.65rem' }}>18.1 mm</td><td style={{ padding: '0.65rem' }}>57.0 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 9</td><td style={{ padding: '0.65rem' }}>19.0 mm</td><td style={{ padding: '0.65rem' }}>59.5 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 10</td><td style={{ padding: '0.65rem' }}>19.8 mm</td><td style={{ padding: '0.65rem' }}>62.1 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.15)', color: 'var(--color-muted-grey)' }}><td style={{ padding: '0.65rem' }}>US 11</td><td style={{ padding: '0.65rem' }}>20.6 mm</td><td style={{ padding: '0.65rem' }}>64.6 mm</td></tr>
+          </tbody>
+        </table>
+        <button
+          className="btn-primary"
+          style={{ marginTop: '2rem', width: '100%' }}
+          onClick={() => setSizeModalOpen(false)}
+        >
+          Understood
+        </button>
+      </AnimatedModal>
     </div>
   );
 };

@@ -1,5 +1,7 @@
 import React, { useMemo } from 'react';
+import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
+import { revealOnScroll } from '../lib/motion';
 
 const fallbackImages = ['/images/campaign_mens_wear.jpg', '/images/campaign_womens_wear.jpg'];
 
@@ -15,15 +17,15 @@ export const GenderCategories: React.FC = () => {
   return (
     <section className="gender-categories-section" aria-labelledby="gender-categories-heading">
       <div className="container">
-        <div className="gender-categories-header">
+        <motion.div className="gender-categories-header" {...revealOnScroll()}>
           <span className="eyebrow">DISCOVER YOUR STYLE</span>
           <h2 id="gender-categories-heading" className="headline-editorial">Jewellery, <em>Defined by You.</em></h2>
           <p className="gender-categories-intro">Distinctive silver ornaments for every expression of style.</p>
-        </div>
+        </motion.div>
         <div className="gender-panels-grid">
           {roots.map((root, index) => {
             const browse = () => navigateTo('collection', { rootCategoryId: root.id, category: 'all' });
-            return <article key={root.id} className="gender-panel" role="button" tabIndex={0} onClick={browse}
+            return <motion.div key={root.id} className="reveal-cell" {...revealOnScroll(index * 0.12)}><article className="gender-panel" role="button" tabIndex={0} onClick={browse}
               onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); browse(); } }}
               aria-label={`Explore ${root.name} fine silver collection`}>
               <div className="gender-panel-media">
@@ -38,7 +40,7 @@ export const GenderCategories: React.FC = () => {
                 </div>
                 <div className="gender-panel-cta" aria-hidden="true"><span className="gender-panel-cta-label">EXPLORE {root.name.toUpperCase()}</span><span className="gender-panel-cta-arrow">→</span></div>
               </div>
-            </article>;
+            </article></motion.div>;
           })}
         </div>
       </div>

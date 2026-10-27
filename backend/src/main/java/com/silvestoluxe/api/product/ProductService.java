@@ -20,9 +20,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class ProductService {
     private final ProductRepository products;
     private final CategoryRepository categories;
-    public ProductService(ProductRepository products, CategoryRepository categories) {
+    private final StockLedger stock;
+    public ProductService(ProductRepository products, CategoryRepository categories, StockLedger stock) {
         this.products = products;
         this.categories = categories;
+        this.stock = stock;
     }
 
     public Page<Response> activeProducts(UUID categoryId, String query, Pageable pageable) {
@@ -57,16 +59,22 @@ public class ProductService {
     }
 
     @Transactional
-    public Response create(Upsert request) {
+    public Response create(Upsert request, UUID actorId) {
         Product product = new Product();
         apply(product, request);
-        return response(products.save(product));
+        Product saved = products.save(product);
+        stock.record(saved, saved.getStockQuantity(), StockMovementReason.INITIAL, null, actorId);
+        return response(saved);
     }
 
     @Transactional
-    public Response update(UUID id, Upsert request) {
-        Product product = find(id);
+    public Response update(UUID id, Upsert request, UUID actorId) {
+        // Locked like checkout, so the recorded change is measured from the count actually in the database.
+        Product product = products.findByIdForStockUpdate(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found."));
+        int before = product.getStockQuantity();
         apply(product, request);
+        stock.record(product, product.getStockQuantity() - before, StockMovementReason.MANUAL, null, actorId);
         return response(product);
     }
 
