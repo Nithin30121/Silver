@@ -1,5 +1,7 @@
 import React from 'react';
+import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
+import { drawerSlide } from '../lib/motion';
 import { X, Trash2, ShoppingBag } from 'lucide-react';
 
 export const WishlistDrawer: React.FC = () => {
@@ -17,8 +19,9 @@ export const WishlistDrawer: React.FC = () => {
 
   return (
     <div className={`drawer-backdrop ${isWishlistOpen ? 'open' : ''}`} onClick={() => setIsWishlistOpen(false)}>
-      <aside
-        className={`drawer-panel ${isWishlistOpen ? 'open' : ''}`}
+      <motion.aside
+        className="drawer-panel"
+        {...drawerSlide(isWishlistOpen)}
         onClick={(e) => e.stopPropagation()}
         aria-label="Wishlist Drawer"
       >
@@ -138,7 +141,7 @@ export const WishlistDrawer: React.FC = () => {
             </div>
           )}
         </div>
-      </aside>
+      </motion.aside>
     </div>
   );
 };

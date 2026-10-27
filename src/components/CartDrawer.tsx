@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
+import { drawerSlide } from '../lib/motion';
 import { useAuth } from '../context/AuthContext';
 import { createOrder, type PaymentMethod } from '../services/orderService';
 import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
@@ -79,8 +81,9 @@ export const CartDrawer: React.FC = () => {
 
   return (
     <div className={`drawer-backdrop ${isCartOpen ? 'open' : ''}`} onClick={closeDrawer}>
-      <aside
-        className={`drawer-panel ${isCartOpen ? 'open' : ''}`}
+      <motion.aside
+        className="drawer-panel"
+        {...drawerSlide(isCartOpen)}
         onClick={(e) => e.stopPropagation()}
         aria-label="Shopping Bag Drawer"
       >
@@ -455,7 +458,7 @@ export const CartDrawer: React.FC = () => {
             )}
           </div>
         )}
-      </aside>
+      </motion.aside>
     </div>
   );
 };

@@ -3,8 +3,16 @@ import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { toAccountError } from '../services/authService';
 import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { motion } from 'motion/react';
+import { drawerSlide, useBumpOnIncrease } from '../lib/motion';
 import { LiveSilverRate } from './LiveSilverRate';
 import { useCustomerSignOut } from './auth/authHelpers';
+
+/** The bag or wishlist count beside its icon, which bumps when the number goes up. */
+const CountBadge: React.FC<{ count: number; label: string }> = ({ count, label }) => {
+  const badgeRef = useBumpOnIncrease<HTMLSpanElement>(count);
+  return count > 0 ? <span ref={badgeRef} className="badge-count" aria-label={label}>{count}</span> : null;
+};
 
 export const Header: React.FC = () => {
   const { currentView, navigateTo, cartCount, wishlistCount, setIsCartOpen, setIsWishlistOpen, setIsSearchOpen, showToast, categories } = useShop();
@@ -73,7 +81,7 @@ export const Header: React.FC = () => {
           <button className="nav-action-btn" onClick={() => setIsSearchOpen(true)} aria-label="Search catalog" title="Search"><Search size={19} style={{ strokeWidth: 1.6 }} /></button>
           <button className="nav-action-btn" onClick={() => setIsWishlistOpen(true)} aria-label="View wishlist" title="Saved Pieces">
             <Heart size={19} style={{ strokeWidth: 1.6 }} />
-            {wishlistCount > 0 && <span className="badge-count" aria-label={`${wishlistCount} items in wishlist`}>{wishlistCount}</span>}
+            <CountBadge count={wishlistCount} label={`${wishlistCount} items in wishlist`} />
           </button>
           {isAdmin && <a className="nav-action-btn" href="/admin" aria-label="Open the admin dashboard" title="Admin Dashboard"><LayoutDashboard size={19} style={{ strokeWidth: 1.6 }} /></a>}
           <button className="nav-action-btn" onClick={() => navigateTo(isSignedIn ? 'account' : 'login')}
@@ -82,15 +90,15 @@ export const Header: React.FC = () => {
           </button>
           <button className="nav-action-btn" onClick={() => setIsCartOpen(true)} aria-label="View shopping bag" title="Shopping Bag">
             <ShoppingBag size={19} style={{ strokeWidth: 1.6 }} />
-            {cartCount > 0 && <span className="badge-count" aria-label={`${cartCount} items in bag`}>{cartCount}</span>}
+            <CountBadge count={cartCount} label={`${cartCount} items in bag`} />
           </button>
         </div>
       </div>
     </header>
 
     <div className={`drawer-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)}>
-      <div className={`drawer-panel ${mobileMenuOpen ? 'open' : ''}`} onClick={(event) => event.stopPropagation()}
-        style={{ left: 0, right: 'auto', transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)' }}>
+      <motion.div className="drawer-panel" onClick={(event) => event.stopPropagation()}
+        style={{ left: 0, right: 'auto' }} {...drawerSlide(mobileMenuOpen, 'left')}>
         <div className="drawer-header"><span className="brand-logo" style={{ fontSize: '1.25rem' }}>SILVORA</span><button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu"><X size={20} /></button></div>
         <div className="drawer-body" style={{ padding: '1.5rem' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -122,7 +130,7 @@ export const Header: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   </>;
 };

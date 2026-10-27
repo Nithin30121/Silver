@@ -270,6 +270,13 @@ img {
   color: var(--color-champagne);
 }
 
+/* A quick press-in on primary and secondary buttons; release eases back at the normal speed. */
+.btn-primary:active,
+.btn-secondary:active {
+  transform: scale(0.98);
+  transition-duration: 0.1s;
+}
+
 .btn-text {
   display: inline-flex;
   align-items: center;
@@ -482,6 +489,34 @@ img {
   transform: translateY(-1px);
 }
 
+/* Phones: a smaller wordmark and tighter icons so the menu, logo and every icon fit on one line. */
+@media (max-width: 576px) {
+  .mobile-menu-trigger,
+  .nav-action-btn {
+    padding: 0.3rem;
+  }
+
+  .brand-logo {
+    font-size: 1.3rem;
+    letter-spacing: 0.2em;
+  }
+
+  .nav-actions {
+    gap: 0.6rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .brand-logo {
+    font-size: 1.15rem;
+    letter-spacing: 0.16em;
+  }
+
+  .nav-actions {
+    gap: 0.4rem;
+  }
+}
+
 .badge-count {
   position: absolute;
   top: -2px;
@@ -581,6 +616,18 @@ img {
   font-style: italic;
   font-weight: 400;
   color: var(--color-rose-gold);
+}
+
+/* Masks that the hero headline lines slide up from behind; the padding keeps descenders visible. */
+.hero-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.hero-line-text {
+  display: inline-block;
 }
 
 .hero-supporting {
@@ -948,7 +995,16 @@ img {
   }
 }
 
-/* Product Card */
+/* Grid cells that scroll-reveal their card: they may shrink like the card did, and keep it stretched to the row height. */
+.reveal-cell {
+  min-width: 0;
+}
+
+.reveal-cell > * {
+  height: 100%;
+}
+
+/* Product Card (Motion lifts it on hover, so CSS only eases the border and shadow) */
 .product-card {
   position: relative;
   display: flex;
@@ -956,13 +1012,12 @@ img {
   background-color: var(--color-rich-black);
   border: 1px solid rgba(184, 121, 81, 0.18);
   padding-bottom: 1.25rem;
-  transition: var(--transition-smooth);
+  transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .product-card:hover {
   border-color: rgba(184, 121, 81, 0.45);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
-  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.75);
 }
 
 .product-img-wrapper {
@@ -1102,7 +1157,7 @@ img {
   text-decoration: line-through;
 }
 
-/* Slide-over Drawers (Cart & Wishlist) */
+/* Slide-over Drawers (Cart, Wishlist & mobile menu); Motion slides the panels */
 .drawer-backdrop {
   position: fixed;
   inset: 0;
@@ -1112,7 +1167,8 @@ img {
   z-index: 999;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  /* Stays visible until the panel's slide-out has finished. */
+  transition: opacity 0.3s ease, visibility 0.45s ease;
 }
 
 .drawer-backdrop.open {
@@ -1133,12 +1189,6 @@ img {
   z-index: 1000;
   display: flex;
   flex-direction: column;
-  transform: translateX(100%);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.drawer-panel.open {
-  transform: translateX(0);
 }
 
 .drawer-header {
@@ -1169,7 +1219,7 @@ img {
   background-color: #0d0a09;
 }
 
-/* Modals */
+/* Modals (AnimatedModal fades and lifts them in and out) */
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -1181,14 +1231,6 @@ img {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.modal-backdrop.open {
-  opacity: 1;
-  visibility: visible;
 }
 
 .modal-panel {
@@ -1200,12 +1242,6 @@ img {
   overflow-y: auto;
   box-shadow: var(--shadow-modal);
   position: relative;
-  transform: scale(0.96) translateY(10px);
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.modal-backdrop.open .modal-panel {
-  transform: scale(1) translateY(0);
 }
 
 /* Toast Notification */
@@ -1224,18 +1260,20 @@ img {
   font-size: 0.8125rem;
   letter-spacing: 0.06em;
   z-index: 2000;
-  animation: toastSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes toastSlideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
+/* Homepage trust banner: three columns, stacked on phones */
+.assurance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  text-align: center;
+}
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
+@media (max-width: 768px) {
+  .assurance-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
   }
 }
 
