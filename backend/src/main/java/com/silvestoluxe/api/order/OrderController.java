@@ -3,6 +3,7 @@ package com.silvestoluxe.api.order;
 import static com.silvestoluxe.api.order.OrderDtos.*;
 
 import java.util.UUID;
+import com.silvestoluxe.api.security.CurrentActor;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,11 +37,15 @@ public class OrderController {
 
     @GetMapping("/admin/orders")
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
-    public Page<Response> all(Pageable pageable) { return orders.all(pageable); }
+    public Page<Response> all(@RequestParam(required = false) String query,
+                              @RequestParam(required = false) OrderStatus status,
+                              Pageable pageable) {
+        return orders.search(query, status, pageable);
+    }
 
     @PatchMapping("/admin/orders/{id}/status")
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
-    public Response updateStatus(@PathVariable UUID id, @RequestBody @Valid StatusUpdate request) {
-        return orders.updateStatus(id, request);
+    public Response updateStatus(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestBody @Valid StatusUpdate request) {
+        return orders.updateStatus(id, request, CurrentActor.idOf(jwt));
     }
 }

@@ -8,10 +8,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import static com.silvestoluxe.api.product.ProductDtos.*;
+import com.silvestoluxe.api.security.CurrentActor;
 
 @RestController
 @RequestMapping("/api")
@@ -19,9 +22,11 @@ import static com.silvestoluxe.api.product.ProductDtos.*;
 public class ProductController {
     private final ProductService products;
     private final ProductImageService images;
-    public ProductController(ProductService products, ProductImageService images) {
+    private final StockLedger stock;
+    public ProductController(ProductService products, ProductImageService images, StockLedger stock) {
         this.products = products;
         this.images = images;
+        this.stock = stock;
     }
 
     @GetMapping("/products")
@@ -44,10 +49,14 @@ public class ProductController {
 
     @PostMapping("/admin/products") @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
-    public Response create(@RequestBody @Valid Upsert request) { return products.create(request); }
+    public Response create(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid Upsert request) {
+        return products.create(request, CurrentActor.idOf(jwt));
+    }
 
     @PutMapping("/admin/products/{id}") @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
-    public Response update(@PathVariable UUID id, @RequestBody @Valid Upsert request) { return products.update(id, request); }
+    public Response update(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestBody @Valid Upsert request) {
+        return products.update(id, request, CurrentActor.idOf(jwt));
+    }
 
     @PatchMapping("/admin/products/{id}/status") @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
     public Response status(@PathVariable UUID id, @RequestBody @Valid Status request) { return products.updateStatus(id, request); }
@@ -59,6 +68,21 @@ public class ProductController {
     @DeleteMapping("/admin/products/{id}/categories/{categoryId}") @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
     public void removeCategory(@PathVariable UUID id, @PathVariable UUID categoryId) { products.removeCategory(id, categoryId); }
+
+    @GetMapping("/admin/products/{id}/stock-movements")
+    @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
+    public Page<StockMovementResponse> stockMovements(@PathVariable UUID id,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "20") int size) {
+        return stock.history(id, page, size);
+    }
+
+    @GetMapping("/admin/stock-movements")
+    @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
+    public Page<StockMovementResponse> recentStockMovements(@RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "20") int size) {
+        return stock.history(null, page, size);
+    }
 
     @GetMapping("/admin/products/{id}/images")
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")

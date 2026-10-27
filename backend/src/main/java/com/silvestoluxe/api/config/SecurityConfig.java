@@ -30,6 +30,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health").permitAll()
+                        // Spring's error page reports the real status (400, 404) instead of every error becoming 403.
+                        // It never includes messages or stack traces (server.error settings in application.yml).
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**", "/api/products", "/api/products/**").permitAll()
                         .requestMatchers("/api/me").authenticated()
                         .requestMatchers("/api/orders/**").authenticated()

@@ -30,9 +30,11 @@ public final class OrderDtos {
 
     public record CheckoutItem(@NotNull UUID productId, @Min(1) @Max(99) int quantity) { }
 
+    /** notifyCustomer defaults to true; customers are emailed only when email is set up on the server. */
     public record StatusUpdate(@NotNull OrderStatus status,
                                @NotNull PaymentStatus paymentStatus,
-                               @Size(max = 500) String note) { }
+                               @Size(max = 500) String note,
+                               Boolean notifyCustomer) { }
 
     public record ItemResponse(UUID productId, String productName, String productSku, BigDecimal unitPrice,
                                int quantity, BigDecimal lineTotal) { }
