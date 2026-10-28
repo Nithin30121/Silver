@@ -100,9 +100,10 @@
 
 .lux-hero-wordmark {
   display: block;
-  padding: 0.06em 0.05em 0.1em;
+  padding: 0.02em 0.05em 0.06em;
   font-family: var(--font-serif);
-  font-size: clamp(3.8rem, 9.5vw, 10.5rem);
+  /* About two-thirds of the screen wide, matching the phone layout's proportion. */
+  font-size: clamp(4.5rem, 17vw, 19rem);
   font-weight: 300;
   line-height: 0.84;
   letter-spacing: -0.01em;
@@ -131,11 +132,11 @@
 
 .lux-hero-luxe {
   display: block;
-  margin-top: clamp(0.5rem, 1.6vw, 1.6rem);
+  margin-top: clamp(0.4rem, 1vw, 1.2rem);
   /* Letter spacing also follows the last letter; the matching left padding keeps the word centred. */
   padding-left: 1em;
   font-family: var(--font-sans);
-  font-size: clamp(0.72rem, 1.15vw, 1.05rem);
+  font-size: clamp(0.8rem, 1.7vw, 1.75rem);
   font-weight: 500;
   letter-spacing: 1em;
   color: rgba(214, 218, 225, 0.72);
@@ -163,7 +164,8 @@
   flex-direction: column;
   align-items: center;
   min-height: inherit;
-  padding: clamp(1.75rem, 5vh, 3.25rem) clamp(1.25rem, 4vw, 4rem) clamp(1.75rem, 5vh, 3.25rem);
+  /* The label sits just under the header; the bottom keeps its breathing room above the button. */
+  padding: clamp(0.9rem, 2.4vh, 1.5rem) clamp(1.25rem, 4vw, 4rem) clamp(1.75rem, 5vh, 3.25rem);
   text-align: center;
   pointer-events: none;
 }
@@ -172,7 +174,7 @@
   position: relative;
   flex: 1;
   width: 100%;
-  min-height: clamp(12rem, 34vh, 26rem);
+  min-height: clamp(9rem, 24vh, 20rem);
   margin: clamp(0.5rem, 1.5vh, 1rem) 0;
 }
 
@@ -204,6 +206,45 @@
   background: linear-gradient(90deg, rgba(214, 218, 225, 0.55), transparent);
 }
 
+/* Visitors drag here to turn the bracelet. Touch screens keep vertical swipes for scrolling. */
+.lux-hero-space.is-turnable {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.lux-hero-space.is-dragging {
+  cursor: grabbing;
+}
+
+.lux-hero-space.is-turnable:focus-visible {
+  outline: 1px solid rgba(214, 218, 225, 0.35);
+  outline-offset: -6px;
+  border-radius: 1.5rem;
+}
+
+/* A quiet hint once the bracelet has arrived; it fades away the first time someone turns it. */
+.lux-hero-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 1.2rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(214, 218, 225, 0.6);
+  opacity: 0;
+  transition: opacity 0.8s var(--lux-ease);
+}
+
+.lux-hero-hint.is-shown {
+  opacity: 1;
+  transition-delay: 2.8s;
+}
+
 .lux-hero-footer {
   display: flex;
   align-items: flex-end;
@@ -211,7 +252,7 @@
   gap: 1.5rem 3rem;
   width: 100%;
   max-width: 82rem;
-  margin-top: clamp(1.25rem, 3.5vh, 2.5rem);
+  margin-top: clamp(0.9rem, 2.5vh, 2rem);
   text-align: left;
 }
 
@@ -306,7 +347,7 @@
   }
 
   .lux-hero-luxe {
-    font-size: 0.72rem;
+    font-size: 0.8rem;
   }
 
   .lux-hero-label {

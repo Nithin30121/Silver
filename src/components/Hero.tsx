@@ -1,9 +1,10 @@
-import React, { Component, Suspense, lazy, useEffect, useRef, useState, type ReactNode } from 'react';
+import React, { Component, Suspense, lazy, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { motion, useMotionValueEvent, useReducedMotion, useScroll, useTransform, type Variants } from 'motion/react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Rotate3d } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { luxeEase } from '../lib/motion';
 import { INTRO_DISMISSED_EVENT, hasSeenIntro } from '../lib/intro';
+import { SETTLE_AFTER, TILT_RANGE, restingDrag } from './hero/heroInput';
 import '../styles/hero.css';
 
 // Three.js arrives in its own download only when the hero needs it, so other pages stay light.
@@ -50,6 +51,11 @@ function useRevealTime(skipIntro: boolean): number | null {
   return revealAt;
 }
 
+/** Dragging across the bracelet's space turns it about this much per pixel; dragging up or down tips it. */
+const SPIN_PER_PIXEL = 0.011;
+const TILT_PER_PIXEL = 0.005;
+const clampTilt = (value: number) => Math.min(TILT_RANGE.closed, Math.max(TILT_RANGE.open, value));
+
 const rise: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: (delay: number) => ({ opacity: 1, y: 0, transition: { duration: 0.9, ease: luxeEase, delay } }),
@@ -73,6 +79,14 @@ export const Hero: React.FC = () => {
   // The free space above the lettering, which the 3D bracelet fills (see measuring below).
   const spaceRef = useRef<HTMLDivElement>(null);
   const anchor = useRef({ x: 0.5, y: 0.4, width: 1, height: 0.5 });
+  // Visitors turn the bracelet by dragging it (or with the arrow keys); the scene reads this every frame.
+  const drag = useRef(restingDrag());
+  const lastPoint = useRef({ x: 0, y: 0, t: 0, speed: 0 });
+  // With reduced motion the scene draws only on request, so each turn asks it for a frame.
+  const redraw = useRef<(() => void) | null>(null);
+  const registerRedraw = useCallback((next: (() => void) | null) => { redraw.current = next; }, []);
+  const [hasTurned, setHasTurned] = useState(false);
+  const turnable = device.webgl && !sceneFailed;
 
   // As the hero scrolls away the text lifts and fades while the bracelet rises and turns faster.
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
@@ -129,6 +143,65 @@ export const Hero: React.FC = () => {
   const animate = revealed ? 'show' : 'hidden';
   const initial = reduceMotion ? false : 'hidden';
 
+  const noteTurn = () => {
+    drag.current.lastInteraction = performance.now();
+    redraw.current?.();
+    if (!hasTurned) setHasTurned(true);
+  };
+  const startDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!turnable || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    const now = performance.now();
+    // After a pause the bracelet has settled back upright, so a new drag starts from there.
+    if (now - drag.current.lastInteraction > SETTLE_AFTER) drag.current.tilt = 0;
+    drag.current.dragging = true;
+    lastPoint.current = { x: event.clientX, y: event.clientY, t: now, speed: 0 };
+    event.currentTarget.setPointerCapture(event.pointerId);
+    event.currentTarget.classList.add('is-dragging');
+    noteTurn();
+  };
+  const moveDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const state = drag.current;
+    if (!state.dragging) return;
+    const now = performance.now();
+    const seconds = Math.max(0.008, (now - lastPoint.current.t) / 1000);
+    const spin = (event.clientX - lastPoint.current.x) * SPIN_PER_PIXEL;
+    state.spin += spin;
+    // On touch screens only sideways swipes turn it; up and down still scroll the page.
+    if (event.pointerType !== 'touch') state.tilt = clampTilt(state.tilt + (event.clientY - lastPoint.current.y) * TILT_PER_PIXEL);
+    // Smoothed, so a flick carries on spinning at about the speed it was thrown.
+    const speed = Math.max(-7, Math.min(7, lastPoint.current.speed * 0.5 + (spin / seconds) * 0.5));
+    lastPoint.current = { x: event.clientX, y: event.clientY, t: now, speed };
+    noteTurn();
+  };
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const state = drag.current;
+    if (!state.dragging) return;
+    state.dragging = false;
+    // Held still before letting go: no throw.
+    const now = performance.now();
+    state.throwSpeed = now - lastPoint.current.t > 90 ? 0 : lastPoint.current.speed;
+    state.thrownAt = now;
+    event.currentTarget.classList.remove('is-dragging');
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    noteTurn();
+  };
+  const turnWithKeys = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const turn = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+    const tip = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
+    if (!turn && !tip) return;
+    event.preventDefault();
+    // A gentle push that glides to a stop, or a fixed step when motion is reduced.
+    const now = performance.now();
+    if (now - drag.current.lastInteraction > SETTLE_AFTER) drag.current.tilt = 0;
+    if (turn && reduceMotion) drag.current.spin += turn * 0.3;
+    else if (turn) {
+      drag.current.throwSpeed = turn * 1.6;
+      drag.current.thrownAt = now;
+    }
+    if (tip) drag.current.tilt = clampTilt(drag.current.tilt + tip * 0.12);
+    noteTurn();
+  };
+
   return (
     <section ref={sectionRef} className="lux-hero" aria-labelledby="lux-hero-title">
       <div className="lux-hero-atmosphere" aria-hidden="true">
@@ -142,7 +215,7 @@ export const Hero: React.FC = () => {
           <SceneBoundary onFail={() => setSceneFailed(true)}>
             <Suspense fallback={null}>
               <HeroScene revealAt={revealAt} active={active} reducedMotion={reduceMotion} lowPower={device.lowPower}
-                motion={{ pointer, scroll, anchor }} />
+                motion={{ pointer, scroll, anchor, drag }} registerRedraw={registerRedraw} />
             </Suspense>
           </SceneBoundary>
         </div>
@@ -153,10 +226,28 @@ export const Hero: React.FC = () => {
           925 STERLING SILVER
         </motion.p>
 
-        {/* The bracelet's place. Without WebGL a drawn bracelet fills it instead. */}
-        <div ref={spaceRef} className="lux-hero-space">
+        {/* The bracelet's place, where visitors drag to turn it. Without WebGL a drawn bracelet fills it instead. */}
+        <div
+          ref={spaceRef}
+          className={`lux-hero-space${turnable ? ' is-turnable' : ''}`}
+          role={turnable ? 'group' : undefined}
+          tabIndex={turnable ? 0 : undefined}
+          aria-roledescription={turnable ? '3D view' : undefined}
+          aria-label={turnable ? 'Silver Cuban-link bracelet. Drag it, or use the arrow keys, to turn it.' : undefined}
+          onPointerDown={startDrag}
+          onPointerMove={moveDrag}
+          onPointerUp={endDrag}
+          onPointerCancel={endDrag}
+          onKeyDown={turnable ? turnWithKeys : undefined}
+        >
           {(!device.webgl || sceneFailed) && <StillBracelet />}
         </div>
+        {turnable && (
+          <span className={`lux-hero-hint${revealed && !hasTurned ? ' is-shown' : ''}`} aria-hidden="true">
+            <Rotate3d size={14} strokeWidth={1.5} />
+            {device.finePointer ? 'Drag to turn' : 'Swipe to turn'}
+          </span>
+        )}
 
         <h1 id="lux-hero-title" className="lux-hero-title">
           <span className="lux-hero-sr-only">SILVORA LUXE</span>

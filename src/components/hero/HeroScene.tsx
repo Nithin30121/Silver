@@ -7,6 +7,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, Lightformer } from '@react-three/drei';
 import { MathUtils, MeshPhysicalMaterial, NeutralToneMapping, type Group, type InstancedMesh, type Mesh } from 'three';
 import { CHAIN, CHAIN_EXTENT, boxClasp, claspMatrix, curbLink, curbLinkMatrices } from './braceletGeometry';
+import { SETTLE_AFTER, type DragState } from './heroInput';
 
 /** Where the bracelet goes: the centre and size of the free space above the lettering, as fractions of the hero. */
 export interface SceneAnchor {
@@ -22,6 +23,7 @@ export interface SceneMotion {
   /** How far the hero has scrolled out of view, 0..1. */
   scroll: RefObject<number>;
   anchor: RefObject<SceneAnchor>;
+  drag: RefObject<DragState>;
 }
 
 export interface HeroSceneProps {
@@ -33,6 +35,8 @@ export interface HeroSceneProps {
   /** Phones and tablets: a lighter mesh and a lower pixel ratio. */
   lowPower: boolean;
   motion: SceneMotion;
+  /** Hands the page a way to draw a fresh frame when only the visitor is moving the bracelet (reduced motion). */
+  registerRedraw: (redraw: (() => void) | null) => void;
 }
 
 const { damp } = MathUtils;
@@ -44,10 +48,13 @@ const TILT = 1.14;
 /** How far it rocks forward and back around that tilt. */
 const ROCK = 0.06;
 /**
- * How big the tilted bracelet looks, in its own units, with room for its rocking. The oval's long
- * side turns round as the bracelet spins, so both directions allow for it.
+ * How big the bracelet looks at a given tilt, in its own units. The oval's long side turns round as
+ * the bracelet spins, so both directions allow for it, and the near side is closer to the camera and
+ * looks larger, hence the extra allowance.
  */
-const APPARENT_HEIGHT = 2 * CHAIN_EXTENT.x * Math.cos(TILT - ROCK) + 2 * CHAIN_EXTENT.band * Math.sin(TILT);
+const heightAt = (tilt: number) => (2 * CHAIN_EXTENT.x * Math.cos(tilt) + 2 * CHAIN_EXTENT.band * Math.sin(tilt)) * 1.18;
+/** Its height at rest, with room for its rocking: what the space on the page is fitted to. */
+const APPARENT_HEIGHT = heightAt(TILT - ROCK);
 const APPARENT_WIDTH = 2 * CHAIN_EXTENT.x;
 const ENTER_DELAY = 500;
 
@@ -60,13 +67,17 @@ const satinSilver = (roughness: number, extra: Partial<ConstructorParameters<typ
     color: '#dedfe1', metalness: 1, roughness, envMapIntensity: 1.15, transparent: true, opacity: 0, ...extra,
   });
 
-function CubanBracelet({ revealAt, reducedMotion, lowPower, motion }: Omit<HeroSceneProps, 'active'>) {
+function CubanBracelet({ revealAt, reducedMotion, lowPower, motion, registerRedraw }: Omit<HeroSceneProps, 'active'>) {
   const holder = useRef<Group>(null);
   const body = useRef<Group>(null);
   const chain = useRef<InstancedMesh>(null);
   const clasp = useRef<Mesh>(null);
   const entered = useRef(0);
   const turned = useRef(0);
+  const tipped = useRef(0);
+  // The visitor's turning as far as the scene has applied it, and the glide left when they let go.
+  const applied = useRef({ spin: 0, thrownAt: 0, glide: 0 });
+  const invalidate = useThree((state) => state.invalidate);
   const parts = useMemo(() => ({
     link: curbLink(lowPower ? 0.6 : 1),
     claspShape: boxClasp(),
@@ -76,6 +87,11 @@ function CubanBracelet({ revealAt, reducedMotion, lowPower, motion }: Omit<HeroS
   }), [lowPower]);
   const placements = useMemo(() => ({ links: curbLinkMatrices(), clasp: claspMatrix() }), []);
   useEffect(() => () => Object.values(parts).forEach((part) => part.dispose()), [parts]);
+
+  useEffect(() => {
+    registerRedraw(invalidate);
+    return () => registerRedraw(null);
+  }, [registerRedraw, invalidate]);
 
   useLayoutEffect(() => {
     const mesh = chain.current;
@@ -120,19 +136,40 @@ function CubanBracelet({ revealAt, reducedMotion, lowPower, motion }: Omit<HeroS
     );
     group.position.set(
       (anchor.x - 0.5) * viewport.width,
-      // On wide screens the near side looks larger, so sitting a touch low centres it by eye.
-      (0.5 - anchor.y) * viewport.height - (viewport.aspect > 1 ? 0.035 * viewport.height : 0)
-        + Math.sin(t * 0.55) * 0.06 * fit - rest * 1.2 + away * 0.9,
+      (0.5 - anchor.y) * viewport.height + Math.sin(t * 0.55) * 0.05 * fit - rest * 1.2 + away * 0.9,
       -rest * 3 + away * 0.6,
     );
-    group.scale.setScalar(fit * (0.75 + 0.25 * e) * (1 - 0.1 * away));
+    // The visitor's turning: what they dragged since the last frame, then any spin left when they let go.
+    const drag = motion.drag.current;
+    const done = applied.current;
+    const idle = performance.now() - drag.lastInteraction;
+    turned.current += drag.spin - done.spin;
+    done.spin = drag.spin;
+    if (drag.thrownAt !== done.thrownAt) {
+      done.thrownAt = drag.thrownAt;
+      done.glide = drag.throwSpeed;
+    }
+    if (drag.dragging) done.glide = 0;
+    if (!reducedMotion) {
+      turned.current += done.glide * delta;
+      done.glide *= Math.exp(-2.6 * delta);
+    }
+    // A short while after they let go, the tilt settles back and the slow turn picks up again.
+    const settled = !drag.dragging && idle > SETTLE_AFTER;
+    tipped.current = reducedMotion ? drag.tilt : damp(tipped.current, settled ? 0 : drag.tilt, settled ? 1.1 : 9, delta);
+    const autoTurn = drag.dragging ? 0 : MathUtils.smoothstep(idle, 1200, 3600);
+
+    // Tipped open, the bracelet stands taller; shrink it just enough to stay inside its space.
+    const tilt = TILT + tipped.current;
+    const roomy = Math.min(1, APPARENT_HEIGHT / heightAt(Math.min(tilt, TILT - ROCK)));
+    group.scale.setScalar(fit * roomy * (0.75 + 0.25 * e) * (1 - 0.1 * away));
 
     // A slow turn around the bracelet's own axis carries the links and clasp round; gentle sway on the others.
     // It starts with the clasp at the front right, where it is easy to see.
-    if (!reducedMotion) turned.current += 0.12 * delta * (1 + away * 2.5);
+    if (!reducedMotion) turned.current += 0.12 * delta * (1 + away * 2.5) * autoTurn;
     turning.rotation.set(
-      TILT + Math.sin(t * 0.23) * ROCK + rest * 0.7,
-      Math.sin(t * 0.17 + 1.3) * 0.16 - rest * 0.5,
+      tilt + Math.sin(t * 0.23) * ROCK + rest * 0.7,
+      Math.sin(t * 0.17 + 1.3) * 0.16 * (0.4 + 0.6 * autoTurn) - rest * 0.5,
       -0.9 + turned.current,
     );
   });
@@ -147,14 +184,14 @@ function CubanBracelet({ revealAt, reducedMotion, lowPower, motion }: Omit<HeroS
   );
 }
 
-/** Follows the pointer with the bracelet and the camera. */
+/** Leans the bracelet and the camera gently towards the pointer, except while the visitor is dragging it. */
 function Rig({ children, reducedMotion, motion }: { children: ReactNode; reducedMotion: boolean; motion: SceneMotion }) {
   const rig = useRef<Group>(null);
   useFrame(({ camera }, rawDelta) => {
     const delta = step(rawDelta);
     const group = rig.current;
     if (!group || reducedMotion) return;
-    const { x, y } = motion.pointer.current;
+    const { x, y } = motion.drag.current.dragging ? { x: 0, y: 0 } : motion.pointer.current;
     group.rotation.y = damp(group.rotation.y, x * 0.24, 2.4, delta);
     group.rotation.x = damp(group.rotation.x, -y * 0.14, 2.4, delta);
     camera.position.x = damp(camera.position.x, x * 0.25, 1.8, delta);
@@ -207,7 +244,7 @@ function DrawStill({ reducedMotion, revealAt }: { reducedMotion: boolean; reveal
   return null;
 }
 
-export default function HeroScene({ revealAt, active, reducedMotion, lowPower, motion }: HeroSceneProps) {
+export default function HeroScene({ revealAt, active, reducedMotion, lowPower, motion, registerRedraw }: HeroSceneProps) {
   return (
     <Canvas
       className="lux-hero-canvas"
@@ -221,7 +258,7 @@ export default function HeroScene({ revealAt, active, reducedMotion, lowPower, m
     >
       <Studio />
       <Rig reducedMotion={reducedMotion} motion={motion}>
-        <CubanBracelet revealAt={revealAt} reducedMotion={reducedMotion} lowPower={lowPower} motion={motion} />
+        <CubanBracelet revealAt={revealAt} reducedMotion={reducedMotion} lowPower={lowPower} motion={motion} registerRedraw={registerRedraw} />
       </Rig>
       <DrawStill reducedMotion={reducedMotion} revealAt={revealAt} />
     </Canvas>
