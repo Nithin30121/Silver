@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import {
   ArrowRight, Boxes, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
   LayoutDashboard, LoaderCircle, LogOut, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
@@ -10,6 +9,8 @@ import { toAccountError } from '../../services/authService';
 import type { CatalogueCategory } from '../../types';
 import type { ApiProduct } from '../../services/catalogService';
 import type { OrderResponse } from '../../services/orderService';
+import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../../lib/orderFormat';
+import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import {
   AdminApiError, createCategory, createProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
   getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getSalesSummary, getStockMovements, setCategoryActive,
@@ -61,7 +62,8 @@ const EMAIL_STATUSES = new Set(['CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'
 const STOCK_REASONS: Record<StockReason, string> = {
   INITIAL: 'Starting stock', MANUAL: 'Updated by hand', SALE: 'Sold', CANCELLATION: 'Order cancelled'
 };
-const PAYMENT_METHODS: Record<string, string> = { UPI: 'UPI', CARD: 'Card', COD: 'Cash on delivery' };
+// Suggestions for the courier box; any other courier can be typed in.
+const COURIERS = ['Delhivery', 'Blue Dart', 'DTDC', 'India Post', 'Ekart', 'Xpressbees', 'Shadowfax', 'Shiprocket'];
 const CATEGORY_TYPES: Record<CatalogueCategory['categoryType'], string> = {
   audience: 'Audience', collection: 'Collection', items: 'Items', landing_page: 'Landing page'
 };
@@ -75,16 +77,6 @@ const emptyCategory = (): CategoryInput => ({
 });
 
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-/** ₹1,000 for whole rupees and ₹1,890.50 when there are paise, so printed totals add up exactly. */
-const money = (value: number | string) => {
-  const amount = Number(value);
-  const digits = Number.isInteger(Math.round(amount * 100) / 100) ? 0 : 2;
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(amount);
-};
-/** "PENDING_PAYMENT" becomes "Pending payment". */
-const humanize = (value: string) => value.charAt(0) + value.slice(1).toLowerCase().replace(/_/g, ' ');
-const formatDate = (value?: string) => value
-  ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : '—';
 const formatDateTime = (value?: string) => value
   ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value)) : '—';
 const formatTime = (value: Date) => new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit' }).format(value);
@@ -1160,19 +1152,30 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
   const [status, setStatus] = useState(order.status);
   const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus);
   const [emailCustomer, setEmailCustomer] = useState(true);
-  const [printing, setPrinting] = useState<PrintKind | null>(null);
+  const [tracking, setTracking] = useState({
+    carrier: order.trackingCarrier ?? '', number: order.trackingNumber ?? '', url: order.trackingUrl ?? ''
+  });
+  const [printing, setPrinting] = useState<OrderPrintKind | null>(null);
   const stopPrinting = useCallback(() => setPrinting(null), []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const statusOptions = [order.status, ...(NEXT_ORDER_STATUSES[order.status] ?? [])];
   const isClosed = statusOptions.length === 1;
-  const unchanged = status === order.status && paymentStatus === order.paymentStatus;
+  // Tracking belongs to shipped orders; it is sent only while its fields are on screen.
+  const showsTracking = status === 'SHIPPED' || status === 'DELIVERED';
+  const trackingChanged = tracking.carrier.trim() !== (order.trackingCarrier ?? '')
+    || tracking.number.trim() !== (order.trackingNumber ?? '') || tracking.url.trim() !== (order.trackingUrl ?? '');
+  const trackingLinkProblem = tracking.url.trim() && !isSecureLink(tracking.url.trim())
+    ? 'Paste the full tracking link, starting with https://' : '';
+  const unchanged = status === order.status && paymentStatus === order.paymentStatus && !(showsTracking && trackingChanged);
   const customerHearsAboutIt = status !== order.status && EMAIL_STATUSES.has(status);
   const save = async () => {
     setBusy(true);
     setError('');
     try {
-      await updateOrderStatus(order.id, status, paymentStatus, emailCustomer);
+      await updateOrderStatus(order.id, status, paymentStatus, emailCustomer, showsTracking ? {
+        carrier: tracking.carrier.trim(), number: tracking.number.trim(), url: tracking.url.trim()
+      } : undefined);
       notify('success', customerHearsAboutIt && emailCustomer && emailEnabled
         ? `Order ${order.orderNumber} updated. The customer will get an email.`
         : `Order ${order.orderNumber} updated.`);
@@ -1192,7 +1195,7 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
           <button type="button" className="admin-button is-ghost" onClick={() => setPrinting('summary')}><Printer size={15} /> Order summary</button>
         </span>
         <button type="button" className="admin-button is-secondary" onClick={onClose}>Close</button>
-        <button type="button" className="admin-button is-primary" disabled={busy || unchanged} onClick={() => void save()}>
+        <button type="button" className="admin-button is-primary" disabled={busy || unchanged || Boolean(trackingLinkProblem)} onClick={() => void save()}>
           {busy ? <><LoaderCircle size={16} className="is-spinning" /> Saving…</> : 'Save changes'}
         </button>
       </>}>
@@ -1244,6 +1247,20 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
             {PAYMENT_STATUSES.map((value) => <option key={value} value={value}>{humanize(value)}</option>)}
           </select>
         </Field>
+        {showsTracking && <>
+          <Field label="Courier" hint="Optional. Shown to the customer with the tracking number.">
+            <input value={tracking.carrier} maxLength={80} list="admin-couriers" placeholder="e.g. Delhivery"
+              onChange={(e) => setTracking({ ...tracking, carrier: e.target.value })} />
+            <datalist id="admin-couriers">{COURIERS.map((courier) => <option key={courier} value={courier} />)}</datalist>
+          </Field>
+          <Field label="Tracking number" hint="Optional. Customers see it on their order page.">
+            <input value={tracking.number} maxLength={80} onChange={(e) => setTracking({ ...tracking, number: e.target.value })} />
+          </Field>
+          <Field label="Tracking link" hint="Optional. The courier's tracking page for this parcel." error={trackingLinkProblem}>
+            <input type="url" inputMode="url" value={tracking.url} maxLength={500} placeholder="https://"
+              onChange={(e) => setTracking({ ...tracking, url: e.target.value })} />
+          </Field>
+        </>}
         {status === 'CANCELLED' && order.status !== 'CANCELLED' && (
           <p className="admin-callout is-warning is-wide"><TriangleAlert size={16} /> Cancelling returns this order's pieces to stock. It can't be undone.</p>
         )}
@@ -1254,81 +1271,8 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
               : 'Customer emails are off until an email service is set up on the server.'} />
         )}
       </div>
-      {printing && <PrintSheet order={order} kind={printing} onDone={stopPrinting} />}
+      {printing && <OrderPrintSheet order={order} kind={printing} onDone={stopPrinting} />}
     </Modal>
-  );
-};
-
-type PrintKind = 'slip' | 'summary';
-
-/**
- * A printable page drawn outside the dashboard. Print styles hide everything else while it exists;
- * React escapes every value, so customer-typed text can't become markup on the printed page.
- */
-const PrintSheet: React.FC<{ order: OrderResponse; kind: PrintKind; onDone: () => void }> = ({ order, kind, onDone }) => {
-  useEffect(() => {
-    window.addEventListener('afterprint', onDone);
-    // Wait a frame so the sheet is on the page before the print dialog takes its snapshot.
-    const frame = window.requestAnimationFrame(() => window.print());
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener('afterprint', onDone);
-    };
-  }, [onDone]);
-  const isSlip = kind === 'slip';
-  const cityLine = [order.shippingCity, [order.shippingState, order.shippingPostalCode].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-  return createPortal(
-    <div className="admin-print">
-      <header className="admin-print-header">
-        <div>
-          <p className="admin-print-brand">SILVORA</p>
-          <h1>{isSlip ? 'Packing slip' : 'Order summary'}</h1>
-        </div>
-        <dl>
-          <div><dt>Order</dt><dd>{order.orderNumber}</dd></div>
-          <div><dt>Placed</dt><dd>{formatDate(order.createdAt)}</dd></div>
-          {!isSlip && <div><dt>Payment</dt><dd>{PAYMENT_METHODS[order.paymentMethod] ?? order.paymentMethod} · {humanize(order.paymentStatus)}</dd></div>}
-        </dl>
-      </header>
-      <section className="admin-print-address">
-        <h2>Ship to</h2>
-        <p><strong>{order.shippingFullName}</strong></p>
-        {order.shippingAddress && <p>{order.shippingAddress}</p>}
-        {cityLine && <p>{cityLine}</p>}
-        {order.shippingPhone && <p>{order.shippingPhone}</p>}
-        {!isSlip && order.shippingEmail && <p>{order.shippingEmail}</p>}
-      </section>
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th><th>SKU</th><th className="is-right">Qty</th>
-            {isSlip ? <th className="is-right">Packed</th> : <><th className="is-right">Price</th><th className="is-right">Total</th></>}
-          </tr>
-        </thead>
-        <tbody>
-          {order.items?.map((item, index) => (
-            <tr key={`${item.productId ?? 'item'}-${index}`}>
-              <td>{item.productName}</td>
-              <td>{item.productSku || '—'}</td>
-              <td className="is-right">{item.quantity}</td>
-              {isSlip ? <td className="is-right"><span className="admin-print-box" /></td>
-                : <><td className="is-right">{money(item.unitPrice)}</td><td className="is-right">{money(item.lineTotal)}</td></>}
-            </tr>
-          ))}
-        </tbody>
-        {!isSlip && (
-          <tfoot>
-            {order.subtotal !== undefined && <tr><td colSpan={4}>Subtotal</td><td className="is-right">{money(order.subtotal)}</td></tr>}
-            {order.shippingAmount !== undefined && <tr><td colSpan={4}>Shipping</td><td className="is-right">{money(order.shippingAmount)}</td></tr>}
-            <tr className="is-total"><td colSpan={4}>Total</td><td className="is-right">{money(order.totalAmount)}</td></tr>
-          </tfoot>
-        )}
-      </table>
-      <p className="admin-print-note">
-        {isSlip ? 'Thank you for shopping with SILVORA.' : 'This order summary is not a GST tax invoice.'}
-      </p>
-    </div>,
-    document.body
   );
 };
 
@@ -1527,11 +1471,11 @@ const FormSection: React.FC<{ title: string; description?: string; children: Rea
   </section>
 );
 
-const Field: React.FC<{ label: string; hint?: string; wide?: boolean; children: React.ReactNode }> = ({ label, hint, wide, children }) => (
+const Field: React.FC<{ label: string; hint?: string; error?: string; wide?: boolean; children: React.ReactNode }> = ({ label, hint, error, wide, children }) => (
   <label className={`admin-field ${wide ? 'is-wide' : ''}`}>
     <span className="admin-field-label">{label}</span>
     {children}
-    {hint && <small className="admin-field-hint">{hint}</small>}
+    {error ? <small className="admin-field-hint is-error" role="alert">{error}</small> : hint && <small className="admin-field-hint">{hint}</small>}
   </label>
 );
 

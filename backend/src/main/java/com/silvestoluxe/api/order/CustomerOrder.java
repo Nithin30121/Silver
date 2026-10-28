@@ -26,7 +26,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class CustomerOrder {
     @Id @GeneratedValue(strategy = GenerationType.UUID) private UUID id;
     @Column(name = "order_number", nullable = false, unique = true, insertable = false, updatable = false) private String orderNumber;
-    @Column(name = "customer_id", nullable = false, updatable = false) private UUID customerId;
+    /** Null once the customer has deleted their account; the order keeps its own delivery snapshot. */
+    @Column(name = "customer_id", updatable = false) private UUID customerId;
     @Enumerated(EnumType.STRING) @Column(nullable = false) private OrderStatus status;
     @Enumerated(EnumType.STRING) @Column(nullable = false) private PaymentStatus paymentStatus;
     @Enumerated(EnumType.STRING) @Column(nullable = false) private PaymentMethod paymentMethod;
@@ -40,6 +41,9 @@ public class CustomerOrder {
     @Column(nullable = false) private String shippingCity;
     @Column(nullable = false) private String shippingState;
     @Column(nullable = false) private String shippingPostalCode;
+    private String trackingCarrier;
+    private String trackingNumber;
+    private String trackingUrl;
     @CreationTimestamp @Column(nullable = false, updatable = false) private Instant createdAt;
     @UpdateTimestamp @Column(nullable = false) private Instant updatedAt;
 
@@ -86,6 +90,14 @@ public class CustomerOrder {
     public String getShippingCity() { return shippingCity; }
     public String getShippingState() { return shippingState; }
     public String getShippingPostalCode() { return shippingPostalCode; }
+    public String getTrackingCarrier() { return trackingCarrier; }
+    public String getTrackingNumber() { return trackingNumber; }
+    public String getTrackingUrl() { return trackingUrl; }
+    public void setTracking(String carrier, String number, String url) {
+        this.trackingCarrier = carrier;
+        this.trackingNumber = number;
+        this.trackingUrl = url;
+    }
     public Instant getCreatedAt() { return createdAt; }
     public List<OrderItem> getItems() { return items; }
     public List<OrderStatusHistory> getStatusHistory() { return statusHistory; }

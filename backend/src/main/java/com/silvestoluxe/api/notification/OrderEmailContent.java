@@ -41,6 +41,12 @@ final class OrderEmailContent {
                     .append(": ").append(money(line.lineTotal())).append('\n');
         }
         body.append("Total: ").append(money(email.total())).append("\n\n");
+        String tracking = trackingLine(email);
+        if (tracking != null) {
+            body.append(tracking).append('\n');
+            if (isSecureLink(email.tracking().url())) body.append("Track your parcel: ").append(email.tracking().url()).append('\n');
+            body.append('\n');
+        }
         if (hasText(email.shippingAddress())) body.append("Delivering to: ").append(email.shippingAddress()).append("\n\n");
         body.append(shopName);
         if (isWebAddress(shopUrl)) body.append('\n').append(shopUrl);
@@ -55,8 +61,11 @@ final class OrderEmailContent {
                     .append("</td><td style=\"padding:8px 0;border-bottom:1px solid #eee5dd;text-align:right\">")
                     .append(escape(money(line.lineTotal()))).append("</td></tr>");
         }
-        String address = hasText(email.shippingAddress())
-                ? "<p style=\"margin:20px 0 0;color:#6b625b\">Delivering to: " + escape(email.shippingAddress()) + "</p>" : "";
+        String tracking = trackingLine(email) == null ? ""
+                : "<p style=\"margin:20px 0 0\">" + escape(trackingLine(email)) + (isSecureLink(email.tracking().url())
+                        ? "<br><a href=\"" + escape(email.tracking().url()) + "\" style=\"color:#9b5b37\">Track your parcel</a>" : "") + "</p>";
+        String address = tracking + (hasText(email.shippingAddress())
+                ? "<p style=\"margin:20px 0 0;color:#6b625b\">Delivering to: " + escape(email.shippingAddress()) + "</p>" : "");
         String link = isWebAddress(shopUrl)
                 ? "<p style=\"margin:28px 0 0\"><a href=\"" + escape(shopUrl) + "\" style=\"color:#9b5b37\">Visit " + escape(shopName) + "</a></p>" : "";
         return """
@@ -84,6 +93,24 @@ final class OrderEmailContent {
         NumberFormat format = NumberFormat.getCurrencyInstance(Locale.of("en", "IN"));
         format.setMinimumFractionDigits(amount.stripTrailingZeros().scale() > 0 ? 2 : 0);
         return format.format(amount);
+    }
+
+    /** "Courier: Delhivery · Tracking number: 123", only in the shipped email and only when known. */
+    private static String trackingLine(OrderEmail email) {
+        if (!showsTracking(email)) return null;
+        OrderEmail.Tracking tracking = email.tracking();
+        String carrier = hasText(tracking.carrier()) ? "Courier: " + tracking.carrier().trim() : null;
+        String number = hasText(tracking.number()) ? "Tracking number: " + tracking.number().trim() : null;
+        if (carrier == null && number == null) return isSecureLink(tracking.url()) ? "Your parcel can be tracked online." : null;
+        return carrier == null ? number : number == null ? carrier : carrier + " · " + number;
+    }
+
+    private static boolean showsTracking(OrderEmail email) {
+        return email.kind() == OrderEmail.Kind.SHIPPED && email.tracking() != null;
+    }
+
+    private static boolean isSecureLink(String url) {
+        return url != null && url.startsWith("https://");
     }
 
     private static boolean isWebAddress(String url) {

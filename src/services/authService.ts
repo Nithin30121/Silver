@@ -186,6 +186,30 @@ export async function requestPasswordReset(email: string): Promise<void> {
   }
 }
 
+/**
+ * Checks the signed-in customer's password by signing in again with it. Supabase then issues a
+ * fresh session, which is what lets the server allow sensitive changes such as deleting the account.
+ */
+export async function confirmPassword(email: string, password: string): Promise<void> {
+  const client = requireClient();
+  try {
+    const { error } = await client.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) throw error;
+  } catch (error) {
+    const accountError = toAccountError(error, 'Password check');
+    if (accountError.kind === 'invalid-credentials') {
+      throw new AccountError('invalid-credentials', 'That password is not correct. Please try again.');
+    }
+    throw accountError;
+  }
+}
+
+/** Changes the password of a signed-in customer who knows their current one. */
+export async function changePassword(email: string, currentPassword: string, newPassword: string): Promise<void> {
+  await confirmPassword(email, currentPassword);
+  await updatePassword(newPassword);
+}
+
 /** Sets a new password for the signed-in customer (used after following a reset link). */
 export async function updatePassword(newPassword: string): Promise<void> {
   const client = requireClient();

@@ -3,6 +3,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { initialAuthRedirect, isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import * as authService from '../services/authService';
 import * as profileService from '../services/profileService';
+import * as accountService from '../services/accountService';
 import { AccountError, toAccountError, type SignUpInput, type SignUpOutcome } from '../services/authService';
 import type { CustomerProfile } from '../types';
 
@@ -37,6 +38,10 @@ interface AuthContextType {
   resendConfirmationEmail: (email: string) => Promise<void>;
   requestPasswordReset: (email: string) => Promise<void>;
   updatePassword: (newPassword: string) => Promise<void>;
+  /** For a signed-in customer who knows their current password. Other devices are signed out. */
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  /** Confirms the password, permanently deletes the account, then signs out on this device. */
+  deleteAccount: (password: string) => Promise<void>;
   updateFullName: (fullName: string) => Promise<void>;
 }
 
@@ -164,6 +169,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsPasswordRecovery(false);
   };
 
+  const signedInEmail = () => {
+    if (!user?.email) throw new AccountError('session-expired', 'Your session has expired. Please sign in again.');
+    return user.email;
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    await authService.changePassword(signedInEmail(), currentPassword, newPassword);
+  };
+
+  const deleteAccount = async (password: string) => {
+    await authService.confirmPassword(signedInEmail(), password);
+    await accountService.deleteAccount();
+    // The sign-in no longer exists, so this only clears the session stored on this device.
+    expectingSignOut.current = true;
+    try {
+      await authService.signOut();
+    } catch {
+      expectingSignOut.current = false;
+    }
+  };
+
   const updateFullName = async (fullName: string) => {
     if (!userId) throw new AccountError('session-expired', 'Your session has expired. Please sign in again.');
     const profile = await profileService.updateFullName(userId, fullName);
@@ -189,6 +215,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resendConfirmationEmail: authService.resendConfirmationEmail,
         requestPasswordReset: authService.requestPasswordReset,
         updatePassword,
+        changePassword,
+        deleteAccount,
         updateFullName
       }}
     >

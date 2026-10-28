@@ -3,10 +3,13 @@ package com.silvestoluxe.api.order;
 import static com.silvestoluxe.api.order.OrderDtos.*;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import com.silvestoluxe.api.account.AccountProfileService;
@@ -34,6 +37,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class OrderService {
     static final int MAX_QUERY_LENGTH = 100;
     static final int EXPORT_LIMIT = 10_000;
+    /** A customer can cancel an order themselves until it leaves the shop. */
+    static final Set<OrderStatus> CUSTOMER_CANCELLABLE = EnumSet.of(OrderStatus.PENDING_PAYMENT, OrderStatus.CONFIRMED, OrderStatus.PROCESSING);
+    /** Orders that are still on their way, which keep a customer from deleting their account. */
+    static final Set<OrderStatus> IN_PROGRESS = EnumSet.of(OrderStatus.PENDING_PAYMENT, OrderStatus.CONFIRMED,
+            OrderStatus.PROCESSING, OrderStatus.SHIPPED);
 
     private final CustomerOrderRepository orders;
     private final ProductRepository products;
@@ -100,8 +108,39 @@ public class OrderService {
     public Response customerOrder(String subject, UUID orderId) {
         UUID customerId = profiles.currentUser(subject).id();
         CustomerOrder order = find(orderId);
-        if (!order.getCustomerId().equals(customerId)) throw notFound();
+        if (!customerId.equals(order.getCustomerId())) throw notFound();
         return response(order);
+    }
+
+    /**
+     * Cancels a customer's own order before it ships and returns its pieces to stock. A paid order
+     * needs a refund, which the shop arranges, so customers are asked to get in touch instead.
+     */
+    @Transactional
+    public Response cancelByCustomer(String subject, UUID orderId) {
+        UUID customerId = profiles.currentUser(subject).id();
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (!customerId.equals(order.getCustomerId())) throw notFound();
+        // A second click, or a second tab, finds the order already cancelled: nothing more to do.
+        if (order.getStatus() == OrderStatus.CANCELLED) return response(order);
+        if (!CUSTOMER_CANCELLABLE.contains(order.getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This order has already been shipped, so it can no longer be cancelled online. Please contact us for help.");
+        }
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This order has been paid, so please contact us to cancel it and arrange your refund.");
+        }
+        restoreStock(order, customerId);
+        order.setStatus(OrderStatus.CANCELLED);
+        order.recordStatus(OrderStatus.CANCELLED, "Cancelled by the customer.");
+        events.publishEvent(email(order, OrderEmail.Kind.CANCELLED));
+        return response(order);
+    }
+
+    /** Whether any of this customer's orders is still on its way. */
+    public boolean hasOrdersInProgress(UUID customerId) {
+        return orders.existsByCustomerIdAndStatusIn(customerId, IN_PROGRESS);
     }
 
     /** Admin order list: the query matches part of an order number, customer name, email or phone. */
@@ -126,6 +165,7 @@ public class OrderService {
         OrderStatus previous = order.getStatus();
         validateTransition(previous, request.status());
         if (previous != OrderStatus.CANCELLED && request.status() == OrderStatus.CANCELLED) restoreStock(order, actorId);
+        applyTracking(order, request);
         order.setStatus(request.status());
         order.setPaymentStatus(request.paymentStatus());
         order.recordStatus(request.status(), request.note() == null || request.note().isBlank()
@@ -134,6 +174,35 @@ public class OrderService {
         boolean notify = request.notifyCustomer() == null || request.notifyCustomer();
         if (notify && kind != null && previous != request.status()) events.publishEvent(email(order, kind));
         return response(order);
+    }
+
+    /** Courier details belong to shipped orders; null fields leave the saved details alone. */
+    private void applyTracking(CustomerOrder order, StatusUpdate request) {
+        if (request.trackingCarrier() == null && request.trackingNumber() == null && request.trackingUrl() == null) return;
+        String carrier = blankToNull(request.trackingCarrier());
+        String number = blankToNull(request.trackingNumber());
+        String url = blankToNull(request.trackingUrl());
+        boolean shipped = request.status() == OrderStatus.SHIPPED || request.status() == OrderStatus.DELIVERED;
+        if (!shipped && (carrier != null || number != null || url != null)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Add tracking details when the order is marked as shipped.");
+        }
+        if (url != null && !isSecureWebAddress(url)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The tracking link must be a web address starting with https://.");
+        }
+        order.setTracking(carrier, number, url);
+    }
+
+    static boolean isSecureWebAddress(String value) {
+        try {
+            URI uri = new URI(value);
+            return "https".equalsIgnoreCase(uri.getScheme()) && uri.getHost() != null && !uri.getHost().isBlank();
+        } catch (java.net.URISyntaxException exception) {
+            return false;
+        }
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private Map<UUID, Integer> mergeQuantities(List<CheckoutItem> items) {
@@ -193,10 +262,12 @@ public class OrderService {
     private OrderEmail email(CustomerOrder order, OrderEmail.Kind kind) {
         String address = String.join(", ", order.getShippingAddress(), order.getShippingCity(),
                 order.getShippingState() + " " + order.getShippingPostalCode());
+        OrderEmail.Tracking tracking = order.getTrackingNumber() == null && order.getTrackingUrl() == null ? null
+                : new OrderEmail.Tracking(order.getTrackingCarrier(), order.getTrackingNumber(), order.getTrackingUrl());
         return new OrderEmail(kind, order.getShippingEmail(), order.getShippingFullName(), order.getOrderNumber(),
                 order.getTotalAmount(), order.getItems().stream()
                         .map(item -> new OrderEmail.Line(item.getProductName(), item.getQuantity(), item.getLineTotal())).toList(),
-                address);
+                address, tracking);
     }
 
     private void validateTransition(OrderStatus previous, OrderStatus next) {
@@ -224,6 +295,8 @@ public class OrderService {
                 order.getItems().stream().map(item -> new ItemResponse(item.getProductId(), item.getProductName(),
                         item.getProductSku(), item.getUnitPrice(), item.getQuantity(), item.getLineTotal())).toList(),
                 order.getStatusHistory().stream().map(history -> new StatusHistoryResponse(history.getStatus(),
-                        history.getNote(), history.getCreatedAt())).toList());
+                        history.getNote(), history.getCreatedAt())).toList(),
+                order.getTrackingCarrier(), order.getTrackingNumber(), order.getTrackingUrl(),
+                CUSTOMER_CANCELLABLE.contains(order.getStatus()) && order.getPaymentStatus() != PaymentStatus.PAID);
     }
 }

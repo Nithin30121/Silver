@@ -26,7 +26,8 @@ class OrderEmailServiceTest {
     private final OrderEmail shipped = new OrderEmail(OrderEmail.Kind.SHIPPED, "asha@example.com", "Asha <b>Rao</b>",
             "SL-20261027-0003", new BigDecimal("3888.00"),
             List.of(new OrderEmail.Line("Moon Ring", 2, new BigDecimal("1998.00")), new OrderEmail.Line("Pendant", 1, new BigDecimal("1890.50"))),
-            "12 Sample Street, Hyderabad, Telangana 500001");
+            "12 Sample Street, Hyderabad, Telangana 500001",
+            new OrderEmail.Tracking("Delhivery", "DL<123>", "https://track.example.com/DL123"));
 
     @Test
     void staysOffWithoutAnSmtpHostOrFromAddress() {
@@ -67,6 +68,28 @@ class OrderEmailServiceTest {
         // Only web links are added, so a crafted shop URL cannot become a script link.
         assertFalse(html.contains("javascript:"));
         assertTrue(html.contains("Moon Ring &times; 2"));
+    }
+
+    @Test
+    void addsCourierTrackingToTheShippedEmail() {
+        String text = OrderEmailContent.text(shipped, "SILVORA", "");
+        String html = OrderEmailContent.html(shipped, "SILVORA", "");
+
+        assertTrue(text.contains("Courier: Delhivery · Tracking number: DL<123>\nTrack your parcel: https://track.example.com/DL123\n"));
+        assertTrue(html.contains("Tracking number: DL&lt;123&gt;"));
+        assertTrue(html.contains("<a href=\"https://track.example.com/DL123\""));
+    }
+
+    @Test
+    void neverLinksAnInsecureTrackingAddressOrMentionsTrackingInOtherEmails() {
+        OrderEmail insecure = new OrderEmail(OrderEmail.Kind.SHIPPED, "asha@example.com", "Asha", "SL-1", BigDecimal.ONE,
+                List.of(), "", new OrderEmail.Tracking(null, "123", "javascript:alert(1)"));
+        OrderEmail delivered = new OrderEmail(OrderEmail.Kind.DELIVERED, "asha@example.com", "Asha", "SL-1", BigDecimal.ONE,
+                List.of(), "", new OrderEmail.Tracking("Delhivery", "123", "https://track.example.com/123"));
+
+        assertFalse(OrderEmailContent.html(insecure, "SILVORA", "").contains("javascript:"));
+        assertTrue(OrderEmailContent.text(insecure, "SILVORA", "").contains("Tracking number: 123\n"));
+        assertFalse(OrderEmailContent.text(delivered, "SILVORA", "").contains("Tracking number"));
     }
 
     @Test

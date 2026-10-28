@@ -352,6 +352,7 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #3d3631 transpa
 .admin-field { min-width: 0; display: grid; align-content: start; gap: 0.4rem; }
 .admin-field-label { color: var(--a-text); font-size: 0.8125rem; font-weight: 600; }
 .admin-field-hint { color: var(--a-text-3); font-size: 0.75rem; line-height: 1.4; }
+.admin-field-hint.is-error { color: var(--a-danger); }
 
 .admin-affix { display: flex; overflow: hidden; border: 1px solid var(--a-border-strong); border-radius: var(--a-radius-sm); background: var(--a-surface); transition: border-color 0.15s, box-shadow 0.15s; }
 .admin-affix:focus-within { border-color: var(--a-accent); box-shadow: 0 0 0 3px var(--a-focus); }
@@ -520,31 +521,3 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #3d3631 transpa
   .admin-toast { right: 1rem; bottom: 1rem; left: 1rem; max-width: none; }
 }
 
-/* ---------- Printed packing slips and order summaries ---------- */
-/* The sheet sits outside the dashboard (a direct child of body), so it uses plain print colours, not theme tokens. */
-.admin-print { display: none; }
-
-@media print {
-  @page { margin: 14mm; }
-  html:has(> body > .admin-print), body:has(> .admin-print) { background: #ffffff !important; }
-  body:has(> .admin-print) > :not(.admin-print) { display: none !important; }
-  .admin-print { display: block; color: #111111; font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; line-height: 1.45; }
-  .admin-print h1, .admin-print h2, .admin-print p { margin: 0; color: inherit; font-family: inherit; letter-spacing: normal; text-transform: none; }
-  .admin-print-header { display: flex; justify-content: space-between; gap: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #111111; }
-  .admin-print-brand { font-size: 16pt; font-weight: 700; letter-spacing: 0.3em !important; }
-  .admin-print h1 { margin-top: 0.2rem; font-size: 12pt; font-weight: 600; color: #555555; }
-  .admin-print-header dl { display: grid; gap: 0.15rem; margin: 0; text-align: right; }
-  .admin-print-header dl div { display: flex; justify-content: flex-end; gap: 0.6rem; }
-  .admin-print-header dt { color: #555555; }
-  .admin-print-header dd { margin: 0; font-weight: 600; }
-  .admin-print-address { margin: 1.2rem 0; }
-  .admin-print h2 { margin-bottom: 0.3rem; color: #555555; font-size: 9pt; font-weight: 600; letter-spacing: 0.08em !important; text-transform: uppercase; }
-  .admin-print table { width: 100%; border-collapse: collapse; }
-  .admin-print th { padding: 0.45rem 0.4rem; border-bottom: 1px solid #111111; font-size: 9pt; text-align: left; text-transform: uppercase; letter-spacing: 0.05em; }
-  .admin-print td { padding: 0.55rem 0.4rem; border-bottom: 1px solid #dddddd; vertical-align: top; }
-  .admin-print .is-right { text-align: right; }
-  .admin-print tfoot td { border-bottom: 0; padding-top: 0.35rem; }
-  .admin-print tfoot .is-total td { padding-top: 0.6rem; border-top: 2px solid #111111; font-weight: 700; font-size: 11.5pt; }
-  .admin-print-box { display: inline-block; width: 0.9rem; height: 0.9rem; border: 1.5px solid #111111; border-radius: 2px; }
-  .admin-print-note { margin-top: 1.5rem !important; color: #555555; font-size: 9.5pt; }
-}

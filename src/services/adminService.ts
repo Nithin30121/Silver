@@ -202,9 +202,19 @@ export async function getCustomerOrders(customerId: string): Promise<{ orders: O
 }
 
 /** notifyCustomer asks the server to email the customer about a status change, when email is set up there. */
-export function updateOrderStatus(id: string, status: string, paymentStatus: string, notifyCustomer = true) {
+export interface OrderTracking {
+  carrier: string;
+  number: string;
+  url: string;
+}
+
+/** Without tracking the order keeps its saved courier details; blank tracking fields clear them. */
+export function updateOrderStatus(id: string, status: string, paymentStatus: string, notifyCustomer = true, tracking?: OrderTracking) {
   return adminRequest<OrderResponse>(`/admin/orders/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ status, paymentStatus, notifyCustomer })
+    method: 'PATCH', body: JSON.stringify({
+      status, paymentStatus, notifyCustomer,
+      ...(tracking ? { trackingCarrier: tracking.carrier, trackingNumber: tracking.number, trackingUrl: tracking.url } : {})
+    })
   });
 }
 

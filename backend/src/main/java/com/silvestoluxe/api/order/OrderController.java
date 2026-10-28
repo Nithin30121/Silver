@@ -35,6 +35,11 @@ public class OrderController {
         return orders.customerOrder(jwt.getSubject(), id);
     }
 
+    @PostMapping("/orders/{id}/cancel")
+    public Response cancel(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        return orders.cancelByCustomer(jwt.getSubject(), id);
+    }
+
     @GetMapping("/admin/orders")
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
     public Page<Response> all(@RequestParam(required = false) String query,
