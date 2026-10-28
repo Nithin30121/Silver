@@ -31,10 +31,10 @@ class OrderEmailServiceTest {
 
     @Test
     void staysOffWithoutAnSmtpHostOrFromAddress() {
-        assertFalse(new OrderEmailService("", 587, "", "", "orders@example.com", "SILVORA", "").isEnabled());
-        assertFalse(new OrderEmailService("smtp.example.com", 587, "", "", "", "SILVORA", "").isEnabled());
-        assertTrue(new OrderEmailService("smtp.example.com", 587, "", "", "orders@example.com", "SILVORA", "").isEnabled());
-        assertDoesNotThrow(() -> new OrderEmailService("", 587, "", "", "", "SILVORA", "").send(shipped));
+        assertFalse(new OrderEmailService("", 587, "", "", "orders@example.com", "SILVORA", "", "").isEnabled());
+        assertFalse(new OrderEmailService("smtp.example.com", 587, "", "", "", "SILVORA", "", "").isEnabled());
+        assertTrue(new OrderEmailService("smtp.example.com", 587, "", "", "orders@example.com", "SILVORA", "", "").isEnabled());
+        assertDoesNotThrow(() -> new OrderEmailService("", 587, "", "", "", "SILVORA", "", "").send(shipped));
     }
 
     @Test
@@ -90,6 +90,46 @@ class OrderEmailServiceTest {
         assertFalse(OrderEmailContent.html(insecure, "SILVORA", "").contains("javascript:"));
         assertTrue(OrderEmailContent.text(insecure, "SILVORA", "").contains("Tracking number: 123\n"));
         assertFalse(OrderEmailContent.text(delivered, "SILVORA", "").contains("Tracking number"));
+    }
+
+    @Test
+    void linksToTheOrderPageWhenTheShopHasAnAddress() {
+        assertTrue(OrderEmailContent.text(shipped, "SILVORA", "https://shop.example.com/")
+                .contains("View your order: https://shop.example.com/account/orders/SL-20261027-0003\n"));
+        assertTrue(OrderEmailContent.html(shipped, "SILVORA", "https://shop.example.com")
+                .contains("href=\"https://shop.example.com/account/orders/SL-20261027-0003\""));
+        assertFalse(OrderEmailContent.text(shipped, "SILVORA", "").contains("View your order"));
+    }
+
+    @Test
+    void forwardsContactMessagesToTheShopWithReplyToTheSender() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        ShopMessage contact = new ShopMessage("Asha <b>Rao</b>", "asha@example.com", "+91 90000 00001", "Ring size", "SL-1", "Which <i>size</i>?");
+
+        new OrderEmailService(sender, "SILVORA <orders@example.com>", "SILVORA", "", "owner@example.com").notifyShop(contact);
+
+        ArgumentCaptor<MimeMessage> message = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender).send(message.capture());
+        assertEquals("owner@example.com", message.getValue().getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("asha@example.com", message.getValue().getReplyTo()[0].toString());
+        assertEquals("SILVORA message from Asha <b>Rao</b>: Ring size", message.getValue().getSubject());
+        String html = ShopMessageContent.html(contact);
+        assertTrue(html.contains("Which &lt;i&gt;size&lt;/i&gt;?"));
+        assertFalse(html.contains("<b>Rao</b>"));
+    }
+
+    @Test
+    void sendsContactMessagesToTheFromAddressWithoutAnInbox() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+
+        new OrderEmailService(sender, "orders@example.com", "SILVORA", "").notifyShop(
+                new ShopMessage("Asha", "asha@example.com", null, "", null, "Hello"));
+
+        ArgumentCaptor<MimeMessage> message = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender).send(message.capture());
+        assertEquals("orders@example.com", message.getValue().getRecipients(Message.RecipientType.TO)[0].toString());
     }
 
     @Test

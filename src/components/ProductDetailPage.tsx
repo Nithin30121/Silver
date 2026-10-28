@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
-  const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo } = useShop();
+  const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo, catalogueStatus } = useShop();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>('Standard');
@@ -31,6 +31,15 @@ export const ProductDetailPage: React.FC = () => {
     setActiveImageIndex(0);
     setQuantity(1);
   }, [currentProduct]);
+
+  // Opened from its own address, the piece appears once the catalogue has loaded.
+  if (!currentProduct && catalogueStatus === 'loading') {
+    return (
+      <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center', backgroundColor: 'var(--color-obsidian-black)' }}>
+        <p className="auth-loading" style={{ justifyContent: 'center' }}><span className="auth-spinner" aria-hidden="true" /> Loading this piece…</p>
+      </div>
+    );
+  }
 
   if (!currentProduct) {
     return (

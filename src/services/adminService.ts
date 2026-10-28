@@ -96,6 +96,29 @@ export interface StockMovement {
   createdAt: string;
 }
 
+export type MessageStatus = 'NEW' | 'DONE';
+
+/** A message sent through the shop's contact form. fromAccount: the sender was signed in. */
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  orderNumber: string | null;
+  message: string;
+  status: MessageStatus;
+  fromAccount: boolean;
+  createdAt: string;
+  handledAt: string | null;
+}
+
+export interface MessagePage {
+  messages: ContactMessage[];
+  total: number;
+  totalPages: number;
+}
+
 interface ApiPage<T> {
   content: T[];
   totalElements?: number;
@@ -194,6 +217,22 @@ export async function getAdminCustomers(options: { query?: string; role?: Custom
     total: page.totalElements ?? page.page?.totalElements ?? page.content.length,
     totalPages: page.totalPages ?? page.page?.totalPages ?? 1
   };
+}
+
+/** Newest first; without a status every message is listed. */
+export async function getMessages(options: { status?: MessageStatus; page?: number; size?: number } = {}): Promise<MessagePage> {
+  const search = new URLSearchParams({ page: String(options.page ?? 0), size: String(options.size ?? 25) });
+  if (options.status) search.set('status', options.status);
+  const page = await adminRequest<ApiPage<ContactMessage>>(`/admin/messages?${search}`);
+  return {
+    messages: page.content,
+    total: page.totalElements ?? page.page?.totalElements ?? page.content.length,
+    totalPages: page.totalPages ?? page.page?.totalPages ?? 1
+  };
+}
+
+export function setMessageStatus(id: string, status: MessageStatus) {
+  return adminRequest<ContactMessage>(`/admin/messages/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 }
 
 export async function getCustomerOrders(customerId: string): Promise<{ orders: OrderResponse[]; total: number }> {

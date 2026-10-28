@@ -36,19 +36,28 @@ interface ErrorBody {
   fields?: unknown;
 }
 
+/** The current access token, or null for a visitor who isn't signed in. */
+async function optionalAccessToken(): Promise<string | null> {
+  if (!isSupabaseConfigured || !supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
 /**
  * Sends one request as the signed-in customer. The API's own message is shown when it has one
- * (it never contains internal details); otherwise `fallback` is.
+ * (it never contains internal details); otherwise `fallback` is. With signIn "optional" a visitor
+ * may send it too, and a signed-in customer's token still goes along.
  */
-export async function customerRequest<T>(path: string, fallback: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
-  const accessToken = await customerAccessToken();
+export async function customerRequest<T>(path: string, fallback: string,
+  init: { method?: string; body?: unknown; signIn?: 'required' | 'optional' } = {}): Promise<T> {
+  const accessToken = init.signIn === 'optional' ? await optionalAccessToken() : await customerAccessToken();
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${path}`, {
       method: init.method ?? 'GET',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${accessToken}`,
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...(init.body === undefined ? {} : { 'Content-Type': 'application/json' }),
       },
       body: init.body === undefined ? undefined : JSON.stringify(init.body),

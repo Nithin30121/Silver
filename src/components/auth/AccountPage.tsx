@@ -4,13 +4,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useShop } from '../../context/ShopContext';
 import { toAccountError } from '../../services/authService';
 import { MAX_NAME_LENGTH, validateFullName } from '../../lib/authValidation';
+import type { AccountTab } from '../../types';
 import { AuthAlert, AuthLayout, SubmitButton, TextField } from './AuthUI';
 import { firstNameOf, useCustomerSignOut, useSubmission } from './authHelpers';
 import { AccountOrders } from './AccountOrders';
 import { AddressBook } from './AddressBook';
 import { ChangePasswordForm, DeleteAccount } from './AccountSecurity';
 
-type AccountTab = 'orders' | 'addresses' | 'profile';
 const TABS: Array<{ id: AccountTab; label: string }> = [
   { id: 'orders', label: 'Orders' },
   { id: 'addresses', label: 'Addresses' },
@@ -81,13 +81,14 @@ const NameEditor: React.FC<{ initialName: string; onDone: () => void }> = ({ ini
 /** Private account details. Only rendered for a signed-in customer; the database enforces the same rule. */
 export const AccountPage: React.FC = () => {
   const { status, user, profile, isProfileLoading, profileError, displayName, notice, clearNotice } = useAuth();
-  const { navigateTo, cartCount, wishlistCount } = useShop();
+  const { navigateTo, cartCount, wishlistCount, accountTab: tab } = useShop();
   const signOutCustomer = useCustomerSignOut();
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
-  const [tab, setTab] = useState<AccountTab>('orders');
+  // Each tab has its own address (/account/addresses); switching replaces it rather than adding history.
+  const setTab = (next: AccountTab) => navigateTo('account', { accountTab: next, replace: true });
   const tabRefs = useRef<Partial<Record<AccountTab, HTMLButtonElement | null>>>({});
 
   // Arrow keys move between tabs, as screen-reader users expect from a tab list.

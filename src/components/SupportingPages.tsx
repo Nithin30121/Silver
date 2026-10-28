@@ -1,5 +1,26 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Mail, MapPin, Phone, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useShop } from '../context/ShopContext';
+import { sendContactMessage, type ContactInput } from '../services/contactService';
+import { CustomerApiError } from '../services/customerApi';
+import { validateEmail } from '../lib/authValidation';
+
+type ContactField = 'name' | 'email' | 'phone' | 'subject' | 'orderNumber' | 'message';
+const MAX_MESSAGE = 5000;
+
+function validateContact(form: ContactInput): Partial<Record<ContactField, string>> {
+  const name = form.name.trim();
+  const phone = form.phone.trim();
+  const message = form.message.trim();
+  return {
+    name: !name ? 'Please enter your name.' : name.length > 120 ? 'Please keep your name under 120 characters.' : undefined,
+    email: validateEmail(form.email),
+    phone: phone && !/^\+?[0-9 ()-]{7,20}$/.test(phone) ? 'Please enter a valid phone number, or leave it empty.' : undefined,
+    subject: form.subject.trim().length > 150 ? 'Please keep the subject under 150 characters.' : undefined,
+    message: !message ? 'Please write your message.' : message.length > MAX_MESSAGE ? `Please keep your message under ${MAX_MESSAGE.toLocaleString('en-IN')} characters.` : undefined,
+  };
+}
 
 export const ShippingPage: React.FC = () => {
   return (
@@ -51,12 +72,57 @@ export const ShippingPage: React.FC = () => {
 };
 
 export const ContactPage: React.FC = () => {
-  const [submitted, setSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+  const { user, profile } = useAuth();
+  const { contactOrderNumber } = useShop();
+  const blank = (): ContactInput => ({
+    name: profile?.fullName ?? '', email: user?.email ?? '', phone: '', subject: contactOrderNumber ? `About order ${contactOrderNumber}` : '',
+    orderNumber: contactOrderNumber ?? '', message: '', website: ''
+  });
+  const [form, setForm] = useState<ContactInput>(blank);
+  const [errors, setErrors] = useState<Partial<Record<ContactField, string>>>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [sentTo, setSentTo] = useState<{ name: string; email: string } | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const field = (name: ContactField) => ({
+    id: `contact-${name}`,
+    value: form[name],
+    'aria-invalid': errors[name] ? true : undefined,
+    'aria-describedby': errors[name] ? `contact-${name}-error` : undefined,
+    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      setForm({ ...form, [name]: e.target.value });
+      setErrors((previous) => ({ ...previous, [name]: undefined }));
+    },
+  });
+  const fieldError = (name: ContactField) => errors[name] && <p id={`contact-${name}-error`} className="contact-error">{errors[name]}</p>;
+  const focusFirst = (found: Partial<Record<ContactField, string>>) => {
+    const first = (['name', 'email', 'phone', 'subject', 'orderNumber', 'message'] as const).find((name) => found[name]);
+    if (first) formRef.current?.querySelector<HTMLElement>(`#contact-${first}`)?.focus();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (isSending) return;
+    const found = validateContact(form);
+    setErrors(found);
+    setFormError(null);
+    if (Object.values(found).some(Boolean)) return focusFirst(found);
+    setIsSending(true);
+    try {
+      await sendContactMessage({ ...form, name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim(),
+        subject: form.subject.trim(), orderNumber: form.orderNumber.trim(), message: form.message.trim() });
+      setSentTo({ name: form.name.trim(), email: form.email.trim() });
+    } catch (error) {
+      if (error instanceof CustomerApiError && Object.keys(error.fields).length > 0) {
+        setErrors(error.fields as Partial<Record<ContactField, string>>);
+        focusFirst(error.fields as Partial<Record<ContactField, string>>);
+      } else {
+        setFormError(error instanceof Error ? error.message : 'We could not send your message. Please try again in a moment.');
+      }
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -74,7 +140,7 @@ export const ContactPage: React.FC = () => {
       </div>
 
       <div className="container" style={{ maxWidth: '880px', marginTop: '4rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.25fr', gap: '4rem' }}>
+        <div className="contact-layout">
           {/* Info */}
           <div>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.65rem', marginBottom: '1.25rem', color: 'var(--color-soft-ivory)' }}>Direct Inquiries</h2>
@@ -108,62 +174,64 @@ export const ContactPage: React.FC = () => {
 
           {/* Form */}
           <div>
-            {submitted ? (
-              <div style={{ padding: '2.5rem', backgroundColor: '#100D0B', textAlign: 'center', border: '1px solid rgba(184, 121, 81, 0.3)' }}>
+            {sentTo ? (
+              <div className="contact-sent" role="status">
                 <CheckCircle2 size={40} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 1rem' }} />
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>Inquiry Received</h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)' }}>
-                  Thank you, {formData.name}. A client advisor will respond within 24 business hours.
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>Message Sent</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', lineHeight: 1.7 }}>
+                  Thank you, {sentTo.name}. A client advisor will reply to <strong style={{ color: 'var(--color-soft-ivory)' }}>{sentTo.email}</strong> within 24 business hours.
                 </p>
+                <button type="button" className="btn-text" style={{ marginTop: '1.25rem' }}
+                  onClick={() => { setSentTo(null); setForm({ ...blank(), name: form.name, email: form.email }); setErrors({}); }}>
+                  Send Another Message
+                </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '0.35rem', fontWeight: 600, color: 'var(--color-soft-ivory)' }}>Your Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.875rem' }}
-                  />
+              <form ref={formRef} className="contact-form" onSubmit={(e) => void handleSubmit(e)} noValidate aria-busy={isSending}>
+                {formError && <p className="contact-form-error" role="alert">{formError}</p>}
+                <div className="contact-field">
+                  <label className="contact-label" htmlFor="contact-name">Your Name *</label>
+                  <input {...field('name')} className="contact-input" type="text" autoComplete="name" maxLength={120} />
+                  {fieldError('name')}
                 </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '0.35rem', fontWeight: 600, color: 'var(--color-soft-ivory)' }}>Email Address *</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.875rem' }}
-                  />
+                <div className="contact-row">
+                  <div className="contact-field">
+                    <label className="contact-label" htmlFor="contact-email">Email Address *</label>
+                    <input {...field('email')} className="contact-input" type="email" autoComplete="email" maxLength={254} />
+                    {fieldError('email')}
+                  </div>
+                  <div className="contact-field">
+                    <label className="contact-label" htmlFor="contact-phone">Phone <span>(optional)</span></label>
+                    <input {...field('phone')} className="contact-input" type="tel" inputMode="tel" autoComplete="tel" maxLength={20} placeholder="+91 98765 43210" />
+                    {fieldError('phone')}
+                  </div>
                 </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '0.35rem', fontWeight: 600, color: 'var(--color-soft-ivory)' }}>Subject</label>
-                  <input
-                    type="text"
-                    placeholder="Sizing inquiry, appointment request, etc."
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.875rem' }}
-                  />
+                <div className="contact-row">
+                  <div className="contact-field">
+                    <label className="contact-label" htmlFor="contact-subject">Subject</label>
+                    <input {...field('subject')} className="contact-input" type="text" maxLength={150} placeholder="Sizing, an order, an appointment…" />
+                    {fieldError('subject')}
+                  </div>
+                  <div className="contact-field">
+                    <label className="contact-label" htmlFor="contact-orderNumber">Order Number <span>(optional)</span></label>
+                    <input {...field('orderNumber')} className="contact-input" type="text" maxLength={40} placeholder="SL-2026-…" />
+                    {fieldError('orderNumber')}
+                  </div>
                 </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '0.35rem', fontWeight: 600, color: 'var(--color-soft-ivory)' }}>Message *</label>
-                  <textarea
-                    rows={4}
-                    required
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    style={{ width: '100%', padding: '0.75rem 1rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.875rem', resize: 'vertical' }}
-                  />
+                <div className="contact-field">
+                  <label className="contact-label" htmlFor="contact-message">Message *</label>
+                  <textarea {...field('message')} className="contact-input" rows={5} maxLength={MAX_MESSAGE} />
+                  {fieldError('message')}
                 </div>
-
-                <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start' }}>
-                  Transmit Message
+                {/* Hidden from people (and screen readers); bots that fill in every box give themselves away. */}
+                <div className="contact-trap" aria-hidden="true">
+                  <label htmlFor="contact-website">Website</label>
+                  <input id="contact-website" type="text" tabIndex={-1} autoComplete="off" value={form.website}
+                    onChange={(e) => setForm({ ...form, website: e.target.value })} />
+                </div>
+                <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start' }} disabled={isSending}>
+                  {isSending && <span className="auth-spinner" aria-hidden="true" />}
+                  <span>{isSending ? 'Sending…' : 'Send Message'}</span>
                 </button>
               </form>
             )}

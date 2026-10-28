@@ -66,3 +66,5 @@ app:
     shop-name: ${APP_SHOP_NAME:SILVORA}
     # Optional link at the bottom of each email, for example the storefront address.
     shop-url: ${APP_SHOP_URL:}
+    # Where contact form messages are forwarded. Defaults to the from address.
+    shop-inbox: ${APP_SHOP_INBOX:}

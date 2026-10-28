@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   ArrowRight, Boxes, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
-  LayoutDashboard, LoaderCircle, LogOut, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
+  Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
   TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -13,13 +13,14 @@ import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../.
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import {
   AdminApiError, createCategory, createProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
-  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getSalesSummary, getStockMovements, setCategoryActive,
-  setProductActive, updateCategory, updateOrderStatus, updateProduct, uploadProductImages, type AdminCustomer, type AdminOrderPage,
-  type CategoryInput, type CustomerPage, type CustomerRole, type ProductInput, type SalesSummary, type StockMovement, type StockReason
+  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getMessages, getSalesSummary, getStockMovements, setCategoryActive,
+  setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, uploadProductImages, type AdminCustomer,
+  type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
+  type MessageStatus, type ProductInput, type SalesSummary, type StockMovement, type StockReason
 } from '../../services/adminService';
 import '../../styles/admin.css';
 
-type Section = 'overview' | 'products' | 'categories' | 'inventory' | 'orders' | 'customers';
+type Section = 'overview' | 'products' | 'categories' | 'inventory' | 'orders' | 'customers' | 'messages';
 type Theme = 'light' | 'dark';
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 type Notify = (kind: 'success' | 'error', text: string) => void;
@@ -28,6 +29,7 @@ type FlatCategory = CatalogueCategory & { depth: number; path: string; trail: st
 const LOW_STOCK = 3;
 const CUSTOMER_PAGE_SIZE = 25;
 const ORDER_PAGE_SIZE = 25;
+const MESSAGE_PAGE_SIZE = 25;
 const THEME_KEY = 'silvora_admin_theme';
 
 const SECTIONS: Record<Section, { title: string; description: string; icon: React.ReactNode }> = {
@@ -37,11 +39,12 @@ const SECTIONS: Record<Section, { title: string; description: string; icon: Reac
   inventory: { title: 'Inventory', description: 'Watch stock levels and restock before pieces sell out.', icon: <Boxes size={18} /> },
   orders: { title: 'Orders', description: 'Review customer orders and move them along.', icon: <ShoppingBag size={18} /> },
   customers: { title: 'Customers', description: 'See who shops with you.', icon: <Users size={18} /> },
+  messages: { title: 'Messages', description: 'Questions people send through the contact form.', icon: <Inbox size={18} /> },
 };
 const NAV_GROUPS: Array<{ label: string; items: Section[] }> = [
   { label: '', items: ['overview'] },
   { label: 'Catalogue', items: ['products', 'categories', 'inventory'] },
-  { label: 'Sales', items: ['orders', 'customers'] },
+  { label: 'Sales', items: ['orders', 'customers', 'messages'] },
 ];
 
 const ORDER_STATUSES = ['PENDING_PAYMENT', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
@@ -118,6 +121,7 @@ export const AdminDashboard: React.FC = () => {
   const [summary, setSummary] = useState<SalesSummary | null | undefined>(undefined);
   const [recentMovements, setRecentMovements] = useState<StockMovement[] | null | undefined>(undefined);
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
+  const [newMessages, setNewMessages] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -143,6 +147,10 @@ export const AdminDashboard: React.FC = () => {
     : !userId || access?.userId !== userId ? 'checking'
     : access.allowed ? 'allowed' : 'denied';
 
+  const refreshNewMessages = () => {
+    getMessages({ status: 'NEW', size: 1 }).then((page) => setNewMessages(page.total)).catch(() => setNewMessages(null));
+  };
+
   const reload = async () => {
     setIsLoading(true);
     setLoadError('');
@@ -153,6 +161,7 @@ export const AdminDashboard: React.FC = () => {
     getSalesSummary().then(setSummary).catch(() => setSummary(null));
     getStockMovements(undefined, 6).then((result) => setRecentMovements(result.movements)).catch(() => setRecentMovements(null));
     getEmailStatus().then((result) => setEmailEnabled(result.enabled)).catch(() => setEmailEnabled(null));
+    refreshNewMessages();
     try {
       const [productResult, categoryResult, orderResult] = await Promise.all([
         getAdminProducts(), getAdminCategories(), getAdminOrders({ size: 5 })
@@ -216,6 +225,7 @@ export const AdminDashboard: React.FC = () => {
     ...(lowStock.length > 0 && { inventory: { value: lowStock.length, tone: 'warning' as const } }),
     ...(orderTotal !== null && { orders: { value: orderTotal } }),
     ...(customerTotal !== null && { customers: { value: customerTotal } }),
+    ...(newMessages ? { messages: { value: newMessages, tone: 'info' as const } } : {}),
   };
   const displayName = identity?.fullName || identity?.email || 'Administrator';
   const initials = initialsOf(displayName);
@@ -304,6 +314,7 @@ export const AdminDashboard: React.FC = () => {
             {section === 'inventory' && <Inventory products={products} loaded={loaded} refreshedAt={loadedAt} onEdit={setEditingProduct} />}
             {section === 'orders' && <OrderManager refreshedAt={loadedAt} onView={setViewingOrder} notify={notify} />}
             {section === 'customers' && <CustomerManager refreshedAt={loadedAt} onViewOrder={setViewingOrder} notify={notify} />}
+            {section === 'messages' && <MessageManager refreshedAt={loadedAt} emailEnabled={emailEnabled} notify={notify} onChanged={refreshNewMessages} />}
           </main>
         </div>
       </div>
@@ -1272,6 +1283,139 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
         )}
       </div>
       {printing && <OrderPrintSheet order={order} kind={printing} onDone={stopPrinting} />}
+    </Modal>
+  );
+};
+
+/* ---------- Messages ---------- */
+
+type MessageFilter = MessageStatus | 'all';
+type MessageFilters = { status: MessageFilter; page: number };
+const MESSAGE_FILTERS: Array<{ value: MessageFilter; label: string }> = [
+  { value: 'NEW', label: 'New' }, { value: 'DONE', label: 'Done' }, { value: 'all', label: 'All' }
+];
+
+/** A short preview: the subject, or the start of the message when there is none. */
+const messageTitle = (message: ContactMessage) =>
+  message.subject || (message.message.length > 70 ? `${message.message.slice(0, 70).trimEnd()}…` : message.message);
+
+const MessageManager: React.FC<{ refreshedAt: Date | null; emailEnabled: boolean | null; notify: Notify; onChanged: () => void }> = ({ refreshedAt, emailEnabled, notify, onChanged }) => {
+  const [filters, setFilters] = useState<MessageFilters>({ status: 'NEW', page: 0 });
+  const [result, setResult] = useState<{ filters: MessageFilters; page?: MessagePage; error?: string } | null>(null);
+  const [viewing, setViewing] = useState<ContactMessage | undefined>(undefined);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    getMessages({ status: filters.status === 'all' ? undefined : filters.status, page: filters.page, size: MESSAGE_PAGE_SIZE })
+      .then((page) => { if (!cancelled) setResult({ filters, page }); })
+      .catch((cause: unknown) => { if (!cancelled) setResult({ filters, error: unavailableText(cause, 'Unable to load messages.') }); });
+    return () => { cancelled = true; };
+  }, [filters, refreshedAt, reloadKey]);
+
+  const changed = (updated: ContactMessage) => {
+    setViewing(undefined);
+    notify('success', updated.status === 'DONE' ? 'Marked as done.' : 'Moved back to new messages.');
+    setReloadKey((key) => key + 1);
+    onChanged();
+  };
+
+  const isLoading = result?.filters !== filters;
+  const data = result?.page;
+  return (
+    <section className="admin-card">
+      <div className="admin-card-toolbar">
+        <Segmented label="Show messages" value={filters.status} options={MESSAGE_FILTERS}
+          onChange={(status) => setFilters({ status, page: 0 })} />
+      </div>
+      {emailEnabled === false && (
+        <p className="admin-callout is-info admin-card-callout"><Mail size={16} /> New messages are listed here. Once an email service is set up on the server, each one is also emailed to you.</p>
+      )}
+      {isLoading ? <LoadingRows /> : result?.error ? (
+        <div className="admin-card-message"><div className="admin-alert" role="alert"><CircleAlert size={18} /><span>{result.error}</span></div></div>
+      ) : !data || data.messages.length === 0 ? (
+        <EmptyState icon={<Inbox size={20} />} title={filters.status === 'NEW' ? 'No new messages' : 'No messages here'}
+          text={filters.status === 'NEW' ? "You're all caught up. Messages from the contact page appear here." : 'Messages from the contact page appear here.'} />
+      ) : (
+        <>
+          <div className="admin-table-scroll">
+            <table className="admin-table">
+              <thead><tr><th>From</th><th>Message</th><th>Order</th><th>Received</th><th>Status</th><th><span className="admin-sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                {data.messages.map((message) => (
+                  <tr key={message.id}>
+                    <td data-label="From">
+                      <div className="admin-person">
+                        <span className="admin-avatar" aria-hidden="true">{initialsOf(message.name || message.email) || '?'}</span>
+                        <span>
+                          <span className="admin-person-name"><button className="admin-row-title" onClick={() => setViewing(message)}>{message.name}</button></span>
+                          <small>{message.email}</small>
+                        </span>
+                      </div>
+                    </td>
+                    <td data-label="Message"><span className="admin-cell-text">{messageTitle(message)}</span></td>
+                    <td data-label="Order">{message.orderNumber || <span className="admin-muted">—</span>}</td>
+                    <td data-label="Received">{formatDateTime(message.createdAt)}</td>
+                    <td data-label="Status"><Badge tone={message.status === 'NEW' ? 'info' : 'neutral'}>{message.status === 'NEW' ? 'New' : 'Done'}</Badge></td>
+                    <td className="admin-row-actions"><button className="admin-button is-secondary is-small" onClick={() => setViewing(message)}>Open</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={filters.page} pageSize={MESSAGE_PAGE_SIZE} shown={data.messages.length} total={data.total}
+            totalPages={data.totalPages} onPage={(page) => setFilters((current) => ({ ...current, page }))} />
+        </>
+      )}
+      {viewing && <MessageDetails message={viewing} onClose={() => setViewing(undefined)} onChanged={changed} />}
+    </section>
+  );
+};
+
+const MessageDetails: React.FC<{ message: ContactMessage; onClose: () => void; onChanged: (message: ContactMessage) => void }> = ({ message, onClose, onChanged }) => {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const nextStatus: MessageStatus = message.status === 'NEW' ? 'DONE' : 'NEW';
+  const replySubject = `Re: ${message.subject || 'your message to SILVORA'}`;
+  const save = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      onChanged(await setMessageStatus(message.id, nextStatus));
+    } catch (cause) {
+      setError(errorText(cause, 'Unable to update this message.'));
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal title={message.subject || `Message from ${message.name}`} subtitle={`Received ${formatDateTime(message.createdAt)}`} onClose={onClose} size="large"
+      footer={<>
+        {error && <FormError text={error} />}
+        <span className="admin-modal-footer-start">
+          <a className="admin-button is-ghost" href={`mailto:${encodeURIComponent(message.email)}?subject=${encodeURIComponent(replySubject)}`}>
+            <Mail size={15} /> Reply by email
+          </a>
+        </span>
+        <button type="button" className="admin-button is-secondary" onClick={onClose}>Close</button>
+        <button type="button" className="admin-button is-primary" disabled={busy} onClick={() => void save()}>
+          {busy ? <><LoaderCircle size={16} className="is-spinning" /> Saving…</> : nextStatus === 'DONE' ? 'Mark as done' : 'Mark as new'}
+        </button>
+      </>}>
+      <div className="admin-detail-grid">
+        <div className="admin-detail">
+          <h3>From</h3>
+          <p><strong>{message.name}</strong>{message.fromAccount && <> <Badge tone="neutral">Signed in</Badge></>}</p>
+          <p><a className="admin-link" href={`mailto:${encodeURIComponent(message.email)}?subject=${encodeURIComponent(replySubject)}`}>{message.email}</a></p>
+          {message.phone && <p><a className="admin-link" href={`tel:${message.phone.replace(/[^0-9+]/g, '')}`}>{message.phone}</a></p>}
+        </div>
+        <div className="admin-detail">
+          <h3>About</h3>
+          <p>{message.orderNumber ? <>Order <strong>{message.orderNumber}</strong></> : 'No order mentioned'}</p>
+          <p className="admin-muted">{message.status === 'DONE' && message.handledAt ? `Marked done ${formatDateTime(message.handledAt)}` : 'Not answered yet'}</p>
+        </div>
+      </div>
+      <h3 className="admin-subheading">Message</h3>
+      <p className="admin-message-body">{message.message}</p>
     </Modal>
   );
 };

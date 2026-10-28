@@ -48,6 +48,7 @@ final class OrderEmailContent {
             body.append('\n');
         }
         if (hasText(email.shippingAddress())) body.append("Delivering to: ").append(email.shippingAddress()).append("\n\n");
+        if (isWebAddress(shopUrl)) body.append("View your order: ").append(orderUrl(email, shopUrl)).append("\n\n");
         body.append(shopName);
         if (isWebAddress(shopUrl)) body.append('\n').append(shopUrl);
         return body.append('\n').toString();
@@ -67,7 +68,8 @@ final class OrderEmailContent {
         String address = tracking + (hasText(email.shippingAddress())
                 ? "<p style=\"margin:20px 0 0;color:#6b625b\">Delivering to: " + escape(email.shippingAddress()) + "</p>" : "");
         String link = isWebAddress(shopUrl)
-                ? "<p style=\"margin:28px 0 0\"><a href=\"" + escape(shopUrl) + "\" style=\"color:#9b5b37\">Visit " + escape(shopName) + "</a></p>" : "";
+                ? "<p style=\"margin:28px 0 0\"><a href=\"" + escape(orderUrl(email, shopUrl)) + "\" style=\"color:#9b5b37\">View your order</a>"
+                        + " &middot; <a href=\"" + escape(shopUrl) + "\" style=\"color:#9b5b37\">Visit " + escape(shopName) + "</a></p>" : "";
         return """
                 <!doctype html>
                 <html><body style="margin:0;background:#f6f4f1;font-family:Helvetica,Arial,sans-serif;color:#1f1a17">
@@ -111,6 +113,12 @@ final class OrderEmailContent {
 
     private static boolean isSecureLink(String url) {
         return url != null && url.startsWith("https://");
+    }
+
+    /** The order's page in the customer's account; signed-out customers are asked to sign in first. */
+    static String orderUrl(OrderEmail email, String shopUrl) {
+        return shopUrl.replaceFirst("/+$", "") + "/account/orders/"
+                + java.net.URLEncoder.encode(email.orderNumber(), java.nio.charset.StandardCharsets.UTF_8);
     }
 
     private static boolean isWebAddress(String url) {

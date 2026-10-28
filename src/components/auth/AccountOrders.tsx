@@ -38,10 +38,12 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
 
 /** The signed-in customer's orders; choosing one opens its full details. */
 export const AccountOrders: React.FC = () => {
-  const { navigateTo } = useShop();
+  const { navigateTo, accountOrderNumber } = useShop();
   const [orders, setOrders] = useState<OrderResponse[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [openOrderId, setOpenOrderId] = useState<string | null>(null);
+  // Opening an order gives it its own address (/account/orders/SL-…), so the back button returns to the list.
+  const showOrder = (orderNumber: string | null) =>
+    navigateTo('account', { accountTab: 'orders', ...(orderNumber ? { orderNumber } : {}) });
 
   const load = useCallback(async () => {
     setError(null);
@@ -63,8 +65,8 @@ export const AccountOrders: React.FC = () => {
   const replaceOrder = (updated: OrderResponse) =>
     setOrders((current) => current?.map((order) => order.id === updated.id ? updated : order) ?? current);
 
-  const openOrder = orders?.find((order) => order.id === openOrderId);
-  if (openOrder) return <OrderDetails order={openOrder} onBack={() => setOpenOrderId(null)} onChange={replaceOrder} />;
+  const openOrder = orders?.find((order) => order.orderNumber === accountOrderNumber);
+  if (openOrder) return <OrderDetails order={openOrder} onBack={() => showOrder(null)} onChange={replaceOrder} />;
 
   if (error && !orders) {
     return (
@@ -88,23 +90,28 @@ export const AccountOrders: React.FC = () => {
   }
 
   return (
-    <ul className="account-order-list">
-      {orders.map((order) => (
-        <li key={order.id}>
-          <button type="button" className="account-order" onClick={() => setOpenOrderId(order.id)}
-            aria-label={`Order ${order.orderNumber}, ${statusText(order.status).label}. View details`}>
-            <span className="account-order-main">
-              <strong>{order.orderNumber}</strong>
-              <span className="account-muted">
-                {formatDate(order.createdAt)} · {pieces(pieceCount(order))} · {money(order.totalAmount)}
+    <>
+      {accountOrderNumber && (
+        <AuthAlert kind="info">We couldn't find order {accountOrderNumber} among the orders in this account. Your recent orders are below.</AuthAlert>
+      )}
+      <ul className="account-order-list">
+        {orders.map((order) => (
+          <li key={order.id}>
+            <button type="button" className="account-order" onClick={() => showOrder(order.orderNumber)}
+              aria-label={`Order ${order.orderNumber}, ${statusText(order.status).label}. View details`}>
+              <span className="account-order-main">
+                <strong>{order.orderNumber}</strong>
+                <span className="account-muted">
+                  {formatDate(order.createdAt)} · {pieces(pieceCount(order))} · {money(order.totalAmount)}
+                </span>
               </span>
-            </span>
-            <StatusBadge status={order.status} />
-            <ChevronRight size={16} className="account-order-chevron" aria-hidden="true" />
-          </button>
-        </li>
-      ))}
-    </ul>
+              <StatusBadge status={order.status} />
+              <ChevronRight size={16} className="account-order-chevron" aria-hidden="true" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 };
 
@@ -273,7 +280,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onBack, onChange }) 
       )}
       <p className="account-help">
         Choose "Save as PDF" in the print window to keep a copy. Questions about this order?{' '}
-        <button type="button" className="auth-link" onClick={() => navigateTo('contact')}>Contact us</button>
+        <button type="button" className="auth-link" onClick={() => navigateTo('contact', { orderNumber: order.orderNumber })}>Contact us</button>
       </p>
 
       {isPrinting && <OrderPrintSheet order={order} kind="summary" onDone={stopPrinting} />}

@@ -458,7 +458,7 @@ export const CartDrawer: React.FC = () => {
                 style={{ width: '100%' }}
                 onClick={() => {
                   closeDrawer();
-                  navigateTo('account');
+                  navigateTo('account', { accountTab: 'orders', orderNumber: orderId });
                 }}
               >
                 Follow This Order in My Account
