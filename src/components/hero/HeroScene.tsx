@@ -44,7 +44,7 @@ const { damp } = MathUtils;
 const step = (delta: number) => Math.min(delta, 1 / 20);
 
 /** Resting tilt: seen from a little above, like a bracelet held up to the light. */
-const TILT = 1.14;
+const TILT = 1.2;
 /** How far it rocks forward and back around that tilt. */
 const ROCK = 0.06;
 /**
@@ -52,7 +52,7 @@ const ROCK = 0.06;
  * the bracelet spins, so both directions allow for it, and the near side is closer to the camera and
  * looks larger, hence the extra allowance.
  */
-const heightAt = (tilt: number) => (2 * CHAIN_EXTENT.x * Math.cos(tilt) + 2 * CHAIN_EXTENT.band * Math.sin(tilt)) * 1.18;
+const heightAt = (tilt: number) => (2 * CHAIN_EXTENT.x * Math.cos(tilt) + 2 * CHAIN_EXTENT.band * Math.sin(tilt)) * 1.1;
 /** Its height at rest, with room for its rocking: what the space on the page is fitted to. */
 const APPARENT_HEIGHT = heightAt(TILT - ROCK);
 const APPARENT_WIDTH = 2 * CHAIN_EXTENT.x;
@@ -131,12 +131,13 @@ function CubanBracelet({ revealAt, reducedMotion, lowPower, motion, registerRedr
     const anchor = motion.anchor.current;
     const fit = Math.min(
       (anchor.height * viewport.height) / APPARENT_HEIGHT,
-      (anchor.width * viewport.width * 0.94) / APPARENT_WIDTH,
+      (anchor.width * viewport.width) / APPARENT_WIDTH,
       2,
     );
     group.position.set(
       (anchor.x - 0.5) * viewport.width,
-      (0.5 - anchor.y) * viewport.height + Math.sin(t * 0.55) * 0.05 * fit - rest * 1.2 + away * 0.9,
+      // Its top edge is the near side, which looks larger and rises, so it sits a little low to centre by eye.
+      (0.5 - anchor.y) * viewport.height - 0.19 * fit + Math.sin(t * 0.55) * 0.05 * fit - rest * 1.2 + away * 0.9,
       -rest * 3 + away * 0.6,
     );
     // The visitor's turning: what they dragged since the last frame, then any spin left when they let go.
