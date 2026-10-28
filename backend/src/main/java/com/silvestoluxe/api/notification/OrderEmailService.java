@@ -101,6 +101,26 @@ public class OrderEmailService {
         }
     }
 
+    /** Tells the shop that a piece has run low or sold out, so it can be restocked in time. */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void notifyLowStock(LowStockAlert alert) {
+        if (sender == null) return;
+        try {
+            MimeMessage message = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(from);
+            helper.setTo(shopInbox);
+            helper.setSubject(StockAlertContent.subject(alert, shopName));
+            helper.setText(StockAlertContent.text(alert, shopUrl), StockAlertContent.html(alert, shopUrl));
+            sender.send(message);
+            log.info("Sent a {} alert to the shop inbox.", alert.soldOut() ? "sold-out" : "low-stock");
+        } catch (MessagingException | MailException exception) {
+            // The stock change is saved and shown in the dashboard, so a failed email loses nothing.
+            log.warn("Could not send a stock alert to the shop inbox ({}).", exception.getClass().getSimpleName());
+        }
+    }
+
     private static JavaMailSender smtp(String host, int port, String username, String password) {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
         sender.setHost(host);

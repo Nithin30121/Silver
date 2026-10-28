@@ -43,6 +43,13 @@ public class ReportController {
     @GetMapping("/summary")
     public ReportService.Summary summary() { return reports.summary(); }
 
+    /** Order value over time, for the overview chart. Dates are ISO days, for example 2026-10-28. */
+    @GetMapping("/sales")
+    public ReportService.SalesSeries sales(@RequestParam LocalDate from, @RequestParam LocalDate to,
+                                           @RequestParam(defaultValue = "DAY") ReportService.Interval interval) {
+        return reports.sales(from, to, interval);
+    }
+
     @GetMapping("/orders.csv")
     public ResponseEntity<byte[]> ordersCsv(@RequestParam(required = false) String query,
                                             @RequestParam(required = false) OrderStatus status) {

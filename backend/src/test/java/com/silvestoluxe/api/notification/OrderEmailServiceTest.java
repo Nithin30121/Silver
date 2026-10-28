@@ -133,6 +133,35 @@ class OrderEmailServiceTest {
     }
 
     @Test
+    void emailsStockAlertsToTheShopInbox() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+
+        new OrderEmailService(sender, "SILVORA <orders@example.com>", "SILVORA", "https://shop.example.com", "owner@example.com")
+                .notifyLowStock(new LowStockAlert("Moon Ring", "SLV-R-01", 2, false, "SL-20261029-0004"));
+
+        ArgumentCaptor<MimeMessage> message = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender).send(message.capture());
+        assertEquals("owner@example.com", message.getValue().getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("SILVORA: Moon Ring is running low (2 pieces left)", message.getValue().getSubject());
+    }
+
+    @Test
+    void writesStockAlertsThatSayWhatHappenedAndWhy() {
+        LowStockAlert soldOut = new LowStockAlert("Moon <b>Ring</b>", null, 0, true, null);
+        LowStockAlert low = new LowStockAlert("Moon Ring", "SLV-R-01", 1, false, "SL-20261029-0004");
+
+        assertEquals("SILVORA: Moon <b>Ring</b> has sold out", StockAlertContent.subject(soldOut, "SILVORA"));
+        assertTrue(StockAlertContent.text(soldOut, "").startsWith("Moon <b>Ring</b> has sold out.\n\nThis followed a stock change in the dashboard."));
+        assertTrue(StockAlertContent.text(low, "https://shop.example.com/").contains("Moon Ring (SLV-R-01) has only 1 piece left.\n\nThis followed order SL-20261029-0004."));
+        assertTrue(StockAlertContent.text(low, "https://shop.example.com/").contains("https://shop.example.com/admin\n"));
+        String html = StockAlertContent.html(soldOut, "javascript:alert(1)");
+        assertTrue(html.contains("Moon &lt;b&gt;Ring&lt;/b&gt; has sold out."));
+        assertFalse(html.contains("<b>Ring</b>"));
+        assertFalse(html.contains("javascript:"));
+    }
+
+    @Test
     void writesAPlainTextVersionWithRupeeAmounts() {
         String text = OrderEmailContent.text(shipped, "SILVORA", "https://shop.example.com");
 

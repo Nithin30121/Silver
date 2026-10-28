@@ -80,6 +80,26 @@ export interface SalesSummary {
   bestSellers: Array<{ productId: string | null; name: string; sku: string | null; quantity: number; orderValue: number | string }>;
 }
 
+export type SalesInterval = 'DAY' | 'WEEK' | 'MONTH';
+
+/** One bar of the sales chart: the day, week (its Monday) or month (its 1st) it starts on. */
+export interface SalesPoint {
+  start: string;
+  orderCount: number;
+  orderValue: number | string;
+}
+
+/** Leaves out cancelled orders. previous covers the same number of days just before from. */
+export interface SalesSeries {
+  timeZone: string;
+  from: string;
+  to: string;
+  interval: SalesInterval;
+  points: SalesPoint[];
+  total: { orderCount: number; orderValue: number | string };
+  previous: { orderCount: number; orderValue: number | string };
+}
+
 export type StockReason = 'INITIAL' | 'MANUAL' | 'SALE' | 'CANCELLATION';
 
 export interface StockMovement {
@@ -175,6 +195,10 @@ export async function getAdminOrders(options: { query?: string; status?: string;
 }
 
 export const getSalesSummary = () => adminRequest<SalesSummary>('/admin/reports/summary');
+
+/** Days are ISO dates in the shop's time zone, for example 2026-10-29; both ends are included. */
+export const getSalesSeries = (from: string, to: string, interval: SalesInterval) =>
+  adminRequest<SalesSeries>(`/admin/reports/sales?${new URLSearchParams({ from, to, interval })}`);
 export const getEmailStatus = () => adminRequest<{ enabled: boolean }>('/admin/notifications/email');
 
 /** Newest first; without a product id it lists changes across the whole catalogue. */

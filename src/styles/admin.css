@@ -19,6 +19,8 @@
   --a-accent-hover: #834a2a;
   --a-accent-soft: #f7ede6;
   --a-accent-text: #8a4f2e;
+  /* Chart columns: the accent with enough colour to read as copper, checked against each theme's surface. */
+  --a-chart: #a5582c;
   --a-on-accent: #ffffff;
   --a-focus: rgba(155, 91, 55, 0.28);
   --a-success: #157347;
@@ -72,6 +74,7 @@
   --a-accent-hover: #e8c4a4;
   --a-accent-soft: rgba(214, 160, 128, 0.12);
   --a-accent-text: #e2b08f;
+  --a-chart: #c27b4d;
   --a-on-accent: #1a120d;
   --a-focus: rgba(214, 160, 128, 0.35);
   --a-success: #74d3a0;
@@ -218,6 +221,40 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #3d3631 transpa
 .admin-sales-grid dd { display: grid; gap: 0.15rem; margin: 0.35rem 0 0; }
 .admin-sales-grid dd strong { color: var(--a-text); font-size: 1.375rem; font-weight: 700; }
 .admin-sales-grid dd small { color: var(--a-text-3); font-size: 0.8125rem; }
+
+/* Sales over time: one copper series, so the heading names it and there is no legend. */
+.admin-trend { margin-bottom: 1.25rem; }
+.admin-trend-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.875rem 1.25rem 0; }
+.admin-trend-controls-end { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.admin-trend-dates { display: flex; flex-wrap: wrap; gap: 0.75rem; padding: 0.75rem 1.25rem 0; }
+.admin-trend-dates label { display: grid; gap: 0.3rem; color: var(--a-text-2); font-size: 0.8125rem; font-weight: 600; }
+.admin-page .admin-trend-dates input { width: auto; min-width: 10.5rem; }
+.admin-trend-message { padding: 1rem 1.25rem 1.25rem; }
+.admin-trend-body { padding: 0 1.25rem 1rem; transition: opacity 0.15s; }
+.admin-trend-body.is-loading { opacity: 0.5; }
+.admin-trend-summary { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.35rem 1.25rem; padding: 1rem 0 0.75rem; }
+.admin-trend-total strong { display: block; color: var(--a-text); font-size: 1.625rem; font-weight: 700; line-height: 1.2; }
+.admin-trend-total span { color: var(--a-text-3); font-size: 0.8125rem; }
+.admin-page .admin-trend-delta { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; color: var(--a-text-2); font-size: 0.8125rem; font-weight: 600; }
+.admin-page .admin-trend-delta.is-up { color: var(--a-success); }
+.admin-page .admin-trend-delta.is-down { color: var(--a-danger); }
+.admin-trend-delta svg { flex: none; }
+.admin-trend-plot { position: relative; height: 220px; border-radius: var(--a-radius-sm); outline: none; touch-action: pan-y; cursor: default; }
+.admin-trend-plot:focus-visible { box-shadow: 0 0 0 3px var(--a-focus); }
+.admin-trend-plot svg { display: block; overflow: visible; }
+.admin-trend-grid { stroke: var(--a-border); stroke-width: 1; shape-rendering: crispEdges; }
+.admin-trend-baseline { stroke: var(--a-border-strong); stroke-width: 1; shape-rendering: crispEdges; }
+.admin-trend-tick { fill: var(--a-text-3); font-size: 11px; font-variant-numeric: tabular-nums; }
+.admin-trend-band { fill: var(--a-hover); }
+.admin-trend-bar { fill: var(--a-chart); }
+.admin-trend-tooltip { position: absolute; top: 0.25rem; z-index: 2; display: grid; gap: 0.1rem; padding: 0.55rem 0.75rem; border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); background: var(--a-raised); box-shadow: var(--a-shadow-md); color: var(--a-text-3); font-size: 0.75rem; white-space: nowrap; pointer-events: none; }
+.admin-trend-tooltip strong { color: var(--a-text); font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
+.admin-trend-table { max-height: 20rem; margin-bottom: 0; }
+.admin-trend-table thead th { position: sticky; top: 0; z-index: 1; }
+@media (forced-colors: active) {
+  .admin-trend-bar { fill: CanvasText; }
+  .admin-trend-band { fill: Highlight; opacity: 0.3; }
+}
 
 .admin-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
 .admin-summary > div { display: grid; gap: 0.2rem; padding: 0.9rem 1.1rem; background: var(--a-surface); border: 1px solid var(--a-border); border-radius: var(--a-radius); box-shadow: var(--a-shadow-sm); }
@@ -511,6 +548,14 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #3d3631 transpa
   .admin-toolbar-group { flex-direction: column; align-items: stretch; }
   .admin-sales-grid > div { padding: 0.85rem 1rem; }
   .admin-sales-grid dd strong { font-size: 1.15rem; }
+  .admin-trend-controls, .admin-trend-dates { padding-left: 1rem; padding-right: 1rem; }
+  .admin-trend-controls > .admin-segmented, .admin-trend-controls-end { width: 100%; }
+  .admin-trend-controls-end .admin-segmented { flex: 1; }
+  .admin-trend-controls > .admin-segmented button { padding-left: 0.3rem; padding-right: 0.3rem; font-size: 0.75rem; white-space: nowrap; }
+  .admin-trend-body, .admin-trend-message { padding-left: 1rem; padding-right: 1rem; }
+  .admin-trend-dates label { flex: 1; }
+  .admin-page .admin-trend-dates input { width: 100%; min-width: 0; }
+  .admin-trend-total strong { font-size: 1.375rem; }
   .admin-card-header { flex-wrap: wrap; gap: 0.25rem 1rem; }
   .admin-modal-footer-start { flex-basis: 100%; margin-right: 0; }
   .admin-pagination-buttons .admin-button { flex: 1; }
