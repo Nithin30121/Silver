@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-
-const INTRO_STORAGE_KEY = 'silvesto_intro_seen';
+import { INTRO_DISMISSED_EVENT, INTRO_STORAGE_KEY } from '../lib/intro';
 
 export const BrandIntro: React.FC = () => {
   const [visible, setVisible] = useState<boolean>(() => {
@@ -41,6 +40,8 @@ export const BrandIntro: React.FC = () => {
       // Ignore storage failures; the current visit can still continue.
     }
     setFadingOut(true);
+    // The hero starts its own reveal as the introduction fades.
+    window.dispatchEvent(new Event(INTRO_DISMISSED_EVENT));
     setTimeout(() => {
       setVisible(false);
     }, 700); // Match CSS fade-out duration
