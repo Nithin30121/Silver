@@ -1,0 +1,390 @@
+/* ==========================================================================
+   SILVORA | Futuristic 3D hero
+   Layers, back to front: atmosphere, the 3D bracelet, then the text. The page leaves an empty
+   space above the SILVORA lettering, and the bracelet is drawn into exactly that space.
+   ========================================================================== */
+.lux-hero {
+  --lux-silver-1: #f4f5f7;
+  --lux-silver-2: #c9ccd2;
+  --lux-silver-3: #8f9299;
+  --lux-silver-4: #5b5e64;
+  --lux-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  isolation: isolate;
+  min-height: max(36rem, calc(100svh - var(--header-height) - 2.5rem));
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 62% at 50% 46%, #16171b 0%, #0c0c0e 52%, #050506 100%);
+  border-bottom: 1px solid rgba(201, 204, 210, 0.12);
+}
+
+.lux-hero-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Atmosphere: a soft silver haze behind the centre and two faint drifting light streaks. */
+.lux-hero-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.lux-hero-glow {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  width: min(78vw, 980px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  background: radial-gradient(circle, rgba(220, 224, 232, 0.1) 0%, rgba(150, 158, 170, 0.04) 36%, transparent 66%);
+}
+
+.lux-hero-streak {
+  position: absolute;
+  left: -20%;
+  width: 140%;
+  height: 1px;
+  rotate: -11deg;
+  background: linear-gradient(90deg, transparent 18%, rgba(236, 239, 245, 0.4) 50%, transparent 82%);
+  opacity: 0.45;
+  animation: lux-streak 16s ease-in-out infinite;
+}
+
+.lux-hero-streak::after {
+  content: '';
+  position: absolute;
+  inset: -28px 10%;
+  background: linear-gradient(90deg, transparent, rgba(205, 211, 222, 0.07) 50%, transparent);
+  filter: blur(14px);
+}
+
+.lux-hero-streak.is-high {
+  top: 22%;
+}
+
+.lux-hero-streak.is-low {
+  top: 78%;
+  opacity: 0.28;
+  animation-delay: -8s;
+}
+
+@keyframes lux-streak {
+  0%,
+  100% {
+    translate: -5% 0;
+    opacity: 0.22;
+  }
+
+  50% {
+    translate: 5% 0;
+    opacity: 0.5;
+  }
+}
+
+/* The brand: large, light serif lettering in muted silver with a slow sweep of light across it. */
+.lux-hero-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  text-align: center;
+  line-height: 1;
+}
+
+.lux-hero-wordmark {
+  display: block;
+  padding: 0.02em 0.05em 0.06em;
+  font-family: var(--font-serif);
+  /* About two-thirds of the screen wide, matching the phone layout's proportion. */
+  font-size: clamp(4.5rem, 17vw, 19rem);
+  font-weight: 300;
+  line-height: 0.84;
+  letter-spacing: -0.01em;
+  background: linear-gradient(100deg,
+    var(--lux-silver-4) 0%, var(--lux-silver-3) 22%, var(--lux-silver-2) 40%, var(--lux-silver-1) 50%,
+    var(--lux-silver-2) 60%, var(--lux-silver-3) 78%, var(--lux-silver-4) 100%);
+  background-size: 260% 100%;
+  background-position: 100% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: lux-sheen 12s cubic-bezier(0.45, 0, 0.2, 1) 3s infinite;
+}
+
+/* One slow pass of light, then a long rest; both ends of the gradient look the same, so it loops smoothly. */
+@keyframes lux-sheen {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  40%,
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.lux-hero-luxe {
+  display: block;
+  margin-top: clamp(0.4rem, 1vw, 1.2rem);
+  /* Letter spacing also follows the last letter; the matching left padding keeps the word centred. */
+  padding-left: 1em;
+  font-family: var(--font-sans);
+  font-size: clamp(0.8rem, 1.7vw, 1.75rem);
+  font-weight: 500;
+  letter-spacing: 1em;
+  color: rgba(214, 218, 225, 0.72);
+}
+
+/* The 3D bracelet, drawn on a transparent canvas covering the hero. */
+.lux-hero-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.lux-hero-canvas {
+  position: absolute !important;
+  inset: 0;
+  pointer-events: none !important;
+}
+
+/* Text: the label at the top, the bracelet's space, the lettering, then the line and button. */
+.lux-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: inherit;
+  /* The label sits just under the header; the bottom keeps its breathing room above the button. */
+  padding: clamp(0.9rem, 2.4vh, 1.5rem) clamp(1.25rem, 4vw, 4rem) clamp(1.75rem, 5vh, 3.25rem);
+  text-align: center;
+  pointer-events: none;
+}
+
+.lux-hero-space {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: clamp(9rem, 24vh, 20rem);
+  margin: clamp(0.5rem, 1.5vh, 1rem) 0;
+}
+
+.lux-hero-content button {
+  pointer-events: auto;
+}
+
+.lux-hero-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.42em;
+  color: rgba(214, 218, 225, 0.72);
+}
+
+.lux-hero-label::before,
+.lux-hero-label::after {
+  content: '';
+  width: 2.75rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(214, 218, 225, 0.55));
+}
+
+.lux-hero-label::after {
+  /* Matches the spacing after the last letter, so the label stays centred. */
+  margin-left: -0.42em;
+  background: linear-gradient(90deg, rgba(214, 218, 225, 0.55), transparent);
+}
+
+/* Visitors drag here to turn the bracelet. Touch screens keep vertical swipes for scrolling. */
+.lux-hero-space.is-turnable {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.lux-hero-space.is-dragging {
+  cursor: grabbing;
+}
+
+.lux-hero-space.is-turnable:focus-visible {
+  outline: 1px solid rgba(214, 218, 225, 0.35);
+  outline-offset: -6px;
+  border-radius: 1.5rem;
+}
+
+/* A quiet hint once the bracelet has arrived; it fades away the first time someone turns it. */
+.lux-hero-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 1.2rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(214, 218, 225, 0.6);
+  opacity: 0;
+  transition: opacity 0.8s var(--lux-ease);
+}
+
+.lux-hero-hint.is-shown {
+  opacity: 1;
+  transition-delay: 2.8s;
+}
+
+.lux-hero-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem 3rem;
+  width: 100%;
+  max-width: 82rem;
+  margin-top: clamp(0.9rem, 2.5vh, 2rem);
+  text-align: left;
+}
+
+.lux-hero-tagline {
+  max-width: 24rem;
+  font-family: var(--font-serif);
+  font-size: clamp(1.1rem, 1.6vw, 1.4rem);
+  font-style: italic;
+  line-height: 1.5;
+  color: rgba(228, 231, 237, 0.8);
+}
+
+.lux-hero-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 2.1rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  color: #f2f3f5;
+  background-color: rgba(10, 10, 12, 0.4);
+  border: 1px solid rgba(214, 218, 225, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background-color 0.45s var(--lux-ease), color 0.45s var(--lux-ease), border-color 0.45s var(--lux-ease);
+}
+
+.lux-hero-primary svg {
+  transition: transform 0.45s var(--lux-ease);
+}
+
+.lux-hero-primary:hover {
+  color: #0b0b0d;
+  background-color: #e8eaee;
+  border-color: #e8eaee;
+}
+
+.lux-hero-primary:hover svg {
+  transform: translateX(3px);
+}
+
+.lux-hero-primary:focus-visible {
+  outline: 2px solid var(--lux-silver-2);
+  outline-offset: 4px;
+}
+
+/* Without WebGL: one bracelet drawn with a metallic sweep, cut into links and tilted in perspective. */
+.lux-hero-still {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+.lux-hero-still span {
+  width: min(72%, 34rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: conic-gradient(from 200deg, #4d5056, #d9dce1, #7d8087, #f3f4f6, #60636a, #c3c6cc, #4d5056);
+  -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%, #000 72%, transparent 73%),
+    repeating-conic-gradient(#000 0deg 8deg, transparent 8deg 11.25deg);
+  -webkit-mask-composite: source-in;
+  mask: radial-gradient(circle, transparent 60%, #000 61%, #000 72%, transparent 73%),
+    repeating-conic-gradient(#000 0deg 8deg, transparent 8deg 11.25deg);
+  mask-composite: intersect;
+  transform: rotateX(62deg) rotateZ(14deg);
+  animation: lux-still-float 9s ease-in-out infinite;
+}
+
+@keyframes lux-still-float {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+
+  50% {
+    margin-top: -10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .lux-hero {
+    min-height: max(34rem, calc(100svh - var(--header-height) - 2rem));
+  }
+
+  .lux-hero-wordmark {
+    font-size: 19vw;
+  }
+
+  .lux-hero-luxe {
+    font-size: 0.8rem;
+  }
+
+  .lux-hero-label {
+    gap: 0.7rem;
+    font-size: 0.625rem;
+    letter-spacing: 0.32em;
+  }
+
+  .lux-hero-label::before,
+  .lux-hero-label::after {
+    width: 1.5rem;
+  }
+
+  .lux-hero-label::after {
+    margin-left: -0.32em;
+  }
+
+  /* The line, then the button at the bottom right. */
+  .lux-hero-footer {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .lux-hero-tagline {
+    align-self: flex-start;
+    max-width: 18rem;
+  }
+
+  .lux-hero-still span {
+    width: 88%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lux-hero-wordmark,
+  .lux-hero-streak,
+  .lux-hero-still span {
+    animation: none;
+  }
+}
