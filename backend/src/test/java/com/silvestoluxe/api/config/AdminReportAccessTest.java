@@ -1,6 +1,7 @@
 package com.silvestoluxe.api.config;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -21,6 +22,7 @@ import com.silvestoluxe.api.customer.CustomerService;
 import com.silvestoluxe.api.notification.NotificationController;
 import com.silvestoluxe.api.notification.OrderEmailService;
 import com.silvestoluxe.api.order.OrderService;
+import com.silvestoluxe.api.order.PlacedBetween;
 import com.silvestoluxe.api.report.ReportController;
 import com.silvestoluxe.api.report.ReportService;
 import com.silvestoluxe.api.security.CatalogAuthorization;
@@ -119,6 +121,18 @@ class AdminReportAccessTest {
         mvc.perform(get("/api/admin/reports/sales").param("from", "1 Oct").param("to", "2026-10-31")
                 .header(HttpHeaders.AUTHORIZATION, bearer())).andExpect(status().isBadRequest());
         verifyNoInteractions(reports);
+    }
+
+    @Test
+    void downloadsOnlyTheOrdersFromTheChosenDays() throws Exception {
+        when(authorization.isAdmin(any())).thenReturn(true);
+        when(reports.zone()).thenReturn(ZoneId.of("Asia/Kolkata"));
+        when(orders.export(any(), any(), any())).thenReturn(List.of());
+
+        mvc.perform(get("/api/admin/reports/orders.csv").param("from", "2026-10-01").param("to", "2026-10-01")
+                        .header(HttpHeaders.AUTHORIZATION, bearer()))
+                .andExpect(status().isOk());
+        verify(orders).export(null, null, new PlacedBetween(Instant.parse("2026-09-30T18:30:00Z"), Instant.parse("2026-10-01T18:30:00Z")));
     }
 
     @Test

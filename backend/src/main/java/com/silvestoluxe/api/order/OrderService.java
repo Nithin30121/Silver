@@ -144,13 +144,13 @@ public class OrderService {
     }
 
     /** Admin order list: the query matches part of an order number, customer name, email or phone. */
-    public Page<Response> search(String query, OrderStatus status, Pageable pageable) {
-        return orders.findAll(matching(query, status), pageable).map(this::response);
+    public Page<Response> search(String query, OrderStatus status, PlacedBetween placed, Pageable pageable) {
+        return orders.findAll(matching(query, status, placed), pageable).map(this::response);
     }
 
     /** Every matching order, newest first, for spreadsheet downloads. */
-    public List<Response> export(String query, OrderStatus status) {
-        return orders.findAll(matching(query, status), PageRequest.of(0, EXPORT_LIMIT, Sort.by(Sort.Direction.DESC, "createdAt")))
+    public List<Response> export(String query, OrderStatus status, PlacedBetween placed) {
+        return orders.findAll(matching(query, status, placed), PageRequest.of(0, EXPORT_LIMIT, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .map(this::response).getContent();
     }
 
@@ -230,9 +230,11 @@ public class OrderService {
         }
     }
 
-    static Specification<CustomerOrder> matching(String query, OrderStatus status) {
+    static Specification<CustomerOrder> matching(String query, OrderStatus status, PlacedBetween placed) {
         Specification<CustomerOrder> spec = (root, criteria, builder) -> builder.conjunction();
         if (status != null) spec = spec.and((root, criteria, builder) -> builder.equal(root.get("status"), status));
+        if (placed.from() != null) spec = spec.and((root, criteria, builder) -> builder.greaterThanOrEqualTo(root.get("createdAt"), placed.from()));
+        if (placed.until() != null) spec = spec.and((root, criteria, builder) -> builder.lessThan(root.get("createdAt"), placed.until()));
         String search = query == null ? "" : query.trim().toLowerCase();
         if (search.length() > MAX_QUERY_LENGTH) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search must be " + MAX_QUERY_LENGTH + " characters or fewer.");

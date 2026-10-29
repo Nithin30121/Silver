@@ -13,6 +13,7 @@ import com.silvestoluxe.api.customer.CustomerService;
 import com.silvestoluxe.api.order.OrderDtos;
 import com.silvestoluxe.api.order.OrderService;
 import com.silvestoluxe.api.order.OrderStatus;
+import com.silvestoluxe.api.order.PlacedBetween;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -52,12 +53,14 @@ public class ReportController {
 
     @GetMapping("/orders.csv")
     public ResponseEntity<byte[]> ordersCsv(@RequestParam(required = false) String query,
-                                            @RequestParam(required = false) OrderStatus status) {
+                                            @RequestParam(required = false) OrderStatus status,
+                                            @RequestParam(required = false) LocalDate from,
+                                            @RequestParam(required = false) LocalDate to) {
         StringBuilder csv = new StringBuilder(Csv.BYTE_ORDER_MARK).append(Csv.row(List.of(
                 "Order number", "Placed (" + reports.zone().getId() + ")", "Status", "Payment status", "Payment method",
                 "Customer name", "Email", "Phone", "Address", "City", "State", "Postal code",
                 "Items", "Pieces", "Subtotal", "Shipping", "Total")));
-        for (OrderDtos.Response order : orders.export(query, status)) {
+        for (OrderDtos.Response order : orders.export(query, status, PlacedBetween.days(from, to, reports.zone()))) {
             List<Object> cells = new ArrayList<>(List.of(order.orderNumber(), localTime(order.createdAt()),
                     order.status().name(), order.paymentStatus().name(), order.paymentMethod().name()));
             cells.add(order.shippingFullName());

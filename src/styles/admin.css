@@ -292,6 +292,7 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-segmented button span { color: var(--a-text-3); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
 .admin-select-inline { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--a-text-2); font-size: 0.8125rem; font-weight: 600; }
 .admin-page .admin-select-inline select { width: auto; min-width: 11rem; }
+.admin-page .admin-select-inline input[type='date'] { width: auto; min-width: 9.5rem; }
 
 /* ---------- Tables ---------- */
 
@@ -528,7 +529,7 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
   .admin-search { flex-basis: auto; max-width: none; }
   .admin-segmented button { flex: 1; }
   .admin-select-inline { justify-content: space-between; }
-  .admin-page .admin-select-inline select { flex: 1; min-width: 0; }
+  .admin-page .admin-select-inline :is(select, input[type='date']) { flex: 1; min-width: 0; }
 
   .admin-table:not(.is-compact) thead { display: none; }
   .admin-table:not(.is-compact), .admin-table:not(.is-compact) :is(tbody, td) { display: block; width: 100%; }

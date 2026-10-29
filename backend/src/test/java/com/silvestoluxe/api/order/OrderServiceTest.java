@@ -256,7 +256,7 @@ class OrderServiceTest {
 
     @Test
     void refusesOverlongSearches() {
-        assertThrows(ResponseStatusException.class, () -> OrderService.matching("a".repeat(OrderService.MAX_QUERY_LENGTH + 1), null));
+        assertThrows(ResponseStatusException.class, () -> OrderService.matching("a".repeat(OrderService.MAX_QUERY_LENGTH + 1), null, PlacedBetween.ANY));
     }
 
     private void signedInCustomer() {

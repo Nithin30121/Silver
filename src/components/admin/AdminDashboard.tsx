@@ -1373,18 +1373,20 @@ const unavailableText = (cause: unknown, fallback: string) => cause instanceof A
 
 /* ---------- Orders ---------- */
 
-type OrderFilters = { query: string; status: string; page: number };
+/** from and to are ISO days, empty for no limit. */
+type OrderFilters = { query: string; status: string; from: string; to: string; page: number };
 
 const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null; onView: (order: OrderResponse) => void; notify: Notify }> = ({ initialStatus = '', refreshedAt, onView, notify }) => {
   const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState<OrderFilters>({ query: '', status: initialStatus, page: 0 });
+  const [filters, setFilters] = useState<OrderFilters>({ query: '', status: initialStatus, from: '', to: '', page: 0 });
   // Remembers which filters a result belongs to, so new filters show loading rows instead of stale orders.
   const [result, setResult] = useState<{ filters: OrderFilters; page?: AdminOrderPage; error?: string } | null>(null);
   useSearchAsYouType(query, setFilters);
 
   useEffect(() => {
     let cancelled = false;
-    getAdminOrders({ query: filters.query, status: filters.status || undefined, page: filters.page, size: ORDER_PAGE_SIZE })
+    getAdminOrders({ query: filters.query, status: filters.status || undefined, from: filters.from || undefined, to: filters.to || undefined,
+      page: filters.page, size: ORDER_PAGE_SIZE })
       .then((page) => { if (!cancelled) setResult({ filters, page }); })
       .catch((cause: unknown) => { if (!cancelled) setResult({ filters, error: errorText(cause, 'Unable to load orders.') }); });
     return () => { cancelled = true; };
@@ -1405,15 +1407,31 @@ const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null;
               {ORDER_STATUSES.map((value) => <option key={value} value={value}>{humanize(value)}</option>)}
             </select>
           </label>
-          <DownloadButton notify={notify} title="Download the orders that match your search and status as a spreadsheet"
-            onDownload={() => downloadAdminCsv('orders', { query: filters.query, status: filters.status }, `silvora-orders-${today()}.csv`)} />
+          <label className="admin-select-inline">
+            <span>From</span>
+            <input type="date" value={filters.from} max={filters.to || today()}
+              onChange={(e) => setFilters((current) => ({ ...current, from: e.target.value, page: 0 }))} />
+          </label>
+          <label className="admin-select-inline">
+            <span>To</span>
+            <input type="date" value={filters.to} min={filters.from || undefined} max={today()}
+              onChange={(e) => setFilters((current) => ({ ...current, to: e.target.value, page: 0 }))} />
+          </label>
+          {(filters.from || filters.to) && (
+            <button type="button" className="admin-button is-ghost" onClick={() => setFilters((current) => ({ ...current, from: '', to: '', page: 0 }))}>
+              <X size={15} /> Clear dates
+            </button>
+          )}
+          <DownloadButton notify={notify} title="Download the orders that match your search, status and dates as a spreadsheet"
+            onDownload={() => downloadAdminCsv('orders', { query: filters.query, status: filters.status, from: filters.from, to: filters.to },
+              `silvora-orders-${today()}.csv`)} />
         </div>
       </div>
       {isLoading ? <LoadingRows /> : result?.error ? (
         <div className="admin-card-message"><div className="admin-alert" role="alert"><CircleAlert size={18} /><span>{result.error}</span></div></div>
       ) : !data || data.orders.length === 0 ? (
-        filters.query || filters.status
-          ? <EmptyState icon={<Search size={20} />} title="No matching orders" text="Try a different search or status." />
+        filters.query || filters.status || filters.from || filters.to
+          ? <EmptyState icon={<Search size={20} />} title="No matching orders" text="Try a different search, status or dates." />
           : <EmptyState icon={<ShoppingBag size={20} />} title="No orders yet" text="Orders appear here as soon as customers check out." />
       ) : (
         <>
