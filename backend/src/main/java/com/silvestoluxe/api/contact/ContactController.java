@@ -4,6 +4,7 @@ import static com.silvestoluxe.api.contact.ContactDtos.*;
 
 import java.util.UUID;
 
+import com.silvestoluxe.api.common.ClientAddress;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -24,7 +25,7 @@ public class ContactController {
     @PostMapping("/contact")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void send(@AuthenticationPrincipal Jwt jwt, @RequestBody @Valid ContactRequest request, HttpServletRequest http) {
-        contact.submit(request, jwt == null ? null : jwt.getSubject(), sender(http));
+        contact.submit(request, jwt == null ? null : jwt.getSubject(), ClientAddress.of(http));
     }
 
     @GetMapping("/admin/messages")
@@ -39,15 +40,5 @@ public class ContactController {
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
     public MessageResponse updateStatus(@PathVariable UUID id, @RequestBody @Valid StatusUpdate request) {
         return contact.updateStatus(id, request.status());
-    }
-
-    /**
-     * Who is sending, for the rate limit. Hosts such as Render put the visitor's address first in
-     * X-Forwarded-For; it can be faked, which is why the limiter also caps the whole shop.
-     */
-    static String sender(HttpServletRequest http) {
-        String forwarded = http.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) return forwarded.split(",")[0].trim();
-        return http.getRemoteAddr();
     }
 }

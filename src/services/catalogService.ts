@@ -85,6 +85,16 @@ async function allProducts(signal?: AbortSignal): Promise<ApiProduct[]> {
 }
 
 /**
+ * Tells the shop one more visitor saved this piece, so the admin can see which pieces people want.
+ * Nothing about the visitor is sent, it is sent once, and a failure is ignored: the wishlist itself
+ * lives in this browser and works either way.
+ */
+export function recordWishlistAdd(productId: string): void {
+  void fetch(`${API_BASE_URL}/products/${encodeURIComponent(productId)}/wishlist-adds`, { method: 'POST', keepalive: true })
+    .catch(() => undefined);
+}
+
+/**
  * Fetches fresh public catalogue data on each application load. If the server is still waking up
  * (see lib/serverRetry), onWaking is called once and the whole load is tried again until the
  * pauses run out.

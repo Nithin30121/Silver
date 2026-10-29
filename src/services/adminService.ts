@@ -101,6 +101,13 @@ export interface SalesSeries {
   previous: { orderCount: number; orderValue: number | string };
 }
 
+/** How often a piece was added to a wishlist: all time, and over the last 30 days. */
+export interface WishlistCount {
+  productId: string;
+  allTime: number;
+  recent: number;
+}
+
 export type StockReason = 'INITIAL' | 'MANUAL' | 'SALE' | 'CANCELLATION';
 
 export interface StockMovement {
@@ -202,6 +209,9 @@ export async function getAdminOrders(options: { query?: string; status?: string;
 }
 
 export const getSalesSummary = () => adminRequest<SalesSummary>('/admin/reports/summary');
+
+/** Only pieces added at least once are listed. */
+export const getWishlistCounts = () => adminRequest<WishlistCount[]>('/admin/wishlist-counts');
 
 /** Days are ISO dates in the shop's time zone, for example 2026-10-29; both ends are included. */
 export const getSalesSeries = (from: string, to: string, interval: SalesInterval) =>

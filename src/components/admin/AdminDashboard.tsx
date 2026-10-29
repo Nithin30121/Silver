@@ -13,10 +13,10 @@ import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../.
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import {
   AdminApiError, createCategory, createProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
-  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getMessages, getSalesSeries, getSalesSummary, getStockMovements,
+  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getMessages, getSalesSeries, getSalesSummary, getStockMovements, getWishlistCounts,
   setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, uploadProductImages, type AdminCustomer,
   type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
-  type MessageStatus, type ProductInput, type SalesInterval, type SalesPoint, type SalesSeries, type SalesSummary, type StockMovement,
+  type MessageStatus, type ProductInput, type SalesInterval, type SalesPoint, type SalesSeries, type SalesSummary, type StockMovement, type WishlistCount,
   type StockReason
 } from '../../services/adminService';
 import '../../styles/admin.css';
@@ -985,6 +985,15 @@ const ProductManager: React.FC<{
 }> = ({ products, categories, loaded, onEdit, onChanged, notify }) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'live' | 'hidden'>('all');
+  // undefined while loading, null when this server doesn't count wishlist adds yet.
+  const [wishlistCounts, setWishlistCounts] = useState<Map<string, WishlistCount> | null | undefined>(undefined);
+  useEffect(() => {
+    let cancelled = false;
+    getWishlistCounts()
+      .then((counts) => { if (!cancelled) setWishlistCounts(new Map(counts.map((count) => [count.productId, count]))); })
+      .catch(() => { if (!cancelled) setWishlistCounts(null); });
+    return () => { cancelled = true; };
+  }, [products]);
   const trails = useMemo(() => new Map(categories.map((category) => [category.id, category.trail])), [categories]);
   const liveCount = products.filter((product) => product.isActive).length;
   // Every product is loaded, so searching happens here as you type.
@@ -1009,10 +1018,13 @@ const ProductManager: React.FC<{
       ) : (
         <div className="admin-table-scroll">
           <table className="admin-table">
-            <thead><tr><th>Product</th><th>SKU</th><th className="is-right">Price</th><th>Stock</th><th>Status</th><th><span className="admin-sr-only">Actions</span></th></tr></thead>
+            <thead><tr><th>Product</th><th>SKU</th><th className="is-right">Price</th><th>Stock</th>
+              <th className="is-right" title="Times visitors added the piece to their wishlist">Wishlisted</th><th>Status</th>
+              <th><span className="admin-sr-only">Actions</span></th></tr></thead>
             <tbody>
               {visible.map((product) => (
                 <ProductRow key={product.id} product={product} onEdit={() => onEdit(product)} onChanged={onChanged} notify={notify}
+                  wishlist={wishlistCounts ? wishlistCounts.get(product.id) ?? { productId: product.id, allTime: 0, recent: 0 } : null}
                   categoryText={product.categoryIds.map((id) => trails.get(id)).filter(Boolean).join(', ')} />
               ))}
             </tbody>
@@ -1023,7 +1035,7 @@ const ProductManager: React.FC<{
   );
 };
 
-const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; onEdit: () => void; onChanged: () => void; notify: Notify }> = ({ product, categoryText, onEdit, onChanged, notify }) => {
+const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist: WishlistCount | null; onEdit: () => void; onChanged: () => void; notify: Notify }> = ({ product, categoryText, wishlist, onEdit, onChanged, notify }) => {
   const [busy, setBusy] = useState(false);
   const toggle = async () => {
     setBusy(true);
@@ -1048,6 +1060,9 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; onEdit: 
       <td data-label="SKU" className="admin-mono">{product.sku || '—'}</td>
       <td data-label="Price" className="admin-num is-right">{money(product.price)}</td>
       <td data-label="Stock"><StockLevel quantity={product.stockQuantity} /></td>
+      <td data-label="Wishlisted" className="admin-num is-right">
+        {wishlist ? <>{wishlist.allTime}<small>{wishlist.recent} in 30 days</small></> : '—'}
+      </td>
       <td data-label="Status"><LiveBadge isActive={product.isActive} /></td>
       <td className="admin-row-actions">
         <button className="admin-button is-ghost is-small" onClick={onEdit}><Pencil size={14} /> Edit</button>
