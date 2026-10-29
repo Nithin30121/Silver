@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { isAccountView, type AccountTab, type CatalogueCategory, type CartItem, type Product, type ProductCategory, type ViewType } from '../types';
-import { loadCatalogue, type ApiProduct } from '../services/catalogService';
+import { CatalogueRequestError, loadCatalogue, type ApiProduct } from '../services/catalogService';
 import { pageTitle, parseRoute, routePath, type Route } from '../lib/routes';
 
 type CatalogueStatus = 'loading' | 'ready' | 'error';
@@ -30,6 +30,8 @@ interface ShopContextType {
   categories: CatalogueCategory[];
   catalogueStatus: CatalogueStatus;
   catalogueError: string | null;
+  /** True while the catalogue is still loading because the server is waking up. */
+  catalogueWaking: boolean;
   reloadCatalogue: () => Promise<void>;
   products: Product[];
   currentProduct: Product | null;
@@ -137,6 +139,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [apiProducts, setApiProducts] = useState<ApiProduct[]>([]);
   const [catalogueStatus, setCatalogueStatus] = useState<CatalogueStatus>('loading');
   const [catalogueError, setCatalogueError] = useState<string | null>(null);
+  const [catalogueWaking, setCatalogueWaking] = useState(false);
   const [cart, setCart] = useState<CartItem[]>(() => { try { return JSON.parse(localStorage.getItem('silvesto_cart') ?? '[]') as CartItem[]; } catch { return []; } });
   const [wishlist, setWishlist] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('silvesto_wishlist') ?? '[]') as string[]; } catch { return []; } });
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -161,14 +164,19 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const reloadCatalogue = useCallback(async () => {
     setCatalogueStatus('loading');
     setCatalogueError(null);
+    setCatalogueWaking(false);
     try {
-      const catalogue = await loadCatalogue();
+      const catalogue = await loadCatalogue(undefined, () => setCatalogueWaking(true));
       setCategories(catalogue.categories);
       setApiProducts(catalogue.products);
       setCatalogueStatus('ready');
     } catch (error) {
       setCatalogueStatus('error');
-      setCatalogueError(error instanceof Error ? error.message : 'Unable to load the catalogue.');
+      setCatalogueError(error instanceof CatalogueRequestError && error.retryable
+        ? 'The collection is taking longer than usual to open. Please try again in a moment.'
+        : error instanceof Error ? error.message : 'Unable to load the catalogue.');
+    } finally {
+      setCatalogueWaking(false);
     }
   }, []);
 
@@ -283,7 +291,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <ShopContext.Provider value={{
     currentView, selectedProductId, selectedCategory: effectiveCategory, selectedRootCategoryId: effectiveRootId, selectedGender, navigateTo, returnView,
     accountTab, accountOrderNumber, contactOrderNumber,
-    categories, catalogueStatus, catalogueError, reloadCatalogue, products, currentProduct,
+    categories, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue, products, currentProduct,
     cart, cartCount: cart.reduce((total, item) => total + item.quantity, 0), cartSubtotal: cart.reduce((total, item) => total + item.product.price * item.quantity, 0), addToCart, removeFromCart, updateQuantity, clearCart: () => setCart([]), isCartOpen, setIsCartOpen,
     wishlist, wishlistCount: wishlist.length, toggleWishlist, isWishlisted: (productId) => wishlist.includes(productId), isWishlistOpen, setIsWishlistOpen,
     searchQuery, setSearchQuery, isSearchOpen, setIsSearchOpen, quickViewProduct, setQuickViewProduct, toastMessage, showToast,

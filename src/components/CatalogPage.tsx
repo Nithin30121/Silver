@@ -9,7 +9,7 @@ function categoryIds(category: CatalogueCategory): string[] {
 }
 
 export const CatalogPage: React.FC = () => {
-  const { products, categories, selectedCategory, selectedRootCategoryId, catalogueStatus, catalogueError, reloadCatalogue } = useShop();
+  const { products, categories, selectedCategory, selectedRootCategoryId, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue } = useShop();
 
   const [activeCategory, setActiveCategory] = useState<ProductCategory | 'all'>(selectedCategory || 'all');
   const [sortBy, setSortBy] = useState<'featured' | 'price-asc' | 'price-desc' | 'name'>('featured');
@@ -228,7 +228,7 @@ export const CatalogPage: React.FC = () => {
         {/* Product Grid, loading/error states, or empty state */}
         {catalogueStatus === 'loading' ? (
           <div style={{ textAlign: 'center', padding: '6rem 2rem', color: 'var(--color-text-muted)' }} aria-live="polite">
-            Loading the latest collection…
+            {catalogueWaking ? 'Opening the collection… The shop is waking up, which can take up to a minute.' : 'Loading the latest collection…'}
           </div>
         ) : catalogueStatus === 'error' ? (
           <div style={{ textAlign: 'center', padding: '6rem 2rem' }} role="alert">

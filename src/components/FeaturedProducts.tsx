@@ -177,7 +177,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
 };
 
 export const FeaturedProducts: React.FC = () => {
-  const { products, navigateTo, catalogueStatus, catalogueError, reloadCatalogue } = useShop();
+  const { products, navigateTo, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue } = useShop();
   const featured = products.filter((p) => p.isFeatured).slice(0, 4);
 
   return (
@@ -202,7 +202,7 @@ export const FeaturedProducts: React.FC = () => {
         </motion.div>
 
         {catalogueStatus === 'loading' ? (
-          <p style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }} aria-live="polite">Loading the latest pieces…</p>
+          <p style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }} aria-live="polite">{catalogueWaking ? 'Opening the collection… The shop is waking up, which can take up to a minute.' : 'Loading the latest pieces…'}</p>
         ) : catalogueStatus === 'error' ? (
           <div style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }} role="alert">
             <p>{catalogueError}</p>
