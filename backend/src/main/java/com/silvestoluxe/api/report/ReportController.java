@@ -51,6 +51,23 @@ public class ReportController {
         return reports.sales(from, to, interval);
     }
 
+    @GetMapping("/sales-by-category")
+    public ReportService.CategoryBreakdown salesByCategory(@RequestParam LocalDate from, @RequestParam LocalDate to) {
+        return reports.salesByCategory(from, to);
+    }
+
+    @GetMapping("/sales-by-payment-method")
+    public ReportService.PaymentBreakdown salesByPaymentMethod(@RequestParam LocalDate from, @RequestParam LocalDate to) {
+        return reports.salesByPaymentMethod(from, to);
+    }
+
+    /** New customer accounts over time, for the Reports page chart. */
+    @GetMapping("/customer-growth")
+    public ReportService.CustomerGrowth customerGrowth(@RequestParam LocalDate from, @RequestParam LocalDate to,
+                                                       @RequestParam(defaultValue = "DAY") ReportService.Interval interval) {
+        return reports.customerGrowth(from, to, interval);
+    }
+
     @GetMapping("/orders.csv")
     public ResponseEntity<byte[]> ordersCsv(@RequestParam(required = false) String query,
                                             @RequestParam(required = false) OrderStatus status,

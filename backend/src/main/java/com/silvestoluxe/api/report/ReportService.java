@@ -92,17 +92,8 @@ public class ReportService {
      * comparison. Cancelled orders are left out, as in the summary.
      */
     public SalesSeries sales(LocalDate from, LocalDate to, Interval interval) {
-        if (from == null || to == null || interval == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a start date, an end date and an interval.");
-        }
-        if (to.isBefore(from)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The start date must be on or before the end date.");
-        long days = ChronoUnit.DAYS.between(from, to) + 1;
-        if (days > MAX_DAYS) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a range of three years or less.");
-        List<LocalDate> buckets = buckets(from, to, interval);
-        if (buckets.size() > MAX_POINTS) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "That range has too many " + interval.label + "s to chart. Choose a wider interval.");
-        }
+        long days = checkRange(from, to);
+        List<LocalDate> buckets = chartBuckets(from, to, interval);
 
         Map<LocalDate, SalesPoint> found = new HashMap<>();
         jdbcTemplate.query("""
@@ -125,6 +116,92 @@ public class ReportService {
         LocalDate previousTo = from.minusDays(1);
         return new SalesSeries(zone.getId(), from, to, interval, points, new Totals(orders, value),
                 totals(previousTo.minusDays(days - 1), previousTo));
+    }
+
+    /**
+     * Order value, pieces and orders per category from one day to another, leaving out cancelled
+     * orders. A piece placed in two categories counts in both; pieces in no category, or whose
+     * product was deleted, are listed under a null category.
+     */
+    public CategoryBreakdown salesByCategory(LocalDate from, LocalDate to) {
+        checkRange(from, to);
+        List<CategorySales> categories = jdbcTemplate.query("""
+                select cp.category_id, count(distinct o.id) as order_count, sum(i.quantity) as pieces, sum(i.line_total) as order_value
+                from public.order_items i
+                join public.orders o on o.id = i.order_id
+                left join public.category_products cp on cp.product_id = i.product_id
+                where o.status <> 'CANCELLED' and o.created_at >= ? and o.created_at < ?
+                group by cp.category_id
+                order by order_value desc
+                """, (resultSet, row) -> new CategorySales(resultSet.getObject("category_id", UUID.class), resultSet.getLong("order_count"),
+                        resultSet.getLong("pieces"), resultSet.getBigDecimal("order_value")), start(from), start(to.plusDays(1)));
+        return new CategoryBreakdown(zone.getId(), from, to, categories, totals(from, to));
+    }
+
+    /**
+     * Orders and order value per payment method chosen at checkout, leaving out cancelled orders.
+     * There is no payment provider yet, so paidValue is only what an admin has marked as paid.
+     */
+    public PaymentBreakdown salesByPaymentMethod(LocalDate from, LocalDate to) {
+        checkRange(from, to);
+        List<PaymentMethodSales> methods = jdbcTemplate.query("""
+                select payment_method, count(*) as order_count, coalesce(sum(total_amount), 0) as order_value,
+                       coalesce(sum(total_amount) filter (where payment_status = 'PAID'), 0) as paid_value
+                from public.orders
+                where status <> 'CANCELLED' and created_at >= ? and created_at < ?
+                group by payment_method
+                order by order_value desc
+                """, (resultSet, row) -> new PaymentMethodSales(resultSet.getString("payment_method"), resultSet.getLong("order_count"),
+                        resultSet.getBigDecimal("order_value"), resultSet.getBigDecimal("paid_value")), start(from), start(to.plusDays(1)));
+        return new PaymentBreakdown(zone.getId(), from, to, methods);
+    }
+
+    /**
+     * New customer accounts (admins left out) per day, week or month, with empty ones as zero, the
+     * same-length period just before for comparison, and how many customers there are in all.
+     */
+    public CustomerGrowth customerGrowth(LocalDate from, LocalDate to, Interval interval) {
+        long days = checkRange(from, to);
+        List<LocalDate> buckets = chartBuckets(from, to, interval);
+        Map<LocalDate, Long> found = new HashMap<>();
+        jdbcTemplate.query("""
+                select date_trunc(?, created_at at time zone ?)::date as bucket, count(*) as new_customers
+                from public.profiles
+                where role = 'customer' and created_at >= ? and created_at < ?
+                group by 1
+                """, (RowCallbackHandler) resultSet -> found.put(resultSet.getObject("bucket", LocalDate.class), resultSet.getLong("new_customers")),
+                interval.sqlUnit, zone.getId(), start(from), start(to.plusDays(1)));
+        List<GrowthPoint> points = buckets.stream().map((bucket) -> new GrowthPoint(bucket, found.getOrDefault(bucket, 0L))).toList();
+        LocalDate previousTo = from.minusDays(1);
+        return new CustomerGrowth(zone.getId(), from, to, interval, points, points.stream().mapToLong(GrowthPoint::newCustomers).sum(),
+                newCustomers(previousTo.minusDays(days - 1), previousTo), newCustomers(null, null));
+    }
+
+    /** The number of days in the range, after checking it is one a report can cover. */
+    private static long checkRange(LocalDate from, LocalDate to) {
+        if (from == null || to == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a start date and an end date.");
+        if (to.isBefore(from)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The start date must be on or before the end date.");
+        long days = ChronoUnit.DAYS.between(from, to) + 1;
+        if (days > MAX_DAYS) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose a range of three years or less.");
+        return days;
+    }
+
+    private static List<LocalDate> chartBuckets(LocalDate from, LocalDate to, Interval interval) {
+        if (interval == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose daily, weekly or monthly.");
+        List<LocalDate> buckets = buckets(from, to, interval);
+        if (buckets.size() > MAX_POINTS) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "That range has too many " + interval.label + "s to chart. Choose a wider interval.");
+        }
+        return buckets;
+    }
+
+    /** New customer accounts in the range, or all of them when both ends are null. */
+    private long newCustomers(LocalDate from, LocalDate to) {
+        String customers = "select count(*) from public.profiles where role = 'customer'";
+        Long count = from == null ? jdbcTemplate.queryForObject(customers, Long.class)
+                : jdbcTemplate.queryForObject(customers + " and created_at >= ? and created_at < ?", Long.class, start(from), start(to.plusDays(1)));
+        return count == null ? 0 : count;
     }
 
     /** The start of every day, week (from Monday) or month that the range touches. */
@@ -205,6 +282,24 @@ public class ReportService {
 
     public record SalesSeries(String timeZone, LocalDate from, LocalDate to, Interval interval, List<SalesPoint> points,
                               Totals total, Totals previous) { }
+
+    /** categoryId is null for pieces in no category. */
+    public record CategorySales(UUID categoryId, long orderCount, long pieces, BigDecimal orderValue) { }
+
+    /** total counts each order once, however many categories its pieces are in. */
+    public record CategoryBreakdown(String timeZone, LocalDate from, LocalDate to, List<CategorySales> categories, Totals total) { }
+
+    /** method is UPI, CARD or COD, as chosen at checkout. */
+    public record PaymentMethodSales(String method, long orderCount, BigDecimal orderValue, BigDecimal paidValue) { }
+
+    public record PaymentBreakdown(String timeZone, LocalDate from, LocalDate to, List<PaymentMethodSales> methods) { }
+
+    /** One bar of the customer growth chart: the day, week (its Monday) or month (its 1st) it covers. */
+    public record GrowthPoint(LocalDate start, long newCustomers) { }
+
+    /** total is the new customers in the range, previous those in the same-length period before. */
+    public record CustomerGrowth(String timeZone, LocalDate from, LocalDate to, Interval interval, List<GrowthPoint> points,
+                                 long total, long previous, long allCustomers) { }
 
     /** from is null for all time. */
     public record Period(Instant from, long orderCount, BigDecimal orderValue, BigDecimal paidValue) { }

@@ -261,6 +261,20 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-summary span { color: var(--a-text-2); font-size: 0.8125rem; font-weight: 600; }
 .admin-summary strong { font-size: 1.5rem; font-weight: 700; }
 .admin-summary .is-warning strong { color: var(--a-warning); }
+.admin-summary.is-four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.admin-summary small { color: var(--a-text-3); font-size: 0.75rem; }
+
+/* Reports: one date range for every report, two breakdowns side by side, then the growth chart. */
+.admin-report-range { margin-bottom: 1.25rem; }
+.admin-report-range .admin-trend-controls { padding-bottom: 0.875rem; }
+.admin-report-range .admin-trend-message, .admin-report-range .admin-trend-dates { padding-bottom: 0.875rem; }
+.admin-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; align-items: start; }
+.admin-report-table td:first-child { white-space: nowrap; }
+.admin-table-scroll.is-loading { opacity: 0.5; transition: opacity 0.15s; }
+.admin-share { display: flex; align-items: center; gap: 0.5rem; min-width: 7rem; color: var(--a-text-2); font-size: 0.8125rem; }
+.admin-share-track { flex: 1; height: 8px; border-radius: 4px; background: var(--a-neutral-bg); overflow: hidden; }
+.admin-share-fill { display: block; height: 100%; border-radius: 4px; background: var(--a-chart); }
+@media (forced-colors: active) { .admin-share-fill { background: CanvasText; } }
 .admin-summary .is-danger strong { color: var(--a-danger); }
 
 /* ---------- Badges ---------- */
@@ -387,6 +401,10 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-form-section > header p { margin-top: 0.25rem; color: var(--a-text-3); font-size: 0.8125rem; }
 .admin-form-grid, .admin-form.is-flat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-content: start; }
 .admin-form-grid > .is-wide, .admin-form.is-flat > .is-wide { grid-column: 1 / -1; }
+.admin-silver-preview { display: grid; gap: 0.2rem; padding: 0.9rem 1rem; border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); background: var(--a-surface-2); }
+.admin-silver-preview > span { color: var(--a-text-2); font-size: 0.8125rem; font-weight: 600; }
+.admin-silver-preview strong { color: var(--a-text); font-size: 1.375rem; font-weight: 700; }
+.admin-silver-preview small { color: var(--a-text-3); font-size: 0.8125rem; }
 .admin-modal:not(.is-large) .admin-form-section { grid-template-columns: minmax(0, 1fr); gap: 0.9rem; }
 .admin-field { min-width: 0; display: grid; align-content: start; gap: 0.4rem; }
 .admin-field-label { color: var(--a-text); font-size: 0.8125rem; font-weight: 600; }
@@ -492,6 +510,8 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
   .admin-content { padding: 1.75rem 1.75rem 3rem; }
   .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-overview-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-report-grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-summary.is-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-sales-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .admin-sales-grid > div:nth-child(3) { border-left: 0; }
   .admin-sales-grid > div:nth-child(n + 3) { border-top: 1px solid var(--a-border); }
