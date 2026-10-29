@@ -2,9 +2,13 @@ package com.silvestoluxe.api.order;
 
 import static com.silvestoluxe.api.order.OrderDtos.*;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.UUID;
+
 import com.silvestoluxe.api.security.CurrentActor;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -17,7 +21,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class OrderController {
     private final OrderService orders;
-    public OrderController(OrderService orders) { this.orders = orders; }
+    /** The shop's time zone, the same one the sales reports count days in. */
+    private final ZoneId zone;
+
+    public OrderController(OrderService orders, @Value("${app.reports.time-zone:Asia/Kolkata}") String zone) {
+        this.orders = orders;
+        this.zone = ZoneId.of(zone);
+    }
 
     @PostMapping("/orders")
     @ResponseStatus(HttpStatus.CREATED)
@@ -44,8 +54,10 @@ public class OrderController {
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
     public Page<Response> all(@RequestParam(required = false) String query,
                               @RequestParam(required = false) OrderStatus status,
+                              @RequestParam(required = false) LocalDate from,
+                              @RequestParam(required = false) LocalDate to,
                               Pageable pageable) {
-        return orders.search(query, status, pageable);
+        return orders.search(query, status, PlacedBetween.days(from, to, zone), pageable);
     }
 
     @PatchMapping("/admin/orders/{id}/status")

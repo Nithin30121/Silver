@@ -26,11 +26,13 @@ import com.silvestoluxe.api.account.AddressService;
 import com.silvestoluxe.api.account.SupabaseAuthAdminClient;
 import com.silvestoluxe.api.order.OrderController;
 import com.silvestoluxe.api.order.OrderService;
+import com.silvestoluxe.api.order.PlacedBetween;
 import com.silvestoluxe.api.security.CatalogAuthorization;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -130,6 +132,27 @@ class CustomerAccountAccessTest {
     /** The "amr" claim exactly as Supabase writes it after a password sign-in. */
     private static Map<String, Object> signedInAt(Instant when) {
         return Map.of("amr", List.of(Map.of("method", "password", "timestamp", when.getEpochSecond())));
+    }
+
+    @Test
+    void letsAdminsFilterOrdersByShopDays() throws Exception {
+        when(authorization.isAdmin(any())).thenReturn(false);
+        mvc.perform(get("/api/admin/orders").param("from", "2026-10-01").header(HttpHeaders.AUTHORIZATION, bearer(Map.of())))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(orders);
+
+        when(authorization.isAdmin(any())).thenReturn(true);
+        when(orders.search(any(), any(), any(), any())).thenReturn(Page.empty());
+        mvc.perform(get("/api/admin/orders").param("from", "2026-10-01").param("to", "2026-10-29")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(Map.of())))
+                .andExpect(status().isOk());
+        verify(orders).search(eq(null), eq(null),
+                eq(new PlacedBetween(Instant.parse("2026-09-30T18:30:00Z"), Instant.parse("2026-10-29T18:30:00Z"))), any());
+
+        mvc.perform(get("/api/admin/orders").param("from", "2026-10-29").param("to", "2026-10-01")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(Map.of())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("The start date must be on or before the end date."));
     }
 
     private String bearer(Map<String, Object> claims) {

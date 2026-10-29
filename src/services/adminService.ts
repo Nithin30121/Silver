@@ -186,10 +186,13 @@ export async function getAdminProducts(): Promise<{ products: ApiProduct[]; tota
 
 export const getAdminCategories = () => adminRequest<CatalogueCategory[]>('/admin/categories');
 /** Newest first. The query matches part of an order number, customer name, email or phone. */
-export async function getAdminOrders(options: { query?: string; status?: string; page?: number; size?: number } = {}): Promise<AdminOrderPage> {
+/** from and to are ISO days (2026-10-29), both included, counted in the shop's time zone. */
+export async function getAdminOrders(options: { query?: string; status?: string; from?: string; to?: string; page?: number; size?: number } = {}): Promise<AdminOrderPage> {
   const search = new URLSearchParams({ page: String(options.page ?? 0), size: String(options.size ?? 25), sort: 'createdAt,desc' });
   if (options.query?.trim()) search.set('query', options.query.trim());
   if (options.status) search.set('status', options.status);
+  if (options.from) search.set('from', options.from);
+  if (options.to) search.set('to', options.to);
   const page = await adminRequest<ApiPage<OrderResponse>>(`/admin/orders?${search}`);
   return {
     orders: page.content,
