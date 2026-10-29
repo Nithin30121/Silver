@@ -36,7 +36,7 @@ const MainContent: React.FC = () => {
       <BrandIntro />
       <Header />
 
-      <main style={{ flex: 1, backgroundColor: 'var(--color-obsidian-black)' }}>
+      <main style={{ flex: 1, backgroundColor: 'var(--color-black)' }}>
         {/* Dynamic Page Router */}
         {currentView === 'home' && (
           <>
@@ -46,35 +46,35 @@ const MainContent: React.FC = () => {
             <CollectionGrid />
 
             {/* Editorial Brand Assurance Banner */}
-            <section style={{ backgroundColor: '#0c0a09', borderTop: '1px solid rgba(184, 121, 81, 0.2)', borderBottom: '1px solid rgba(184, 121, 81, 0.15)', padding: '5rem 0' }}>
+            <section style={{ backgroundColor: '#0b0b0d', borderTop: '1px solid rgba(143, 146, 153, 0.2)', borderBottom: '1px solid rgba(143, 146, 153, 0.15)', padding: '5rem 0' }}>
               <div className="container">
                 <div className="assurance-grid">
-                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }} {...revealOnScroll()}>
-                    <ShieldCheck size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
+                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(14, 15, 17, 0.6)', border: '1px solid rgba(143, 146, 153, 0.15)' }} {...revealOnScroll()}>
+                    <ShieldCheck size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
                       Certified 925 Hallmark
                     </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.65' }}>
                       Each piece bears the genuine 925 hallmark stamp, guaranteeing 92.5% pure silver content.
                     </p>
                   </motion.div>
 
-                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }} {...revealOnScroll(0.1)}>
-                    <Sparkles size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
+                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(14, 15, 17, 0.6)', border: '1px solid rgba(143, 146, 153, 0.15)' }} {...revealOnScroll(0.1)}>
+                    <Sparkles size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
                       Anti-Tarnish Rhodium Finish
                     </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.65' }}>
                       Shielded with an invisible micro-barrier that preserves brilliant reflectivity against ambient oxidation.
                     </p>
                   </motion.div>
 
-                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(16, 13, 11, 0.6)', border: '1px solid rgba(184, 121, 81, 0.15)' }} {...revealOnScroll(0.2)}>
-                    <RefreshCw size={28} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 0.85rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-soft-ivory)' }}>
+                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(14, 15, 17, 0.6)', border: '1px solid rgba(143, 146, 153, 0.15)' }} {...revealOnScroll(0.2)}>
+                    <RefreshCw size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
                       Complimentary 14-Day Exchange
                     </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', lineHeight: '1.65' }}>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.65' }}>
                       Insured doorstep delivery and hassle-free size exchanges for total confidence in your selection.
                     </p>
                   </motion.div>
@@ -123,7 +123,7 @@ const MainContent: React.FC = () => {
             exit={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.3, ease: luxeEase }}
           >
-            <Check size={16} style={{ color: 'var(--color-rose-gold)' }} />
+            <Check size={16} style={{ color: 'var(--color-silver-accent)' }} />
             <span>{toastMessage}</span>
           </motion.div>
         )}

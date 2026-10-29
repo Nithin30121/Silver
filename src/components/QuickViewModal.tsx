@@ -11,7 +11,7 @@ export const QuickViewModal: React.FC = () => {
     <AnimatedModal
       open={quickViewProduct !== null}
       onClose={() => setQuickViewProduct(null)}
-      panelStyle={{ maxWidth: '780px', padding: '0', display: 'grid', gridTemplateColumns: '1fr 1fr', backgroundColor: '#100D0B', border: '1px solid rgba(184, 121, 81, 0.35)' }}
+      panelStyle={{ maxWidth: '780px', padding: '0', display: 'grid', gridTemplateColumns: '1fr 1fr', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.35)' }}
     >
       {quickViewProduct && <QuickViewDetails key={quickViewProduct.id} product={quickViewProduct} />}
     </AnimatedModal>
@@ -41,7 +41,7 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
   return (
     <>
       {/* Left: Product Image */}
-      <div style={{ backgroundColor: '#0c0a09', height: '100%', minHeight: '380px', position: 'relative' }}>
+      <div style={{ backgroundColor: '#0b0b0d', height: '100%', minHeight: '380px', position: 'relative' }}>
         <img
           src={product.images[0]}
           alt={product.name}
@@ -53,32 +53,32 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
       </div>
 
       {/* Right: Quick Controls */}
-      <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#100D0B' }}>
+      <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#0E0F11' }}>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <div>
               <span className="eyebrow">{product.category}</span>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.65rem', lineHeight: '1.2', color: 'var(--color-soft-ivory)' }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.65rem', lineHeight: '1.2', color: 'var(--color-text)' }}>
                 {product.name}
               </h3>
             </div>
-            <button onClick={() => setQuickViewProduct(null)} aria-label="Close modal" style={{ color: 'var(--color-soft-ivory)' }}>
+            <button onClick={() => setQuickViewProduct(null)} aria-label="Close modal" style={{ color: 'var(--color-text)' }}>
               <X size={20} />
             </button>
           </div>
 
-          <div style={{ fontSize: '1.35rem', fontWeight: 600, color: 'var(--color-champagne)', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '1.35rem', fontWeight: 600, color: 'var(--color-silver-highlight)', marginBottom: '1rem' }}>
             {formattedPrice}
           </div>
 
-          <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', lineHeight: '1.65', marginBottom: '1.5rem' }}>
+          <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: '1.65', marginBottom: '1.5rem' }}>
             {product.subtitle}. {product.description}
           </p>
 
           {/* Sizes */}
           {product.availableSizes && product.availableSizes.length > 0 && (
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>
+              <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--color-text)' }}>
                 Select Size:
               </label>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -89,9 +89,9 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
                     style={{
                       padding: '0.45rem 0.85rem',
                       fontSize: '0.75rem',
-                      border: selectedSize === sz ? '1px solid var(--color-metallic-copper)' : '1px solid rgba(184, 121, 81, 0.25)',
-                      backgroundColor: selectedSize === sz ? 'rgba(27, 23, 20, 0.95)' : '#14100E',
-                      color: selectedSize === sz ? 'var(--color-champagne)' : 'var(--color-soft-ivory)',
+                      border: selectedSize === sz ? '1px solid var(--color-silver-deep)' : '1px solid rgba(143, 146, 153, 0.25)',
+                      backgroundColor: selectedSize === sz ? 'rgba(26, 27, 30, 0.95)' : '#121315',
+                      color: selectedSize === sz ? 'var(--color-silver-highlight)' : 'var(--color-text)',
                       transition: 'var(--transition-fast)'
                     }}
                   >
@@ -120,17 +120,17 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
             <button
               style={{
                 width: '46px',
-                border: '1px solid rgba(184, 121, 81, 0.3)',
+                border: '1px solid rgba(143, 146, 153, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: wishlisted ? '#181310' : '#14100E',
-                color: wishlisted ? 'var(--color-rose-gold)' : 'var(--color-soft-ivory)'
+                backgroundColor: wishlisted ? '#17181b' : '#121315',
+                color: wishlisted ? 'var(--color-silver-accent)' : 'var(--color-text)'
               }}
               onClick={() => toggleWishlist(product.id)}
               aria-label="Wishlist toggle"
             >
-              <Heart size={16} style={{ fill: wishlisted ? 'var(--color-rose-gold)' : 'none' }} />
+              <Heart size={16} style={{ fill: wishlisted ? 'var(--color-silver-accent)' : 'none' }} />
             </button>
           </div>
 

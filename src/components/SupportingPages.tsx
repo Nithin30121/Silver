@@ -24,14 +24,14 @@ function validateContact(form: ContactInput): Partial<Record<ContactField, strin
 
 export const ShippingPage: React.FC = () => {
   return (
-    <div style={{ backgroundColor: 'var(--color-obsidian-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
-      <div style={{ backgroundColor: '#0d0a09', borderBottom: '1px solid rgba(184, 121, 81, 0.22)', padding: '5.5rem 0 4rem' }}>
+    <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
+      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">TRANSIT & EXCHANGES</span>
-          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-soft-ivory)' }}>
+          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
             Shipping & <em>Returns.</em>
           </h1>
-          <p style={{ fontSize: '1.0625rem', color: 'var(--color-muted-grey)', lineHeight: '1.75' }}>
+          <p style={{ fontSize: '1.0625rem', color: 'var(--color-text-muted)', lineHeight: '1.75' }}>
             Every SILVORA ornament is dispatched in tamper-evident, fully insured luxury packaging.
           </p>
         </div>
@@ -39,30 +39,30 @@ export const ShippingPage: React.FC = () => {
 
       <div className="container" style={{ maxWidth: '840px', marginTop: '4rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-          <section style={{ padding: '2rem', backgroundColor: '#100D0B', border: '1px solid rgba(184, 121, 81, 0.2)' }}>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-soft-ivory)' }}>
+          <section style={{ padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)' }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-text)' }}>
               Domestic Shipping (India)
             </h2>
-            <p style={{ fontSize: '0.9375rem', color: 'var(--color-muted-grey)', lineHeight: '1.8' }}>
-              We provide complimentary insured express courier delivery on all domestic orders across India. Orders placed before 1:00 PM IST are processed the same business day. Delivery across major metro locations is completed within <strong style={{ color: 'var(--color-soft-ivory)' }}>2 to 4 business days</strong>. A discrete, signature-required delivery ensures total security.
+            <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: '1.8' }}>
+              We provide complimentary insured express courier delivery on all domestic orders across India. Orders placed before 1:00 PM IST are processed the same business day. Delivery across major metro locations is completed within <strong style={{ color: 'var(--color-text)' }}>2 to 4 business days</strong>. A discrete, signature-required delivery ensures total security.
             </p>
           </section>
 
-          <section style={{ padding: '2rem', backgroundColor: '#100D0B', border: '1px solid rgba(184, 121, 81, 0.2)' }}>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-soft-ivory)' }}>
+          <section style={{ padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)' }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-text)' }}>
               International Delivery
             </h2>
-            <p style={{ fontSize: '0.9375rem', color: 'var(--color-muted-grey)', lineHeight: '1.8' }}>
-              We ship worldwide to over 45 countries via DHL Express and FedEx International Priority. International delivery typically takes <strong style={{ color: 'var(--color-soft-ivory)' }}>5 to 8 business days</strong>. Tracking notifications with direct status links are transmitted immediately upon departure from our atelier.
+            <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: '1.8' }}>
+              We ship worldwide to over 45 countries via DHL Express and FedEx International Priority. International delivery typically takes <strong style={{ color: 'var(--color-text)' }}>5 to 8 business days</strong>. Tracking notifications with direct status links are transmitted immediately upon departure from our atelier.
             </p>
           </section>
 
-          <section style={{ padding: '2rem', backgroundColor: '#100D0B', border: '1px solid rgba(184, 121, 81, 0.2)' }}>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-soft-ivory)' }}>
+          <section style={{ padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)' }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-text)' }}>
               14-Day Complimentary Returns & Exchanges
             </h2>
-            <p style={{ fontSize: '0.9375rem', color: 'var(--color-muted-grey)', lineHeight: '1.8' }}>
-              We understand the importance of perfect proportions. If you need a size exchange or wish to return an unworn piece in its original packaging with tags intact, we arrange complimentary doorstep courier pickup within <strong style={{ color: 'var(--color-soft-ivory)' }}>14 days of delivery</strong>.
+            <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: '1.8' }}>
+              We understand the importance of perfect proportions. If you need a size exchange or wish to return an unworn piece in its original packaging with tags intact, we arrange complimentary doorstep courier pickup within <strong style={{ color: 'var(--color-text)' }}>14 days of delivery</strong>.
             </p>
           </section>
         </div>
@@ -126,14 +126,14 @@ export const ContactPage: React.FC = () => {
   };
 
   return (
-    <div style={{ backgroundColor: 'var(--color-obsidian-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
-      <div style={{ backgroundColor: '#0d0a09', borderBottom: '1px solid rgba(184, 121, 81, 0.22)', padding: '5.5rem 0 4rem' }}>
+    <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
+      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">CLIENT CONCIERGE</span>
-          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-soft-ivory)' }}>
+          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
             Connect with <em>Our Atelier.</em>
           </h1>
-          <p style={{ fontSize: '1.0625rem', color: 'var(--color-muted-grey)', lineHeight: '1.75' }}>
+          <p style={{ fontSize: '1.0625rem', color: 'var(--color-text-muted)', lineHeight: '1.75' }}>
             Our concierge team is at your disposal for sizing guidance, custom commissions, or private appointment inquiries.
           </p>
         </div>
@@ -143,29 +143,29 @@ export const ContactPage: React.FC = () => {
         <div className="contact-layout">
           {/* Info */}
           <div>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.65rem', marginBottom: '1.25rem', color: 'var(--color-soft-ivory)' }}>Direct Inquiries</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontSize: '0.875rem', color: 'var(--color-muted-grey)' }}>
+            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.65rem', marginBottom: '1.25rem', color: 'var(--color-text)' }}>Direct Inquiries</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                <Mail size={18} style={{ color: 'var(--color-rose-gold)', marginTop: '2px' }} />
+                <Mail size={18} style={{ color: 'var(--color-silver-accent)', marginTop: '2px' }} />
                 <div>
-                  <strong style={{ color: 'var(--color-soft-ivory)', display: 'block' }}>Email Concierge</strong>
+                  <strong style={{ color: 'var(--color-text)', display: 'block' }}>Email Concierge</strong>
                   <span>concierge@silvestoluxe.com</span>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                <Phone size={18} style={{ color: 'var(--color-rose-gold)', marginTop: '2px' }} />
+                <Phone size={18} style={{ color: 'var(--color-silver-accent)', marginTop: '2px' }} />
                 <div>
-                  <strong style={{ color: 'var(--color-soft-ivory)', display: 'block' }}>Client Assistance</strong>
+                  <strong style={{ color: 'var(--color-text)', display: 'block' }}>Client Assistance</strong>
                   <span>+91 (0) 22 4589 7700</span>
-                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-muted-grey)' }}>Mon–Sat, 10:00 AM – 7:00 PM IST</span>
+                  <span style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Mon–Sat, 10:00 AM – 7:00 PM IST</span>
                 </div>
               </div>
 
               <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                <MapPin size={18} style={{ color: 'var(--color-rose-gold)', marginTop: '2px' }} />
+                <MapPin size={18} style={{ color: 'var(--color-silver-accent)', marginTop: '2px' }} />
                 <div>
-                  <strong style={{ color: 'var(--color-soft-ivory)', display: 'block' }}>Boutique & Showroom</strong>
+                  <strong style={{ color: 'var(--color-text)', display: 'block' }}>Boutique & Showroom</strong>
                   <span>The SILVORA Atelier, Nariman Point, Mumbai 400021, India</span>
                 </div>
               </div>
@@ -176,10 +176,10 @@ export const ContactPage: React.FC = () => {
           <div>
             {sentTo ? (
               <div className="contact-sent" role="status">
-                <CheckCircle2 size={40} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 1rem' }} />
-                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>Message Sent</h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', lineHeight: 1.7 }}>
-                  Thank you, {sentTo.name}. A client advisor will reply to <strong style={{ color: 'var(--color-soft-ivory)' }}>{sentTo.email}</strong> within 24 business hours.
+                <CheckCircle2 size={40} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 1rem' }} />
+                <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>Message Sent</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: 1.7 }}>
+                  Thank you, {sentTo.name}. A client advisor will reply to <strong style={{ color: 'var(--color-text)' }}>{sentTo.email}</strong> within 24 business hours.
                 </p>
                 <button type="button" className="btn-text" style={{ marginTop: '1.25rem' }}
                   onClick={() => { setSentTo(null); setForm({ ...blank(), name: form.name, email: form.email }); setErrors({}); }}>
@@ -269,23 +269,23 @@ export const FAQPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ backgroundColor: 'var(--color-obsidian-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
-      <div style={{ backgroundColor: '#0d0a09', borderBottom: '1px solid rgba(184, 121, 81, 0.22)', padding: '5.5rem 0 4rem' }}>
+    <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
+      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">COMMON INQUIRIES</span>
-          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-soft-ivory)' }}>
+          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
             Frequently Asked <em>Questions.</em>
           </h1>
-          <p style={{ fontSize: '1.0625rem', color: 'var(--color-muted-grey)', lineHeight: '1.75' }}>
+          <p style={{ fontSize: '1.0625rem', color: 'var(--color-text-muted)', lineHeight: '1.75' }}>
             Everything you need to know about our silver purity, dimensions, craftsmanship, and policies.
           </p>
         </div>
       </div>
 
       <div className="container" style={{ maxWidth: '800px', marginTop: '4rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid rgba(184, 121, 81, 0.2)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid rgba(143, 146, 153, 0.2)' }}>
           {faqs.map((faq, idx) => (
-            <div key={idx} style={{ borderBottom: '1px solid rgba(184, 121, 81, 0.2)' }}>
+            <div key={idx} style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }}>
               <button
                 style={{
                   width: '100%',
@@ -296,17 +296,17 @@ export const FAQPage: React.FC = () => {
                   textAlign: 'left',
                   fontFamily: 'var(--font-serif)',
                   fontSize: '1.25rem',
-                  color: 'var(--color-soft-ivory)'
+                  color: 'var(--color-text)'
                 }}
                 onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
               >
                 <span>{faq.q}</span>
-                <span style={{ fontSize: '1.5rem', color: 'var(--color-rose-gold)', marginLeft: '1rem' }}>
+                <span style={{ fontSize: '1.5rem', color: 'var(--color-silver-accent)', marginLeft: '1rem' }}>
                   {openIndex === idx ? '−' : '+'}
                 </span>
               </button>
               {openIndex === idx && (
-                <div style={{ paddingBottom: '1.5rem', fontSize: '0.9375rem', lineHeight: '1.8', color: 'var(--color-muted-grey)' }}>
+                <div style={{ paddingBottom: '1.5rem', fontSize: '0.9375rem', lineHeight: '1.8', color: 'var(--color-text-muted)' }}>
                   <p>{faq.a}</p>
                 </div>
               )}

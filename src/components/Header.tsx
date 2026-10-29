@@ -86,7 +86,7 @@ export const Header: React.FC = () => {
           {isAdmin && <a className="nav-action-btn" href="/admin" aria-label="Open the admin dashboard" title="Admin Dashboard"><LayoutDashboard size={19} style={{ strokeWidth: 1.6 }} /></a>}
           <button className="nav-action-btn" onClick={() => navigateTo(isSignedIn ? 'account' : 'login')}
             aria-label={isSignedIn ? `My account (signed in as ${displayName})` : 'Sign in or create an account'} title={isSignedIn ? 'My Account' : 'Sign In'}>
-            <User size={19} style={{ strokeWidth: 1.6, color: isSignedIn ? 'var(--color-champagne)' : undefined }} />
+            <User size={19} style={{ strokeWidth: 1.6, color: isSignedIn ? 'var(--color-silver-highlight)' : undefined }} />
           </button>
           <button className="nav-action-btn" onClick={() => setIsCartOpen(true)} aria-label="View shopping bag" title="Shopping Bag">
             <ShoppingBag size={19} style={{ strokeWidth: 1.6 }} />

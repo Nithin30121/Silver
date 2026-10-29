@@ -4,10 +4,11 @@
    space above the SILVORA lettering, and the bracelet is drawn into exactly that space.
    ========================================================================== */
 .lux-hero {
-  --lux-silver-1: #f4f5f7;
-  --lux-silver-2: #c9ccd2;
-  --lux-silver-3: #8f9299;
-  --lux-silver-4: #5b5e64;
+  /* The storefront's silver steps (index.css), so the hero and the shop always match. */
+  --lux-silver-1: var(--silver-1);
+  --lux-silver-2: var(--silver-2);
+  --lux-silver-3: var(--silver-3);
+  --lux-silver-4: var(--silver-4);
   --lux-ease: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   isolation: isolate;

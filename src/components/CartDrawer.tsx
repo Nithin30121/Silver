@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { createOrder, type PaymentMethod } from '../services/orderService';
 import { createAddress, formatAddress, listAddresses, MAX_SAVED_ADDRESSES, type SavedAddress } from '../services/accountService';
 import { INDIAN_STATES, normalisePin } from '../lib/addressValidation';
-import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2, Sparkles } from 'lucide-react';
 
 const NEW_ADDRESS = 'new';
 
@@ -147,7 +147,7 @@ export const CartDrawer: React.FC = () => {
             {checkoutStep === 'shipping' && 'Secure Checkout'}
             {checkoutStep === 'confirmation' && 'Order Request Recorded'}
           </h2>
-          <button onClick={closeDrawer} aria-label="Close drawer" style={{ color: 'var(--color-soft-ivory)' }}>
+          <button onClick={closeDrawer} aria-label="Close drawer" style={{ color: 'var(--color-text)' }}>
             <X size={20} />
           </button>
         </div>
@@ -159,10 +159,10 @@ export const CartDrawer: React.FC = () => {
               {cart.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
                   <span className="eyebrow">YOUR BAG IS EMPTY</span>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--color-soft-ivory)' }}>
+                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1rem', color: 'var(--color-text)' }}>
                     No ornaments in your bag yet.
                   </h3>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', marginBottom: '2rem' }}>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '2rem' }}>
                     Explore our certified 925 sterling silver archive to discover considered pieces.
                   </p>
                   <button
@@ -178,8 +178,9 @@ export const CartDrawer: React.FC = () => {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   {/* Complimentary Shipping Progress */}
-                  <div style={{ padding: '0.85rem', backgroundColor: '#14100E', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(184, 121, 81, 0.25)', color: 'var(--color-champagne)' }}>
-                    <span>✨ Complimentary Insured Express Delivery unlocked!</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.85rem', backgroundColor: '#121315', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(143, 146, 153, 0.25)', color: 'var(--color-silver-highlight)' }}>
+                    <Sparkles size={14} aria-hidden="true" style={{ flexShrink: 0 }} />
+                    <span>Complimentary Insured Express Delivery unlocked!</span>
                   </div>
 
                   {/* Cart Item Rows */}
@@ -198,7 +199,7 @@ export const CartDrawer: React.FC = () => {
                           gridTemplateColumns: '80px 1fr auto',
                           gap: '1rem',
                           paddingBottom: '1.25rem',
-                          borderBottom: '1px solid rgba(184, 121, 81, 0.2)'
+                          borderBottom: '1px solid rgba(143, 146, 153, 0.2)'
                         }}
                       >
                         {/* Thumbnail */}
@@ -206,8 +207,8 @@ export const CartDrawer: React.FC = () => {
                           style={{
                             width: '80px',
                             height: '100px',
-                            backgroundColor: '#100D0B',
-                            border: '1px solid rgba(184, 121, 81, 0.2)',
+                            backgroundColor: '#0E0F11',
+                            border: '1px solid rgba(143, 146, 153, 0.2)',
                             overflow: 'hidden',
                             cursor: 'pointer'
                           }}
@@ -227,7 +228,7 @@ export const CartDrawer: React.FC = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                           <div>
                             <h4
-                              style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', cursor: 'pointer', color: 'var(--color-soft-ivory)' }}
+                              style={{ fontFamily: 'var(--font-serif)', fontSize: '1.05rem', cursor: 'pointer', color: 'var(--color-text)' }}
                               onClick={() => {
                                 closeDrawer();
                                 navigateTo('product', { productId: item.product.id });
@@ -235,26 +236,26 @@ export const CartDrawer: React.FC = () => {
                             >
                               {item.product.name}
                             </h4>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-grey)' }}>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                               Size: {item.selectedSize}
                             </span>
                           </div>
 
                           {/* Quantity Adjuster */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#100D0B' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(143, 146, 153, 0.3)', backgroundColor: '#0E0F11' }}>
                               <button
-                                style={{ padding: '4px 8px', color: 'var(--color-soft-ivory)' }}
+                                style={{ padding: '4px 8px', color: 'var(--color-text)' }}
                                 onClick={() => updateQuantity(item.product.id, item.selectedSize, -1)}
                                 aria-label="Decrease quantity"
                               >
                                 <Minus size={12} />
                               </button>
-                              <span style={{ fontSize: '0.75rem', padding: '0 6px', fontWeight: 600, color: 'var(--color-soft-ivory)' }}>
+                              <span style={{ fontSize: '0.75rem', padding: '0 6px', fontWeight: 600, color: 'var(--color-text)' }}>
                                 {item.quantity}
                               </span>
                               <button
-                                style={{ padding: '4px 8px', color: 'var(--color-soft-ivory)' }}
+                                style={{ padding: '4px 8px', color: 'var(--color-text)' }}
                                 onClick={() => updateQuantity(item.product.id, item.selectedSize, 1)}
                                 aria-label="Increase quantity"
                               >
@@ -263,7 +264,7 @@ export const CartDrawer: React.FC = () => {
                             </div>
 
                             <button
-                              style={{ color: 'var(--color-muted-grey)' }}
+                              style={{ color: 'var(--color-text-muted)' }}
                               onClick={() => removeFromCart(item.product.id, item.selectedSize)}
                               aria-label="Remove item"
                             >
@@ -274,7 +275,7 @@ export const CartDrawer: React.FC = () => {
 
                         {/* Line Total */}
                         <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-champagne)' }}>{itemTotal}</span>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-silver-highlight)' }}>{itemTotal}</span>
                         </div>
                       </div>
                     );
@@ -408,9 +409,9 @@ export const CartDrawer: React.FC = () => {
                         alignItems: 'center',
                         gap: '0.6rem',
                         padding: '0.65rem 0.85rem',
-                        border: formData.paymentMethod === method.id ? '1px solid var(--color-metallic-copper)' : '1px solid rgba(184, 121, 81, 0.2)',
-                        backgroundColor: formData.paymentMethod === method.id ? 'rgba(27, 23, 20, 0.9)' : 'transparent',
-                        color: 'var(--color-soft-ivory)',
+                        border: formData.paymentMethod === method.id ? '1px solid var(--color-silver-deep)' : '1px solid rgba(143, 146, 153, 0.2)',
+                        backgroundColor: formData.paymentMethod === method.id ? 'rgba(26, 27, 30, 0.9)' : 'transparent',
+                        color: 'var(--color-text)',
                         fontSize: '0.75rem',
                         cursor: 'pointer'
                       }}
@@ -421,13 +422,13 @@ export const CartDrawer: React.FC = () => {
                         value={method.id}
                         checked={formData.paymentMethod === method.id}
                         onChange={() => setFormData({ ...formData, paymentMethod: method.id })}
-                        style={{ accentColor: 'var(--color-metallic-copper)' }}
+                        style={{ accentColor: 'var(--color-silver-deep)' }}
                       />
                       <span>{method.label}</span>
                     </label>
                   ))}
                 </div>
-                <p style={{ margin: '0.75rem 0 0', color: 'var(--color-muted-grey)', fontSize: '0.6875rem', lineHeight: 1.5 }}>
+                <p style={{ margin: '0.75rem 0 0', color: 'var(--color-text-muted)', fontSize: '0.6875rem', lineHeight: 1.5 }}>
                   Payment details are confirmed separately; we never collect card numbers or CVV here.
                 </p>
               </div>
@@ -437,19 +438,19 @@ export const CartDrawer: React.FC = () => {
           {/* Confirmation Step */}
           {checkoutStep === 'confirmation' && (
             <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-              <CheckCircle2 size={48} style={{ color: 'var(--color-rose-gold)', margin: '0 auto 1.25rem' }} />
+              <CheckCircle2 size={48} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 1.25rem' }} />
               <span className="eyebrow">ORDER REQUEST RECORDED</span>
-              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--color-soft-ivory)' }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>
                 Thank You for Choosing SILVORA
               </h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--color-muted-grey)', marginBottom: '1.5rem' }}>
-                Reference Order Number: <strong style={{ color: 'var(--color-rose-gold)' }}>{orderId}</strong>
+              <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
+                Reference Order Number: <strong style={{ color: 'var(--color-silver-accent)' }}>{orderId}</strong>
               </p>
-              <div style={{ padding: '1.25rem', backgroundColor: '#14100E', fontSize: '0.8125rem', textAlign: 'left', marginBottom: '2rem', border: '1px solid rgba(184, 121, 81, 0.25)', color: 'var(--color-soft-ivory)' }}>
+              <div style={{ padding: '1.25rem', backgroundColor: '#121315', fontSize: '0.8125rem', textAlign: 'left', marginBottom: '2rem', border: '1px solid rgba(143, 146, 153, 0.25)', color: 'var(--color-text)' }}>
                 <p><strong>Customer:</strong> {formData.fullName || 'Valued Client'}</p>
                 <p><strong>Destination:</strong> {formData.city || 'India'}, {formData.pincode}</p>
                 <p><strong>Method:</strong> {formData.paymentMethod.toUpperCase()}</p>
-                <p style={{ marginTop: '0.75rem', color: 'var(--color-champagne)' }}>
+                <p style={{ marginTop: '0.75rem', color: 'var(--color-silver-highlight)' }}>
                   Your order is pending payment confirmation. We will confirm the payment and dispatch steps separately; no payment details were collected here.
                 </p>
               </div>
@@ -481,13 +482,13 @@ export const CartDrawer: React.FC = () => {
         {cart.length > 0 && checkoutStep !== 'confirmation' && (
           <div className="drawer-footer">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--color-muted-grey)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Estimated Subtotal
               </span>
-              <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-champagne)' }}>{formattedSubtotal}</span>
+              <span style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-silver-highlight)' }}>{formattedSubtotal}</span>
             </div>
 
-            <p style={{ fontSize: '0.6875rem', color: 'var(--color-muted-grey)', marginBottom: '1.25rem' }}>
+            <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
               Taxes calculated at checkout. Complimentary insured transit included.
             </p>
 
