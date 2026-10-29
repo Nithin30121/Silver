@@ -38,6 +38,9 @@ class SpringDefaultAlgorithmTest {
     @MockitoBean
     private AccountProfileService profiles;
 
+    @MockitoBean
+    private com.silvestoluxe.api.account.AccountDeletionService deletion;
+
     @Test
     void rs256OnlyRejectsGenuineSupabaseTokens() throws Exception {
         String genuine = TestJwks.accessToken(TestJwks.SUPABASE_KEY, UUID.randomUUID().toString());

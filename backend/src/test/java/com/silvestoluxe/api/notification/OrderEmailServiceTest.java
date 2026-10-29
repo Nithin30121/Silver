@@ -26,14 +26,15 @@ class OrderEmailServiceTest {
     private final OrderEmail shipped = new OrderEmail(OrderEmail.Kind.SHIPPED, "asha@example.com", "Asha <b>Rao</b>",
             "SL-20261027-0003", new BigDecimal("3888.00"),
             List.of(new OrderEmail.Line("Moon Ring", 2, new BigDecimal("1998.00")), new OrderEmail.Line("Pendant", 1, new BigDecimal("1890.50"))),
-            "12 Sample Street, Hyderabad, Telangana 500001");
+            "12 Sample Street, Hyderabad, Telangana 500001",
+            new OrderEmail.Tracking("Delhivery", "DL<123>", "https://track.example.com/DL123"));
 
     @Test
     void staysOffWithoutAnSmtpHostOrFromAddress() {
-        assertFalse(new OrderEmailService("", 587, "", "", "orders@example.com", "SILVORA", "").isEnabled());
-        assertFalse(new OrderEmailService("smtp.example.com", 587, "", "", "", "SILVORA", "").isEnabled());
-        assertTrue(new OrderEmailService("smtp.example.com", 587, "", "", "orders@example.com", "SILVORA", "").isEnabled());
-        assertDoesNotThrow(() -> new OrderEmailService("", 587, "", "", "", "SILVORA", "").send(shipped));
+        assertFalse(new OrderEmailService("", 587, "", "", "orders@example.com", "SILVORA", "", "").isEnabled());
+        assertFalse(new OrderEmailService("smtp.example.com", 587, "", "", "", "SILVORA", "", "").isEnabled());
+        assertTrue(new OrderEmailService("smtp.example.com", 587, "", "", "orders@example.com", "SILVORA", "", "").isEnabled());
+        assertDoesNotThrow(() -> new OrderEmailService("", 587, "", "", "", "SILVORA", "", "").send(shipped));
     }
 
     @Test
@@ -67,6 +68,97 @@ class OrderEmailServiceTest {
         // Only web links are added, so a crafted shop URL cannot become a script link.
         assertFalse(html.contains("javascript:"));
         assertTrue(html.contains("Moon Ring &times; 2"));
+    }
+
+    @Test
+    void addsCourierTrackingToTheShippedEmail() {
+        String text = OrderEmailContent.text(shipped, "SILVORA", "");
+        String html = OrderEmailContent.html(shipped, "SILVORA", "");
+
+        assertTrue(text.contains("Courier: Delhivery · Tracking number: DL<123>\nTrack your parcel: https://track.example.com/DL123\n"));
+        assertTrue(html.contains("Tracking number: DL&lt;123&gt;"));
+        assertTrue(html.contains("<a href=\"https://track.example.com/DL123\""));
+    }
+
+    @Test
+    void neverLinksAnInsecureTrackingAddressOrMentionsTrackingInOtherEmails() {
+        OrderEmail insecure = new OrderEmail(OrderEmail.Kind.SHIPPED, "asha@example.com", "Asha", "SL-1", BigDecimal.ONE,
+                List.of(), "", new OrderEmail.Tracking(null, "123", "javascript:alert(1)"));
+        OrderEmail delivered = new OrderEmail(OrderEmail.Kind.DELIVERED, "asha@example.com", "Asha", "SL-1", BigDecimal.ONE,
+                List.of(), "", new OrderEmail.Tracking("Delhivery", "123", "https://track.example.com/123"));
+
+        assertFalse(OrderEmailContent.html(insecure, "SILVORA", "").contains("javascript:"));
+        assertTrue(OrderEmailContent.text(insecure, "SILVORA", "").contains("Tracking number: 123\n"));
+        assertFalse(OrderEmailContent.text(delivered, "SILVORA", "").contains("Tracking number"));
+    }
+
+    @Test
+    void linksToTheOrderPageWhenTheShopHasAnAddress() {
+        assertTrue(OrderEmailContent.text(shipped, "SILVORA", "https://shop.example.com/")
+                .contains("View your order: https://shop.example.com/account/orders/SL-20261027-0003\n"));
+        assertTrue(OrderEmailContent.html(shipped, "SILVORA", "https://shop.example.com")
+                .contains("href=\"https://shop.example.com/account/orders/SL-20261027-0003\""));
+        assertFalse(OrderEmailContent.text(shipped, "SILVORA", "").contains("View your order"));
+    }
+
+    @Test
+    void forwardsContactMessagesToTheShopWithReplyToTheSender() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        ShopMessage contact = new ShopMessage("Asha <b>Rao</b>", "asha@example.com", "+91 90000 00001", "Ring size", "SL-1", "Which <i>size</i>?");
+
+        new OrderEmailService(sender, "SILVORA <orders@example.com>", "SILVORA", "", "owner@example.com").notifyShop(contact);
+
+        ArgumentCaptor<MimeMessage> message = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender).send(message.capture());
+        assertEquals("owner@example.com", message.getValue().getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("asha@example.com", message.getValue().getReplyTo()[0].toString());
+        assertEquals("SILVORA message from Asha <b>Rao</b>: Ring size", message.getValue().getSubject());
+        String html = ShopMessageContent.html(contact);
+        assertTrue(html.contains("Which &lt;i&gt;size&lt;/i&gt;?"));
+        assertFalse(html.contains("<b>Rao</b>"));
+    }
+
+    @Test
+    void sendsContactMessagesToTheFromAddressWithoutAnInbox() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+
+        new OrderEmailService(sender, "orders@example.com", "SILVORA", "").notifyShop(
+                new ShopMessage("Asha", "asha@example.com", null, "", null, "Hello"));
+
+        ArgumentCaptor<MimeMessage> message = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender).send(message.capture());
+        assertEquals("orders@example.com", message.getValue().getRecipients(Message.RecipientType.TO)[0].toString());
+    }
+
+    @Test
+    void emailsStockAlertsToTheShopInbox() throws Exception {
+        JavaMailSender sender = mock(JavaMailSender.class);
+        when(sender.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+
+        new OrderEmailService(sender, "SILVORA <orders@example.com>", "SILVORA", "https://shop.example.com", "owner@example.com")
+                .notifyLowStock(new LowStockAlert("Moon Ring", "SLV-R-01", 2, false, "SL-20261029-0004"));
+
+        ArgumentCaptor<MimeMessage> message = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(sender).send(message.capture());
+        assertEquals("owner@example.com", message.getValue().getRecipients(Message.RecipientType.TO)[0].toString());
+        assertEquals("SILVORA: Moon Ring is running low (2 pieces left)", message.getValue().getSubject());
+    }
+
+    @Test
+    void writesStockAlertsThatSayWhatHappenedAndWhy() {
+        LowStockAlert soldOut = new LowStockAlert("Moon <b>Ring</b>", null, 0, true, null);
+        LowStockAlert low = new LowStockAlert("Moon Ring", "SLV-R-01", 1, false, "SL-20261029-0004");
+
+        assertEquals("SILVORA: Moon <b>Ring</b> has sold out", StockAlertContent.subject(soldOut, "SILVORA"));
+        assertTrue(StockAlertContent.text(soldOut, "").startsWith("Moon <b>Ring</b> has sold out.\n\nThis followed a stock change in the dashboard."));
+        assertTrue(StockAlertContent.text(low, "https://shop.example.com/").contains("Moon Ring (SLV-R-01) has only 1 piece left.\n\nThis followed order SL-20261029-0004."));
+        assertTrue(StockAlertContent.text(low, "https://shop.example.com/").contains("https://shop.example.com/admin\n"));
+        String html = StockAlertContent.html(soldOut, "javascript:alert(1)");
+        assertTrue(html.contains("Moon &lt;b&gt;Ring&lt;/b&gt; has sold out."));
+        assertFalse(html.contains("<b>Ring</b>"));
+        assertFalse(html.contains("javascript:"));
     }
 
     @Test

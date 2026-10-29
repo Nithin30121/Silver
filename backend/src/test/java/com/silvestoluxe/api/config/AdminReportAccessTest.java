@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
@@ -63,13 +64,13 @@ class AdminReportAccessTest {
 
     @Test
     void refusesEveryoneButAdmins() throws Exception {
-        for (String path : List.of("/api/admin/reports/summary", "/api/admin/reports/orders.csv",
-                "/api/admin/reports/customers.csv", "/api/admin/notifications/email")) {
+        for (String path : List.of("/api/admin/reports/summary", "/api/admin/reports/sales?from=2026-10-01&to=2026-10-29",
+                "/api/admin/reports/orders.csv", "/api/admin/reports/customers.csv", "/api/admin/notifications/email")) {
             mvc.perform(get(path)).andExpect(status().isUnauthorized());
         }
         when(authorization.isAdmin(any())).thenReturn(false);
-        for (String path : List.of("/api/admin/reports/summary", "/api/admin/reports/orders.csv",
-                "/api/admin/reports/customers.csv", "/api/admin/notifications/email")) {
+        for (String path : List.of("/api/admin/reports/summary", "/api/admin/reports/sales?from=2026-10-01&to=2026-10-29",
+                "/api/admin/reports/orders.csv", "/api/admin/reports/customers.csv", "/api/admin/notifications/email")) {
             mvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, bearer())).andExpect(status().isForbidden());
         }
         verifyNoInteractions(reports, orders, customers, emails);
@@ -88,6 +89,36 @@ class AdminReportAccessTest {
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, org.hamcrest.Matchers.startsWith("attachment; filename=\"silvora-customers-")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(
                         "\"'=cmd()\",\"asha@example.com\",\"customer\",\"2026-10-01 05:30\",2,3888.00,\r\n")));
+    }
+
+    @Test
+    void givesAdminsTheSalesSeriesWithPlainDates() throws Exception {
+        when(authorization.isAdmin(any())).thenReturn(true);
+        LocalDate day = LocalDate.of(2026, 10, 1);
+        when(reports.sales(day, day.plusMonths(1).minusDays(1), ReportService.Interval.WEEK)).thenReturn(new ReportService.SalesSeries(
+                "Asia/Kolkata", day, day.plusMonths(1).minusDays(1), ReportService.Interval.WEEK,
+                List.of(new ReportService.SalesPoint(LocalDate.of(2026, 9, 28), 2, new BigDecimal("3888.00"))),
+                new ReportService.Totals(2, new BigDecimal("3888.00")), new ReportService.Totals(0, BigDecimal.ZERO)));
+
+        mvc.perform(get("/api/admin/reports/sales").param("from", "2026-10-01").param("to", "2026-10-31").param("interval", "WEEK")
+                        .header(HttpHeaders.AUTHORIZATION, bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.from").value("2026-10-01"))
+                .andExpect(jsonPath("$.interval").value("WEEK"))
+                .andExpect(jsonPath("$.points[0].start").value("2026-09-28"))
+                .andExpect(jsonPath("$.points[0].orderValue").value(3888.00))
+                .andExpect(jsonPath("$.previous.orderCount").value(0));
+    }
+
+    @Test
+    void refusesAnUnknownIntervalOrAMalformedDate() throws Exception {
+        when(authorization.isAdmin(any())).thenReturn(true);
+
+        mvc.perform(get("/api/admin/reports/sales").param("from", "2026-10-01").param("to", "2026-10-31").param("interval", "HOUR")
+                .header(HttpHeaders.AUTHORIZATION, bearer())).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/admin/reports/sales").param("from", "1 Oct").param("to", "2026-10-31")
+                .header(HttpHeaders.AUTHORIZATION, bearer())).andExpect(status().isBadRequest());
+        verifyNoInteractions(reports);
     }
 
     @Test

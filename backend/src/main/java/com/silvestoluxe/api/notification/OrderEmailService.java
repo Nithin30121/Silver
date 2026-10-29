@@ -30,6 +30,7 @@ public class OrderEmailService {
     private final String from;
     private final String shopName;
     private final String shopUrl;
+    private final String shopInbox;
 
     @Autowired
     public OrderEmailService(@Value("${app.mail.host:}") String host,
@@ -38,16 +39,23 @@ public class OrderEmailService {
                              @Value("${app.mail.password:}") String password,
                              @Value("${app.mail.from:}") String from,
                              @Value("${app.mail.shop-name:SILVORA}") String shopName,
-                             @Value("${app.mail.shop-url:}") String shopUrl) {
+                             @Value("${app.mail.shop-url:}") String shopUrl,
+                             @Value("${app.mail.shop-inbox:}") String shopInbox) {
         this(host.isBlank() || from.isBlank() ? null : smtp(host.trim(), port, username.trim(), password),
-                from.trim(), shopName.trim(), shopUrl.trim());
+                from.trim(), shopName.trim(), shopUrl.trim(), shopInbox.trim());
     }
 
     OrderEmailService(JavaMailSender sender, String from, String shopName, String shopUrl) {
+        this(sender, from, shopName, shopUrl, "");
+    }
+
+    /** shopInbox receives contact form messages; without one they go to the from address. */
+    OrderEmailService(JavaMailSender sender, String from, String shopName, String shopUrl, String shopInbox) {
         this.sender = sender;
         this.from = from;
         this.shopName = shopName;
         this.shopUrl = shopUrl;
+        this.shopInbox = shopInbox == null || shopInbox.isBlank() ? from : shopInbox;
     }
 
     public boolean isEnabled() { return sender != null; }
@@ -69,6 +77,47 @@ public class OrderEmailService {
             // The order change is already saved, so a failed email must not undo it. Addresses stay out of the logs.
             log.warn("Could not send the {} email for order {} ({}).", email.kind(), email.orderNumber(),
                     exception.getClass().getSimpleName());
+        }
+    }
+
+    /** Forwards a contact form message to the shop. Replying in the email app answers the sender. */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void notifyShop(ShopMessage shopMessage) {
+        if (sender == null) return;
+        try {
+            MimeMessage message = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(from);
+            helper.setTo(shopInbox);
+            helper.setReplyTo(shopMessage.email());
+            helper.setSubject(ShopMessageContent.subject(shopMessage, shopName));
+            helper.setText(ShopMessageContent.text(shopMessage), ShopMessageContent.html(shopMessage));
+            sender.send(message);
+            log.info("Forwarded a contact form message to the shop inbox.");
+        } catch (MessagingException | MailException exception) {
+            // The message is saved and listed in the dashboard, so a failed email loses nothing.
+            log.warn("Could not forward a contact form message to the shop inbox ({}).", exception.getClass().getSimpleName());
+        }
+    }
+
+    /** Tells the shop that a piece has run low or sold out, so it can be restocked in time. */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void notifyLowStock(LowStockAlert alert) {
+        if (sender == null) return;
+        try {
+            MimeMessage message = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(from);
+            helper.setTo(shopInbox);
+            helper.setSubject(StockAlertContent.subject(alert, shopName));
+            helper.setText(StockAlertContent.text(alert, shopUrl), StockAlertContent.html(alert, shopUrl));
+            sender.send(message);
+            log.info("Sent a {} alert to the shop inbox.", alert.soldOut() ? "sold-out" : "low-stock");
+        } catch (MessagingException | MailException exception) {
+            // The stock change is saved and shown in the dashboard, so a failed email loses nothing.
+            log.warn("Could not send a stock alert to the shop inbox ({}).", exception.getClass().getSimpleName());
         }
     }
 

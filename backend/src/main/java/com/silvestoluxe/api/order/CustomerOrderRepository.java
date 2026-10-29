@@ -1,5 +1,6 @@
 package com.silvestoluxe.api.order;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import jakarta.persistence.LockModeType;
@@ -13,6 +14,8 @@ import org.springframework.data.repository.query.Param;
 
 interface CustomerOrderRepository extends JpaRepository<CustomerOrder, UUID>, JpaSpecificationExecutor<CustomerOrder> {
     Page<CustomerOrder> findByCustomerIdOrderByCreatedAtDesc(UUID customerId, Pageable pageable);
+
+    boolean existsByCustomerIdAndStatusIn(UUID customerId, Collection<OrderStatus> statuses);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select customerOrder from CustomerOrder customerOrder where customerOrder.id = :id")

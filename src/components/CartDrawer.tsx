@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { drawerSlide } from '../lib/motion';
 import { useAuth } from '../context/AuthContext';
 import { createOrder, type PaymentMethod } from '../services/orderService';
+import { createAddress, formatAddress, listAddresses, MAX_SAVED_ADDRESSES, type SavedAddress } from '../services/accountService';
+import { INDIAN_STATES, normalisePin } from '../lib/addressValidation';
 import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+
+const NEW_ADDRESS = 'new';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -20,6 +24,10 @@ export const CartDrawer: React.FC = () => {
     showToast
   } = useShop();
   const { status, user } = useAuth();
+  // Saved addresses for a signed-in customer; null until loaded (or when they could not be loaded).
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[] | null>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(NEW_ADDRESS);
+  const [saveNewAddress, setSaveNewAddress] = useState(true);
 
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'shipping' | 'confirmation'>('cart');
   const [formData, setFormData] = useState({
@@ -35,6 +43,44 @@ export const CartDrawer: React.FC = () => {
   const [orderId, setOrderId] = useState<string>('');
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fillFromAddress = (address: SavedAddress) => setFormData((current) => ({
+    ...current,
+    fullName: address.fullName,
+    phone: address.phone,
+    address: address.addressLine,
+    city: address.city,
+    state: address.state,
+    pincode: address.postalCode
+  }));
+
+  const chooseAddress = (id: string) => {
+    setSelectedAddressId(id);
+    const address = savedAddresses?.find((candidate) => candidate.id === id);
+    if (address) fillFromAddress(address);
+    else setFormData((current) => ({ ...current, fullName: '', phone: '', address: '', city: '', state: '', pincode: '' }));
+  };
+
+  // Each time checkout opens, offer the customer's saved addresses, starting with their default.
+  const isAtShipping = checkoutStep === 'shipping' && status === 'authenticated';
+  useEffect(() => {
+    if (!isAtShipping) return;
+    let cancelled = false;
+    listAddresses()
+      .then((addresses) => {
+        if (cancelled) return;
+        setSavedAddresses(addresses);
+        const preferred = addresses.find((address) => address.defaultAddress) ?? addresses[0];
+        setSelectedAddressId(preferred ? preferred.id : NEW_ADDRESS);
+        if (preferred) fillFromAddress(preferred);
+      })
+      // Checkout still works without them: the customer types the address instead.
+      .catch(() => { if (!cancelled) { setSavedAddresses(null); setSelectedAddressId(NEW_ADDRESS); } });
+    return () => { cancelled = true; };
+  }, [isAtShipping]);
+
+  const usingSavedAddress = selectedAddressId !== NEW_ADDRESS && Boolean(savedAddresses?.some((address) => address.id === selectedAddressId));
+  const canSaveAddress = savedAddresses !== null && savedAddresses.length < MAX_SAVED_ADDRESSES;
 
   const formattedSubtotal = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -62,11 +108,18 @@ export const CartDrawer: React.FC = () => {
         shippingAddress: formData.address,
         shippingCity: formData.city,
         shippingState: formData.state,
-        shippingPostalCode: formData.pincode,
+        shippingPostalCode: normalisePin(formData.pincode),
       });
       setOrderId(order.orderNumber);
       setCheckoutStep('confirmation');
       clearCart();
+      if (!usingSavedAddress && saveNewAddress && canSaveAddress) {
+        // The order is already placed, so a problem saving the address is only mentioned, never blocking.
+        createAddress({
+          fullName: formData.fullName.trim(), phone: formData.phone.trim(), addressLine: formData.address.trim(),
+          city: formData.city.trim(), state: formData.state.trim(), postalCode: normalisePin(formData.pincode)
+        }).catch(() => showToast('Your order is placed, but we could not save the address to your account.'));
+      }
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : 'We could not create your order. Please try again.');
     } finally {
@@ -246,96 +299,98 @@ export const CartDrawer: React.FC = () => {
                 </button>
               </div>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Aarav Mehta"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
-                />
+              {savedAddresses && savedAddresses.length > 0 && (
+                <fieldset className="checkout-addresses">
+                  <legend className="visually-hidden">Delivery address</legend>
+                  {savedAddresses.map((address) => (
+                    <label key={address.id} className={`checkout-address${selectedAddressId === address.id ? ' is-selected' : ''}`}>
+                      <input type="radio" name="savedAddress" value={address.id} checked={selectedAddressId === address.id}
+                        onChange={() => chooseAddress(address.id)} />
+                      <span>
+                        <strong>{address.fullName}</strong>{address.defaultAddress && <em> · Default</em>}
+                        <span className="checkout-address-line">{formatAddress(address)}</span>
+                        <span className="checkout-address-line">{address.phone}</span>
+                      </span>
+                    </label>
+                  ))}
+                  <label className={`checkout-address${selectedAddressId === NEW_ADDRESS ? ' is-selected' : ''}`}>
+                    <input type="radio" name="savedAddress" value={NEW_ADDRESS} checked={selectedAddressId === NEW_ADDRESS}
+                      onChange={() => chooseAddress(NEW_ADDRESS)} />
+                    <span><strong>Deliver to a new address</strong></span>
+                  </label>
+                </fieldset>
+              )}
+
+              <div className="checkout-field">
+                <label className="checkout-label" htmlFor="checkout-email">Email *</label>
+                <input id="checkout-email" className="checkout-input" type="email" required autoComplete="email"
+                  placeholder="name@domain.com" value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Email *</label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="name@domain.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>State *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Maharashtra"
-                    value={formData.state}
-                    onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Phone *</label>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="+91 98765 43210"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
-                  />
-                </div>
-              </div>
+              {!usingSavedAddress && (
+                <>
+                  <div className="checkout-field">
+                    <label className="checkout-label" htmlFor="checkout-name">Full Name *</label>
+                    <input id="checkout-name" className="checkout-input" type="text" required autoComplete="name" maxLength={120}
+                      placeholder="e.g. Aarav Mehta" value={formData.fullName}
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} />
+                  </div>
+
+                  <div className="checkout-grid">
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="checkout-phone">Phone *</label>
+                      <input id="checkout-phone" className="checkout-input" type="tel" inputMode="tel" required autoComplete="tel" maxLength={20}
+                        placeholder="+91 98765 43210" value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                    </div>
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="checkout-state">State *</label>
+                      <input id="checkout-state" className="checkout-input" type="text" required autoComplete="address-level1" maxLength={120}
+                        list="checkout-indian-states" placeholder="e.g. Maharashtra" value={formData.state}
+                        onChange={(e) => setFormData({ ...formData, state: e.target.value })} />
+                      <datalist id="checkout-indian-states">{INDIAN_STATES.map((state) => <option key={state} value={state} />)}</datalist>
+                    </div>
+                  </div>
+
+                  <div className="checkout-field">
+                    <label className="checkout-label" htmlFor="checkout-street">Street Address *</label>
+                    <input id="checkout-street" className="checkout-input" type="text" required autoComplete="street-address" maxLength={300}
+                      placeholder="Flat or house number, building, street, area" value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
+                  </div>
+
+                  <div className="checkout-grid">
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="checkout-city">City *</label>
+                      <input id="checkout-city" className="checkout-input" type="text" required autoComplete="address-level2" maxLength={120}
+                        placeholder="e.g. Mumbai" value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })} />
+                    </div>
+                    <div className="checkout-field">
+                      <label className="checkout-label" htmlFor="checkout-pin">PIN Code *</label>
+                      {/* Couriers deliver to Indian 6-digit PIN codes; spaces are allowed and removed before sending. */}
+                      <input id="checkout-pin" className="checkout-input" type="text" inputMode="numeric" required autoComplete="postal-code"
+                        pattern="\s*[1-9](\s*[0-9]){5}\s*" title="Please enter a 6-digit PIN code." maxLength={8}
+                        placeholder="e.g. 400001" value={formData.pincode}
+                        onChange={(e) => setFormData({ ...formData, pincode: e.target.value })} />
+                    </div>
+                  </div>
+
+                  {canSaveAddress && (
+                    <label className="checkout-save">
+                      <input type="checkbox" checked={saveNewAddress} onChange={(e) => setSaveNewAddress(e.target.checked)} />
+                      <span>Save this address to my account for next time</span>
+                    </label>
+                  )}
+                </>
+              )}
 
               {checkoutError && (
                 <p role="alert" style={{ margin: 0, color: '#f4a2a2', fontSize: '0.75rem', lineHeight: 1.5 }}>
                   {checkoutError}
                 </p>
               )}
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>Street Address *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Apartment, suite, unit, building, street"
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
-                />
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>City *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Mumbai"
-                    value={formData.city}
-                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.25rem', color: 'var(--color-soft-ivory)' }}>PIN Code *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. 400001"
-                    value={formData.pincode}
-                    onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}
-                    style={{ width: '100%', padding: '0.65rem 0.85rem', border: '1px solid rgba(184, 121, 81, 0.3)', backgroundColor: '#14100E', color: 'var(--color-soft-ivory)', fontSize: '0.8125rem' }}
-                  />
-                </div>
-              </div>
 
               {/* Payment Method Selector */}
               <div style={{ marginTop: '0.5rem' }}>
@@ -403,6 +458,16 @@ export const CartDrawer: React.FC = () => {
                 style={{ width: '100%' }}
                 onClick={() => {
                   closeDrawer();
+                  navigateTo('account', { accountTab: 'orders', orderNumber: orderId });
+                }}
+              >
+                Follow This Order in My Account
+              </button>
+              <button
+                className="btn-secondary"
+                style={{ width: '100%', marginTop: '0.75rem' }}
+                onClick={() => {
+                  closeDrawer();
                   navigateTo('collection');
                 }}
               >
@@ -438,6 +503,8 @@ export const CartDrawer: React.FC = () => {
                     return;
                   }
                   setCheckoutError(null);
+                  // Order emails go to the account's address unless the customer types another.
+                  setFormData((current) => current.email ? current : { ...current, email: user.email ?? '' });
                   setCheckoutStep('shipping');
                 }}
               >

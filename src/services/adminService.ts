@@ -80,6 +80,26 @@ export interface SalesSummary {
   bestSellers: Array<{ productId: string | null; name: string; sku: string | null; quantity: number; orderValue: number | string }>;
 }
 
+export type SalesInterval = 'DAY' | 'WEEK' | 'MONTH';
+
+/** One bar of the sales chart: the day, week (its Monday) or month (its 1st) it starts on. */
+export interface SalesPoint {
+  start: string;
+  orderCount: number;
+  orderValue: number | string;
+}
+
+/** Leaves out cancelled orders. previous covers the same number of days just before from. */
+export interface SalesSeries {
+  timeZone: string;
+  from: string;
+  to: string;
+  interval: SalesInterval;
+  points: SalesPoint[];
+  total: { orderCount: number; orderValue: number | string };
+  previous: { orderCount: number; orderValue: number | string };
+}
+
 export type StockReason = 'INITIAL' | 'MANUAL' | 'SALE' | 'CANCELLATION';
 
 export interface StockMovement {
@@ -94,6 +114,29 @@ export interface StockMovement {
   orderNumber: string | null;
   actorName: string | null;
   createdAt: string;
+}
+
+export type MessageStatus = 'NEW' | 'DONE';
+
+/** A message sent through the shop's contact form. fromAccount: the sender was signed in. */
+export interface ContactMessage {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  subject: string;
+  orderNumber: string | null;
+  message: string;
+  status: MessageStatus;
+  fromAccount: boolean;
+  createdAt: string;
+  handledAt: string | null;
+}
+
+export interface MessagePage {
+  messages: ContactMessage[];
+  total: number;
+  totalPages: number;
 }
 
 interface ApiPage<T> {
@@ -152,6 +195,10 @@ export async function getAdminOrders(options: { query?: string; status?: string;
 }
 
 export const getSalesSummary = () => adminRequest<SalesSummary>('/admin/reports/summary');
+
+/** Days are ISO dates in the shop's time zone, for example 2026-10-29; both ends are included. */
+export const getSalesSeries = (from: string, to: string, interval: SalesInterval) =>
+  adminRequest<SalesSeries>(`/admin/reports/sales?${new URLSearchParams({ from, to, interval })}`);
 export const getEmailStatus = () => adminRequest<{ enabled: boolean }>('/admin/notifications/email');
 
 /** Newest first; without a product id it lists changes across the whole catalogue. */
@@ -196,15 +243,41 @@ export async function getAdminCustomers(options: { query?: string; role?: Custom
   };
 }
 
+/** Newest first; without a status every message is listed. */
+export async function getMessages(options: { status?: MessageStatus; page?: number; size?: number } = {}): Promise<MessagePage> {
+  const search = new URLSearchParams({ page: String(options.page ?? 0), size: String(options.size ?? 25) });
+  if (options.status) search.set('status', options.status);
+  const page = await adminRequest<ApiPage<ContactMessage>>(`/admin/messages?${search}`);
+  return {
+    messages: page.content,
+    total: page.totalElements ?? page.page?.totalElements ?? page.content.length,
+    totalPages: page.totalPages ?? page.page?.totalPages ?? 1
+  };
+}
+
+export function setMessageStatus(id: string, status: MessageStatus) {
+  return adminRequest<ContactMessage>(`/admin/messages/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+}
+
 export async function getCustomerOrders(customerId: string): Promise<{ orders: OrderResponse[]; total: number }> {
   const page = await adminRequest<ApiPage<OrderResponse>>(`/admin/customers/${customerId}/orders?page=0&size=50`);
   return { orders: page.content, total: page.totalElements ?? page.page?.totalElements ?? page.content.length };
 }
 
 /** notifyCustomer asks the server to email the customer about a status change, when email is set up there. */
-export function updateOrderStatus(id: string, status: string, paymentStatus: string, notifyCustomer = true) {
+export interface OrderTracking {
+  carrier: string;
+  number: string;
+  url: string;
+}
+
+/** Without tracking the order keeps its saved courier details; blank tracking fields clear them. */
+export function updateOrderStatus(id: string, status: string, paymentStatus: string, notifyCustomer = true, tracking?: OrderTracking) {
   return adminRequest<OrderResponse>(`/admin/orders/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ status, paymentStatus, notifyCustomer })
+    method: 'PATCH', body: JSON.stringify({
+      status, paymentStatus, notifyCustomer,
+      ...(tracking ? { trackingCarrier: tracking.carrier, trackingNumber: tracking.number, trackingUrl: tracking.url } : {})
+    })
   });
 }
 

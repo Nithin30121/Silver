@@ -46,6 +46,9 @@ class SupabaseAccessTokenTest {
     @MockitoBean
     private AccountProfileService profiles;
 
+    @MockitoBean
+    private com.silvestoluxe.api.account.AccountDeletionService deletion;
+
     @Test
     void acceptsAnEs256AccessTokenSignedByTheProjectKey() throws Exception {
         UUID userId = UUID.randomUUID();

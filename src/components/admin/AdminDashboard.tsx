@@ -1,24 +1,27 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
-import { createPortal } from 'react-dom';
 import {
   ArrowRight, Boxes, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
-  LayoutDashboard, LoaderCircle, LogOut, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
-  TrendingUp, TriangleAlert, Users, X
+  Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
+  Table2, TrendingDown, TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toAccountError } from '../../services/authService';
 import type { CatalogueCategory } from '../../types';
 import type { ApiProduct } from '../../services/catalogService';
 import type { OrderResponse } from '../../services/orderService';
+import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../../lib/orderFormat';
+import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import {
   AdminApiError, createCategory, createProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
-  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getSalesSummary, getStockMovements, setCategoryActive,
-  setProductActive, updateCategory, updateOrderStatus, updateProduct, uploadProductImages, type AdminCustomer, type AdminOrderPage,
-  type CategoryInput, type CustomerPage, type CustomerRole, type ProductInput, type SalesSummary, type StockMovement, type StockReason
+  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getMessages, getSalesSeries, getSalesSummary, getStockMovements,
+  setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, uploadProductImages, type AdminCustomer,
+  type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
+  type MessageStatus, type ProductInput, type SalesInterval, type SalesPoint, type SalesSeries, type SalesSummary, type StockMovement,
+  type StockReason
 } from '../../services/adminService';
 import '../../styles/admin.css';
 
-type Section = 'overview' | 'products' | 'categories' | 'inventory' | 'orders' | 'customers';
+type Section = 'overview' | 'products' | 'categories' | 'inventory' | 'orders' | 'customers' | 'messages';
 type Theme = 'light' | 'dark';
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 type Notify = (kind: 'success' | 'error', text: string) => void;
@@ -27,6 +30,7 @@ type FlatCategory = CatalogueCategory & { depth: number; path: string; trail: st
 const LOW_STOCK = 3;
 const CUSTOMER_PAGE_SIZE = 25;
 const ORDER_PAGE_SIZE = 25;
+const MESSAGE_PAGE_SIZE = 25;
 const THEME_KEY = 'silvora_admin_theme';
 
 const SECTIONS: Record<Section, { title: string; description: string; icon: React.ReactNode }> = {
@@ -36,11 +40,12 @@ const SECTIONS: Record<Section, { title: string; description: string; icon: Reac
   inventory: { title: 'Inventory', description: 'Watch stock levels and restock before pieces sell out.', icon: <Boxes size={18} /> },
   orders: { title: 'Orders', description: 'Review customer orders and move them along.', icon: <ShoppingBag size={18} /> },
   customers: { title: 'Customers', description: 'See who shops with you.', icon: <Users size={18} /> },
+  messages: { title: 'Messages', description: 'Questions people send through the contact form.', icon: <Inbox size={18} /> },
 };
 const NAV_GROUPS: Array<{ label: string; items: Section[] }> = [
   { label: '', items: ['overview'] },
   { label: 'Catalogue', items: ['products', 'categories', 'inventory'] },
-  { label: 'Sales', items: ['orders', 'customers'] },
+  { label: 'Sales', items: ['orders', 'customers', 'messages'] },
 ];
 
 const ORDER_STATUSES = ['PENDING_PAYMENT', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
@@ -61,7 +66,8 @@ const EMAIL_STATUSES = new Set(['CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'
 const STOCK_REASONS: Record<StockReason, string> = {
   INITIAL: 'Starting stock', MANUAL: 'Updated by hand', SALE: 'Sold', CANCELLATION: 'Order cancelled'
 };
-const PAYMENT_METHODS: Record<string, string> = { UPI: 'UPI', CARD: 'Card', COD: 'Cash on delivery' };
+// Suggestions for the courier box; any other courier can be typed in.
+const COURIERS = ['Delhivery', 'Blue Dart', 'DTDC', 'India Post', 'Ekart', 'Xpressbees', 'Shadowfax', 'Shiprocket'];
 const CATEGORY_TYPES: Record<CatalogueCategory['categoryType'], string> = {
   audience: 'Audience', collection: 'Collection', items: 'Items', landing_page: 'Landing page'
 };
@@ -75,16 +81,6 @@ const emptyCategory = (): CategoryInput => ({
 });
 
 const slugify = (value: string) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-/** ₹1,000 for whole rupees and ₹1,890.50 when there are paise, so printed totals add up exactly. */
-const money = (value: number | string) => {
-  const amount = Number(value);
-  const digits = Number.isInteger(Math.round(amount * 100) / 100) ? 0 : 2;
-  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(amount);
-};
-/** "PENDING_PAYMENT" becomes "Pending payment". */
-const humanize = (value: string) => value.charAt(0) + value.slice(1).toLowerCase().replace(/_/g, ' ');
-const formatDate = (value?: string) => value
-  ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(value)) : '—';
 const formatDateTime = (value?: string) => value
   ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(value)) : '—';
 const formatTime = (value: Date) => new Intl.DateTimeFormat('en-IN', { hour: 'numeric', minute: '2-digit' }).format(value);
@@ -126,6 +122,7 @@ export const AdminDashboard: React.FC = () => {
   const [summary, setSummary] = useState<SalesSummary | null | undefined>(undefined);
   const [recentMovements, setRecentMovements] = useState<StockMovement[] | null | undefined>(undefined);
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
+  const [newMessages, setNewMessages] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -151,6 +148,10 @@ export const AdminDashboard: React.FC = () => {
     : !userId || access?.userId !== userId ? 'checking'
     : access.allowed ? 'allowed' : 'denied';
 
+  const refreshNewMessages = () => {
+    getMessages({ status: 'NEW', size: 1 }).then((page) => setNewMessages(page.total)).catch(() => setNewMessages(null));
+  };
+
   const reload = async () => {
     setIsLoading(true);
     setLoadError('');
@@ -161,6 +162,7 @@ export const AdminDashboard: React.FC = () => {
     getSalesSummary().then(setSummary).catch(() => setSummary(null));
     getStockMovements(undefined, 6).then((result) => setRecentMovements(result.movements)).catch(() => setRecentMovements(null));
     getEmailStatus().then((result) => setEmailEnabled(result.enabled)).catch(() => setEmailEnabled(null));
+    refreshNewMessages();
     try {
       const [productResult, categoryResult, orderResult] = await Promise.all([
         getAdminProducts(), getAdminCategories(), getAdminOrders({ size: 5 })
@@ -224,6 +226,7 @@ export const AdminDashboard: React.FC = () => {
     ...(lowStock.length > 0 && { inventory: { value: lowStock.length, tone: 'warning' as const } }),
     ...(orderTotal !== null && { orders: { value: orderTotal } }),
     ...(customerTotal !== null && { customers: { value: customerTotal } }),
+    ...(newMessages ? { messages: { value: newMessages, tone: 'info' as const } } : {}),
   };
   const displayName = identity?.fullName || identity?.email || 'Administrator';
   const initials = initialsOf(displayName);
@@ -299,7 +302,7 @@ export const AdminDashboard: React.FC = () => {
 
             {section === 'overview' && (
               <Overview products={products} productTotal={productTotal} recentOrders={recentOrders} orderTotal={orderTotal}
-                customerTotal={customerTotal} summary={summary} recentMovements={recentMovements} lowStock={lowStock} loaded={loaded}
+                customerTotal={customerTotal} summary={summary} recentMovements={recentMovements} lowStock={lowStock} loaded={loaded} refreshedAt={loadedAt}
                 onNavigate={navigate} onEditProduct={setEditingProduct} onViewOrder={setViewingOrder} />
             )}
             {section === 'products' && (
@@ -312,6 +315,7 @@ export const AdminDashboard: React.FC = () => {
             {section === 'inventory' && <Inventory products={products} loaded={loaded} refreshedAt={loadedAt} onEdit={setEditingProduct} />}
             {section === 'orders' && <OrderManager refreshedAt={loadedAt} onView={setViewingOrder} notify={notify} />}
             {section === 'customers' && <CustomerManager refreshedAt={loadedAt} onViewOrder={setViewingOrder} notify={notify} />}
+            {section === 'messages' && <MessageManager refreshedAt={loadedAt} emailEnabled={emailEnabled} notify={notify} onChanged={refreshNewMessages} />}
           </main>
         </div>
       </div>
@@ -482,8 +486,9 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
 const Overview: React.FC<{
   products: ApiProduct[]; productTotal: number | null; recentOrders: OrderResponse[]; orderTotal: number | null; customerTotal: number | null;
   summary: SalesSummary | null | undefined; recentMovements: StockMovement[] | null | undefined; lowStock: ApiProduct[]; loaded: boolean;
+  refreshedAt: Date | null;
   onNavigate: (section: Section) => void; onEditProduct: (product: ApiProduct) => void; onViewOrder: (order: OrderResponse) => void;
-}> = ({ products, productTotal, recentOrders, orderTotal, customerTotal, summary, recentMovements, lowStock, loaded, onNavigate, onEditProduct, onViewOrder }) => {
+}> = ({ products, productTotal, recentOrders, orderTotal, customerTotal, summary, recentMovements, lowStock, loaded, refreshedAt, onNavigate, onEditProduct, onViewOrder }) => {
   const liveCount = products.filter((product) => product.isActive).length;
   const byStatus = summary?.ordersByStatus ?? {};
   const toShip = (byStatus.CONFIRMED ?? 0) + (byStatus.PROCESSING ?? 0);
@@ -500,6 +505,7 @@ const Overview: React.FC<{
       </div>
 
       {summary && <SalesStrip summary={summary} />}
+      {summary !== null && <SalesTrend timeZone={summary?.timeZone} refreshedAt={refreshedAt} />}
 
       <div className="admin-overview-grid">
         <Panel title="Recent orders" action={<button className="admin-link" onClick={() => onNavigate('orders')}>View all <ArrowRight size={14} /></button>}>
@@ -599,6 +605,328 @@ const SalesStrip: React.FC<{ summary: SalesSummary }> = ({ summary }) => {
     </section>
   );
 };
+
+/* ---------- Sales chart ---------- */
+
+type RangePreset = '7d' | '30d' | '90d' | '12m' | 'custom';
+type SalesRange = { preset: RangePreset; interval: SalesInterval; customFrom: string; customTo: string };
+
+const RANGE_PRESETS: Array<{ value: RangePreset; label: string }> = [
+  { value: '7d', label: '7 days' }, { value: '30d', label: '30 days' }, { value: '90d', label: '90 days' },
+  { value: '12m', label: '12 months' }, { value: 'custom', label: 'Custom' }
+];
+const PRESET_INTERVALS: Record<Exclude<RangePreset, 'custom'>, SalesInterval> = { '7d': 'DAY', '30d': 'DAY', '90d': 'WEEK', '12m': 'MONTH' };
+const INTERVAL_OPTIONS: Array<{ value: SalesInterval; label: string }> = [
+  { value: 'DAY', label: 'Daily' }, { value: 'WEEK', label: 'Weekly' }, { value: 'MONTH', label: 'Monthly' }
+];
+const PERIOD_HEADINGS: Record<SalesInterval, string> = { DAY: 'Day', WEEK: 'Week', MONTH: 'Month' };
+// The server refuses longer ranges and more bars than these; checking here saves a round trip.
+const MAX_CHART_DAYS = 3 * 366;
+const MAX_DAILY_BARS = 400;
+const CHART_HEIGHT = 220;
+const PLOT = { top: 12, right: 8, bottom: 26, left: 50 };
+
+// Days are handled as ISO strings (2026-10-29) at UTC midnight, so no local clock change can shift them.
+const parseDay = (day: string) => new Date(`${day}T00:00:00Z`);
+const isoDay = (date: Date) => date.toISOString().slice(0, 10);
+const addDays = (day: string, days: number) => { const date = parseDay(day); date.setUTCDate(date.getUTCDate() + days); return isoDay(date); };
+const daysBetween = (from: string, to: string) => Math.round((parseDay(to).getTime() - parseDay(from).getTime()) / 86_400_000);
+const nextBucket = (start: string, interval: SalesInterval) => {
+  if (interval === 'DAY') return addDays(start, 1);
+  if (interval === 'WEEK') return addDays(start, 7);
+  const date = parseDay(start);
+  date.setUTCMonth(date.getUTCMonth() + 1);
+  return isoDay(date);
+};
+
+/** Today's date where the shop is, so "the last 7 days" means the same days the server counts. */
+const todayIn = (timeZone?: string) => {
+  try {
+    return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  } catch {
+    return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  }
+};
+
+const presetFrom = (preset: Exclude<RangePreset, 'custom'>, today: string) => {
+  if (preset === '7d') return addDays(today, -6);
+  if (preset === '30d') return addDays(today, -29);
+  if (preset === '90d') return addDays(today, -89);
+  const date = parseDay(today);
+  date.setUTCDate(1);
+  date.setUTCMonth(date.getUTCMonth() - 11);
+  return isoDay(date);
+};
+
+const rangeProblem = (from: string, to: string, interval: SalesInterval) => {
+  if (!from || !to) return 'Choose a start date and an end date.';
+  if (to < from) return 'The start date must be on or before the end date.';
+  const days = daysBetween(from, to) + 1;
+  if (days > MAX_CHART_DAYS) return 'Choose a range of three years or less.';
+  if (interval === 'DAY' && days > MAX_DAILY_BARS) return 'That is too many days to show one by one. Choose Weekly or Monthly.';
+  return '';
+};
+
+const utcFormat = (options: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat('en-IN', { ...options, timeZone: 'UTC' });
+const DAY_MONTH = utcFormat({ day: 'numeric', month: 'short' });
+const DAY_MONTH_YEAR = utcFormat({ day: 'numeric', month: 'short', year: 'numeric' });
+const WEEKDAY_DATE = utcFormat({ weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+const MONTH_YEAR = utcFormat({ month: 'long', year: 'numeric' });
+const SHORT_MONTH_YEAR = utcFormat({ month: 'short', year: '2-digit' });
+const COMPACT_MONEY = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', notation: 'compact', maximumFractionDigits: 1 });
+
+/** "30 Sept – 29 Oct 2026", or one date when both ends are the same day. */
+const spanText = (from: string, to: string) => from === to
+  ? DAY_MONTH_YEAR.format(parseDay(from)) : DAY_MONTH_YEAR.formatRange(parseDay(from), parseDay(to));
+
+/** What one bar covers, trimmed to the chosen dates: a week can start before the range does. */
+const periodText = (point: SalesPoint, interval: SalesInterval, from: string, to: string) => {
+  if (interval === 'DAY') return WEEKDAY_DATE.format(parseDay(point.start));
+  const lastDay = addDays(nextBucket(point.start, interval), -1);
+  const start = point.start < from ? from : point.start;
+  const end = lastDay > to ? to : lastDay;
+  if (interval === 'MONTH' && start === point.start && end === lastDay) return MONTH_YEAR.format(parseDay(point.start));
+  return spanText(start, end);
+};
+
+const axisText = (point: SalesPoint, interval: SalesInterval, from: string) => interval === 'MONTH'
+  ? SHORT_MONTH_YEAR.format(parseDay(point.start)) : DAY_MONTH.format(parseDay(point.start < from ? from : point.start));
+
+const orderCountText = (count: number) => `${count} ${count === 1 ? 'order' : 'orders'}`;
+
+/** A round top value and about four steps below it: ₹0, ₹2.5K, ₹5K, ₹7.5K, ₹10K. */
+const valueTicks = (max: number) => {
+  if (max <= 0) return [0, 250, 500, 750, 1000];
+  const rough = max / 4;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const step = [1, 2, 2.5, 5, 10].map((factor) => factor * magnitude).find((candidate) => candidate >= rough) ?? 10 * magnitude;
+  const top = Math.ceil(max / step) * step;
+  return Array.from({ length: Math.round(top / step) + 1 }, (_, index) => index * step);
+};
+
+/** A column with 4px rounded top corners, flat on the baseline. */
+const columnPath = (x: number, y: number, width: number, height: number) => {
+  const radius = Math.min(4, width / 2, height);
+  return `M${x},${y + height}V${y + radius}A${radius},${radius} 0 0 1 ${x + radius},${y}H${x + width - radius}`
+    + `A${radius},${radius} 0 0 1 ${x + width},${y + radius}V${y + height}Z`;
+};
+
+const SalesTrend: React.FC<{ timeZone?: string; refreshedAt: Date | null }> = ({ timeZone, refreshedAt }) => {
+  const today = todayIn(timeZone);
+  const [range, setRange] = useState<SalesRange>({ preset: '30d', interval: 'DAY', customFrom: '', customTo: '' });
+  const from = range.preset === 'custom' ? range.customFrom : presetFrom(range.preset, today);
+  const to = range.preset === 'custom' ? range.customTo : today;
+  const { interval } = range;
+  const problem = rangeProblem(from, to, interval);
+  const request = `${from}/${to}/${interval}/${refreshedAt?.getTime() ?? 0}`;
+
+  const [result, setResult] = useState<{ request: string; series?: SalesSeries; error?: unknown } | null>(null);
+  const [lastSeries, setLastSeries] = useState<SalesSeries | null>(null);
+  const [view, setView] = useState<'chart' | 'table'>('chart');
+
+  useEffect(() => {
+    if (problem) return;
+    let cancelled = false;
+    getSalesSeries(from, to, interval)
+      .then((series) => { if (!cancelled) { setResult({ request, series }); setLastSeries(series); } })
+      .catch((cause: unknown) => { if (!cancelled) setResult({ request, error: cause }); });
+    return () => { cancelled = true; };
+  }, [from, to, interval, request, problem]);
+
+  const choosePreset = (preset: RangePreset) => setRange((current) => preset === 'custom'
+    ? { ...current, preset, customFrom: current.customFrom || from, customTo: current.customTo || to }
+    : { ...current, preset, interval: PRESET_INTERVALS[preset] });
+
+  const isLoading = !problem && result?.request !== request;
+  const current = result?.request === request ? result : null;
+  // While new dates load, the previous chart stays in place, faded, instead of jumping to a skeleton.
+  const series = current?.series ?? (isLoading ? lastSeries : null);
+  const notOnServer = current?.error instanceof AdminApiError && current.error.status === 404;
+
+  return (
+    <section className="admin-card admin-trend">
+      <header className="admin-card-header">
+        <h2>Sales over time</h2>
+        <span className="admin-hint">Order value · leaves out cancelled orders</span>
+      </header>
+      {notOnServer ? <NotOnServerYet /> : (
+        <>
+          <div className="admin-trend-controls">
+            <Segmented label="Date range" value={range.preset} options={RANGE_PRESETS} onChange={choosePreset} />
+            <div className="admin-trend-controls-end">
+              <Segmented label="Show sales by" value={interval} options={INTERVAL_OPTIONS}
+                onChange={(value) => setRange((existing) => ({ ...existing, interval: value }))} />
+              <button type="button" className="admin-button is-secondary" aria-pressed={view === 'table'}
+                onClick={() => setView(view === 'chart' ? 'table' : 'chart')}>
+                {view === 'chart' ? <><Table2 size={15} /> Table</> : <><TrendingUp size={15} /> Chart</>}
+              </button>
+            </div>
+          </div>
+          {range.preset === 'custom' && (
+            <div className="admin-trend-dates">
+              <label>From<input type="date" value={range.customFrom} max={range.customTo || today}
+                onChange={(event) => setRange((existing) => ({ ...existing, customFrom: event.target.value }))} /></label>
+              <label>To<input type="date" value={range.customTo} min={range.customFrom || undefined} max={today}
+                onChange={(event) => setRange((existing) => ({ ...existing, customTo: event.target.value }))} /></label>
+            </div>
+          )}
+
+          {problem ? <div className="admin-trend-message"><FormError text={problem} /></div>
+            : current?.error ? <div className="admin-trend-message"><FormError text={errorText(current.error, 'Unable to load sales.')} /></div>
+              : !series ? <div className="admin-trend-message"><LoadingRows /></div>
+                : (
+                  <div className={`admin-trend-body${isLoading ? ' is-loading' : ''}`} aria-busy={isLoading}>
+                    <SalesTrendSummary series={series} />
+                    {series.total.orderCount === 0
+                      ? <EmptyState icon={<TrendingUp size={20} />} title="No orders in these dates"
+                          text="Try a longer range. Cancelled orders are not counted." />
+                      : view === 'chart' ? <SalesColumns series={series} /> : <SalesTable series={series} />}
+                  </div>
+                )}
+        </>
+      )}
+    </section>
+  );
+};
+
+const SalesTrendSummary: React.FC<{ series: SalesSeries }> = ({ series }) => {
+  const total = Number(series.total.orderValue);
+  const before = Number(series.previous.orderValue);
+  const days = daysBetween(series.from, series.to) + 1;
+  const previousTo = addDays(series.from, -1);
+  const previousSpan = spanText(addDays(previousTo, -(days - 1)), previousTo);
+  const change = before > 0 ? Math.round(((total - before) / before) * 100) : null;
+  return (
+    <div className="admin-trend-summary">
+      <div className="admin-trend-total">
+        <strong className="admin-num">{money(total)}</strong>
+        <span>{orderCountText(series.total.orderCount)} · {spanText(series.from, series.to)}</span>
+      </div>
+      {change !== null ? (
+        <p className={`admin-trend-delta${change > 0 ? ' is-up' : change < 0 ? ' is-down' : ''}`}>
+          {change > 0 ? <TrendingUp size={15} aria-hidden="true" /> : change < 0 ? <TrendingDown size={15} aria-hidden="true" /> : null}
+          <span>
+            {change === 0 ? 'The same as' : `${Math.abs(change).toLocaleString('en-IN')}% ${change > 0 ? 'more' : 'less'} than`}{' '}
+            {previousSpan} <span className="admin-num">({money(before)})</span>
+          </span>
+        </p>
+      ) : total > 0 ? <p className="admin-trend-delta">No sales from {previousSpan} to compare with</p> : null}
+    </div>
+  );
+};
+
+const SalesColumns: React.FC<{ series: SalesSeries }> = ({ series }) => {
+  const [width, setWidth] = useState(0);
+  const [active, setActive] = useState<number | null>(null);
+  const measure = useCallback((node: HTMLDivElement | null) => {
+    if (!node) return;
+    const observer = new ResizeObserver(([entry]) => setWidth(Math.round(entry.contentRect.width)));
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const { points, interval, from, to } = series;
+  const count = points.length;
+  const values = points.map((point) => Number(point.orderValue));
+  const ticks = valueTicks(Math.max(...values));
+  const top = ticks[ticks.length - 1];
+  const plotWidth = Math.max(0, width - PLOT.left - PLOT.right);
+  const plotHeight = CHART_HEIGHT - PLOT.top - PLOT.bottom;
+  const slot = count > 0 ? plotWidth / count : 0;
+  // At most 24px wide with at least a 2px gap; very long daily ranges get hairline columns.
+  const columnWidth = Math.max(1, Math.min(24, slot > 8 ? slot - Math.max(2, slot * 0.3) : slot * 0.75));
+  const yOf = (value: number) => PLOT.top + plotHeight - (value / top) * plotHeight;
+  const centreOf = (index: number) => PLOT.left + (index + 0.5) * slot;
+  const labelEvery = Math.max(1, Math.ceil(count / Math.max(2, Math.floor(plotWidth / 76))));
+  const shown = active !== null && active < count ? active : null;
+
+  const pick = (event: React.PointerEvent<HTMLDivElement>) => {
+    const index = Math.floor((event.clientX - event.currentTarget.getBoundingClientRect().left - PLOT.left) / slot);
+    setActive(index >= 0 && index < count ? index : null);
+  };
+  const step = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const moves: Record<string, (index: number) => number> = {
+      ArrowRight: (index) => Math.min(count - 1, index + 1), ArrowLeft: (index) => Math.max(0, index - 1),
+      Home: () => 0, End: () => count - 1
+    };
+    if (event.key === 'Escape') { setActive(null); return; }
+    const move = moves[event.key];
+    if (!move) return;
+    event.preventDefault();
+    setActive((index) => move(index ?? count - 1));
+  };
+
+  const point = shown === null ? null : points[shown];
+  const tooltipSide = shown !== null && centreOf(shown) > width / 2
+    ? { right: width - (centreOf(shown) - columnWidth / 2 - 8) }
+    : { left: shown === null ? 0 : centreOf(shown) + columnWidth / 2 + 8 };
+
+  return (
+    <div ref={measure} className="admin-trend-plot" tabIndex={0} role="group"
+      aria-label="Sales chart. Use the left and right arrow keys to hear each bar, or switch to the table."
+      onPointerDown={pick} onPointerMove={pick} onPointerLeave={(event) => { if (event.pointerType === 'mouse') setActive(null); }}
+      onKeyDown={step} onFocus={() => setActive((index) => index ?? count - 1)} onBlur={() => setActive(null)}>
+      {width > 0 && (
+        <svg width={width} height={CHART_HEIGHT} viewBox={`0 0 ${width} ${CHART_HEIGHT}`} aria-hidden="true">
+          {ticks.map((tick) => (
+            <g key={tick}>
+              <line className={tick === 0 ? 'admin-trend-baseline' : 'admin-trend-grid'} x1={PLOT.left} x2={width - PLOT.right} y1={yOf(tick)} y2={yOf(tick)} />
+              <text className="admin-trend-tick" x={PLOT.left - 8} y={yOf(tick)} dy="0.32em" textAnchor="end">{COMPACT_MONEY.format(tick)}</text>
+            </g>
+          ))}
+          {shown !== null && <rect className="admin-trend-band" x={PLOT.left + shown * slot} y={PLOT.top} width={slot} height={plotHeight} rx={4} />}
+          {points.map((item, index) => {
+            const value = values[index];
+            if (value <= 0) return null;
+            const y = yOf(value);
+            return <path key={item.start} className="admin-trend-bar" d={columnPath(centreOf(index) - columnWidth / 2, y, columnWidth, PLOT.top + plotHeight - y)} />;
+          })}
+          {points.map((item, index) => {
+            if (index % labelEvery !== 0) return null;
+            const x = centreOf(index);
+            const anchor = x < PLOT.left + 18 ? 'start' : x > width - 26 ? 'end' : 'middle';
+            return (
+              <text key={item.start} className="admin-trend-tick" x={anchor === 'start' ? x - columnWidth / 2 : anchor === 'end' ? x + columnWidth / 2 : x}
+                y={CHART_HEIGHT - 8} textAnchor={anchor}>{axisText(item, interval, from)}</text>
+            );
+          })}
+        </svg>
+      )}
+      {point && (
+        <div className="admin-trend-tooltip" style={tooltipSide}>
+          <span>{periodText(point, interval, from, to)}</span>
+          <strong>{money(point.orderValue)}</strong>
+          <span>{orderCountText(point.orderCount)}</span>
+        </div>
+      )}
+      <p className="admin-sr-only" aria-live="polite">
+        {point ? `${periodText(point, interval, from, to)}: ${money(point.orderValue)}, ${orderCountText(point.orderCount)}` : ''}
+      </p>
+    </div>
+  );
+};
+
+const SalesTable: React.FC<{ series: SalesSeries }> = ({ series }) => (
+  <div className="admin-table-scroll is-bordered admin-trend-table">
+    <table className="admin-table is-compact">
+      <thead><tr><th scope="col">{PERIOD_HEADINGS[series.interval]}</th>
+        <th scope="col" className="is-right">Orders</th><th scope="col" className="is-right">Order value</th></tr></thead>
+      <tbody>
+        {series.points.map((point) => (
+          <tr key={point.start}>
+            <td>{periodText(point, series.interval, series.from, series.to)}</td>
+            <td className="is-right admin-num">{point.orderCount}</td>
+            <td className="is-right admin-num">{money(point.orderValue)}</td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr><th scope="row">Total</th><td className="is-right admin-num">{series.total.orderCount}</td>
+          <td className="is-right admin-num">{money(series.total.orderValue)}</td></tr>
+      </tfoot>
+    </table>
+  </div>
+);
 
 const NotOnServerYet: React.FC = () => (
   <EmptyState icon={<CircleAlert size={20} />} title="Not available yet" text="Deploy the latest backend to see this." />
@@ -1160,19 +1488,30 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
   const [status, setStatus] = useState(order.status);
   const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus);
   const [emailCustomer, setEmailCustomer] = useState(true);
-  const [printing, setPrinting] = useState<PrintKind | null>(null);
+  const [tracking, setTracking] = useState({
+    carrier: order.trackingCarrier ?? '', number: order.trackingNumber ?? '', url: order.trackingUrl ?? ''
+  });
+  const [printing, setPrinting] = useState<OrderPrintKind | null>(null);
   const stopPrinting = useCallback(() => setPrinting(null), []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const statusOptions = [order.status, ...(NEXT_ORDER_STATUSES[order.status] ?? [])];
   const isClosed = statusOptions.length === 1;
-  const unchanged = status === order.status && paymentStatus === order.paymentStatus;
+  // Tracking belongs to shipped orders; it is sent only while its fields are on screen.
+  const showsTracking = status === 'SHIPPED' || status === 'DELIVERED';
+  const trackingChanged = tracking.carrier.trim() !== (order.trackingCarrier ?? '')
+    || tracking.number.trim() !== (order.trackingNumber ?? '') || tracking.url.trim() !== (order.trackingUrl ?? '');
+  const trackingLinkProblem = tracking.url.trim() && !isSecureLink(tracking.url.trim())
+    ? 'Paste the full tracking link, starting with https://' : '';
+  const unchanged = status === order.status && paymentStatus === order.paymentStatus && !(showsTracking && trackingChanged);
   const customerHearsAboutIt = status !== order.status && EMAIL_STATUSES.has(status);
   const save = async () => {
     setBusy(true);
     setError('');
     try {
-      await updateOrderStatus(order.id, status, paymentStatus, emailCustomer);
+      await updateOrderStatus(order.id, status, paymentStatus, emailCustomer, showsTracking ? {
+        carrier: tracking.carrier.trim(), number: tracking.number.trim(), url: tracking.url.trim()
+      } : undefined);
       notify('success', customerHearsAboutIt && emailCustomer && emailEnabled
         ? `Order ${order.orderNumber} updated. The customer will get an email.`
         : `Order ${order.orderNumber} updated.`);
@@ -1192,7 +1531,7 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
           <button type="button" className="admin-button is-ghost" onClick={() => setPrinting('summary')}><Printer size={15} /> Order summary</button>
         </span>
         <button type="button" className="admin-button is-secondary" onClick={onClose}>Close</button>
-        <button type="button" className="admin-button is-primary" disabled={busy || unchanged} onClick={() => void save()}>
+        <button type="button" className="admin-button is-primary" disabled={busy || unchanged || Boolean(trackingLinkProblem)} onClick={() => void save()}>
           {busy ? <><LoaderCircle size={16} className="is-spinning" /> Saving…</> : 'Save changes'}
         </button>
       </>}>
@@ -1244,6 +1583,20 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
             {PAYMENT_STATUSES.map((value) => <option key={value} value={value}>{humanize(value)}</option>)}
           </select>
         </Field>
+        {showsTracking && <>
+          <Field label="Courier" hint="Optional. Shown to the customer with the tracking number.">
+            <input value={tracking.carrier} maxLength={80} list="admin-couriers" placeholder="e.g. Delhivery"
+              onChange={(e) => setTracking({ ...tracking, carrier: e.target.value })} />
+            <datalist id="admin-couriers">{COURIERS.map((courier) => <option key={courier} value={courier} />)}</datalist>
+          </Field>
+          <Field label="Tracking number" hint="Optional. Customers see it on their order page.">
+            <input value={tracking.number} maxLength={80} onChange={(e) => setTracking({ ...tracking, number: e.target.value })} />
+          </Field>
+          <Field label="Tracking link" hint="Optional. The courier's tracking page for this parcel." error={trackingLinkProblem}>
+            <input type="url" inputMode="url" value={tracking.url} maxLength={500} placeholder="https://"
+              onChange={(e) => setTracking({ ...tracking, url: e.target.value })} />
+          </Field>
+        </>}
         {status === 'CANCELLED' && order.status !== 'CANCELLED' && (
           <p className="admin-callout is-warning is-wide"><TriangleAlert size={16} /> Cancelling returns this order's pieces to stock. It can't be undone.</p>
         )}
@@ -1254,81 +1607,141 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
               : 'Customer emails are off until an email service is set up on the server.'} />
         )}
       </div>
-      {printing && <PrintSheet order={order} kind={printing} onDone={stopPrinting} />}
+      {printing && <OrderPrintSheet order={order} kind={printing} onDone={stopPrinting} />}
     </Modal>
   );
 };
 
-type PrintKind = 'slip' | 'summary';
+/* ---------- Messages ---------- */
 
-/**
- * A printable page drawn outside the dashboard. Print styles hide everything else while it exists;
- * React escapes every value, so customer-typed text can't become markup on the printed page.
- */
-const PrintSheet: React.FC<{ order: OrderResponse; kind: PrintKind; onDone: () => void }> = ({ order, kind, onDone }) => {
+type MessageFilter = MessageStatus | 'all';
+type MessageFilters = { status: MessageFilter; page: number };
+const MESSAGE_FILTERS: Array<{ value: MessageFilter; label: string }> = [
+  { value: 'NEW', label: 'New' }, { value: 'DONE', label: 'Done' }, { value: 'all', label: 'All' }
+];
+
+/** A short preview: the subject, or the start of the message when there is none. */
+const messageTitle = (message: ContactMessage) =>
+  message.subject || (message.message.length > 70 ? `${message.message.slice(0, 70).trimEnd()}…` : message.message);
+
+const MessageManager: React.FC<{ refreshedAt: Date | null; emailEnabled: boolean | null; notify: Notify; onChanged: () => void }> = ({ refreshedAt, emailEnabled, notify, onChanged }) => {
+  const [filters, setFilters] = useState<MessageFilters>({ status: 'NEW', page: 0 });
+  const [result, setResult] = useState<{ filters: MessageFilters; page?: MessagePage; error?: string } | null>(null);
+  const [viewing, setViewing] = useState<ContactMessage | undefined>(undefined);
+  const [reloadKey, setReloadKey] = useState(0);
+
   useEffect(() => {
-    window.addEventListener('afterprint', onDone);
-    // Wait a frame so the sheet is on the page before the print dialog takes its snapshot.
-    const frame = window.requestAnimationFrame(() => window.print());
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener('afterprint', onDone);
-    };
-  }, [onDone]);
-  const isSlip = kind === 'slip';
-  const cityLine = [order.shippingCity, [order.shippingState, order.shippingPostalCode].filter(Boolean).join(' ')].filter(Boolean).join(', ');
-  return createPortal(
-    <div className="admin-print">
-      <header className="admin-print-header">
-        <div>
-          <p className="admin-print-brand">SILVORA</p>
-          <h1>{isSlip ? 'Packing slip' : 'Order summary'}</h1>
+    let cancelled = false;
+    getMessages({ status: filters.status === 'all' ? undefined : filters.status, page: filters.page, size: MESSAGE_PAGE_SIZE })
+      .then((page) => { if (!cancelled) setResult({ filters, page }); })
+      .catch((cause: unknown) => { if (!cancelled) setResult({ filters, error: unavailableText(cause, 'Unable to load messages.') }); });
+    return () => { cancelled = true; };
+  }, [filters, refreshedAt, reloadKey]);
+
+  const changed = (updated: ContactMessage) => {
+    setViewing(undefined);
+    notify('success', updated.status === 'DONE' ? 'Marked as done.' : 'Moved back to new messages.');
+    setReloadKey((key) => key + 1);
+    onChanged();
+  };
+
+  const isLoading = result?.filters !== filters;
+  const data = result?.page;
+  return (
+    <section className="admin-card">
+      <div className="admin-card-toolbar">
+        <Segmented label="Show messages" value={filters.status} options={MESSAGE_FILTERS}
+          onChange={(status) => setFilters({ status, page: 0 })} />
+      </div>
+      {emailEnabled === false && (
+        <p className="admin-callout is-info admin-card-callout"><Mail size={16} /> New messages are listed here. Once an email service is set up on the server, each one is also emailed to you.</p>
+      )}
+      {isLoading ? <LoadingRows /> : result?.error ? (
+        <div className="admin-card-message"><div className="admin-alert" role="alert"><CircleAlert size={18} /><span>{result.error}</span></div></div>
+      ) : !data || data.messages.length === 0 ? (
+        <EmptyState icon={<Inbox size={20} />} title={filters.status === 'NEW' ? 'No new messages' : 'No messages here'}
+          text={filters.status === 'NEW' ? "You're all caught up. Messages from the contact page appear here." : 'Messages from the contact page appear here.'} />
+      ) : (
+        <>
+          <div className="admin-table-scroll">
+            <table className="admin-table">
+              <thead><tr><th>From</th><th>Message</th><th>Order</th><th>Received</th><th>Status</th><th><span className="admin-sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                {data.messages.map((message) => (
+                  <tr key={message.id}>
+                    <td data-label="From">
+                      <div className="admin-person">
+                        <span className="admin-avatar" aria-hidden="true">{initialsOf(message.name || message.email) || '?'}</span>
+                        <span>
+                          <span className="admin-person-name"><button className="admin-row-title" onClick={() => setViewing(message)}>{message.name}</button></span>
+                          <small>{message.email}</small>
+                        </span>
+                      </div>
+                    </td>
+                    <td data-label="Message"><span className="admin-cell-text">{messageTitle(message)}</span></td>
+                    <td data-label="Order">{message.orderNumber || <span className="admin-muted">—</span>}</td>
+                    <td data-label="Received">{formatDateTime(message.createdAt)}</td>
+                    <td data-label="Status"><Badge tone={message.status === 'NEW' ? 'info' : 'neutral'}>{message.status === 'NEW' ? 'New' : 'Done'}</Badge></td>
+                    <td className="admin-row-actions"><button className="admin-button is-secondary is-small" onClick={() => setViewing(message)}>Open</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={filters.page} pageSize={MESSAGE_PAGE_SIZE} shown={data.messages.length} total={data.total}
+            totalPages={data.totalPages} onPage={(page) => setFilters((current) => ({ ...current, page }))} />
+        </>
+      )}
+      {viewing && <MessageDetails message={viewing} onClose={() => setViewing(undefined)} onChanged={changed} />}
+    </section>
+  );
+};
+
+const MessageDetails: React.FC<{ message: ContactMessage; onClose: () => void; onChanged: (message: ContactMessage) => void }> = ({ message, onClose, onChanged }) => {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const nextStatus: MessageStatus = message.status === 'NEW' ? 'DONE' : 'NEW';
+  const replySubject = `Re: ${message.subject || 'your message to SILVORA'}`;
+  const save = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      onChanged(await setMessageStatus(message.id, nextStatus));
+    } catch (cause) {
+      setError(errorText(cause, 'Unable to update this message.'));
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal title={message.subject || `Message from ${message.name}`} subtitle={`Received ${formatDateTime(message.createdAt)}`} onClose={onClose} size="large"
+      footer={<>
+        {error && <FormError text={error} />}
+        <span className="admin-modal-footer-start">
+          <a className="admin-button is-ghost" href={`mailto:${encodeURIComponent(message.email)}?subject=${encodeURIComponent(replySubject)}`}>
+            <Mail size={15} /> Reply by email
+          </a>
+        </span>
+        <button type="button" className="admin-button is-secondary" onClick={onClose}>Close</button>
+        <button type="button" className="admin-button is-primary" disabled={busy} onClick={() => void save()}>
+          {busy ? <><LoaderCircle size={16} className="is-spinning" /> Saving…</> : nextStatus === 'DONE' ? 'Mark as done' : 'Mark as new'}
+        </button>
+      </>}>
+      <div className="admin-detail-grid">
+        <div className="admin-detail">
+          <h3>From</h3>
+          <p><strong>{message.name}</strong>{message.fromAccount && <> <Badge tone="neutral">Signed in</Badge></>}</p>
+          <p><a className="admin-link" href={`mailto:${encodeURIComponent(message.email)}?subject=${encodeURIComponent(replySubject)}`}>{message.email}</a></p>
+          {message.phone && <p><a className="admin-link" href={`tel:${message.phone.replace(/[^0-9+]/g, '')}`}>{message.phone}</a></p>}
         </div>
-        <dl>
-          <div><dt>Order</dt><dd>{order.orderNumber}</dd></div>
-          <div><dt>Placed</dt><dd>{formatDate(order.createdAt)}</dd></div>
-          {!isSlip && <div><dt>Payment</dt><dd>{PAYMENT_METHODS[order.paymentMethod] ?? order.paymentMethod} · {humanize(order.paymentStatus)}</dd></div>}
-        </dl>
-      </header>
-      <section className="admin-print-address">
-        <h2>Ship to</h2>
-        <p><strong>{order.shippingFullName}</strong></p>
-        {order.shippingAddress && <p>{order.shippingAddress}</p>}
-        {cityLine && <p>{cityLine}</p>}
-        {order.shippingPhone && <p>{order.shippingPhone}</p>}
-        {!isSlip && order.shippingEmail && <p>{order.shippingEmail}</p>}
-      </section>
-      <table>
-        <thead>
-          <tr>
-            <th>Item</th><th>SKU</th><th className="is-right">Qty</th>
-            {isSlip ? <th className="is-right">Packed</th> : <><th className="is-right">Price</th><th className="is-right">Total</th></>}
-          </tr>
-        </thead>
-        <tbody>
-          {order.items?.map((item, index) => (
-            <tr key={`${item.productId ?? 'item'}-${index}`}>
-              <td>{item.productName}</td>
-              <td>{item.productSku || '—'}</td>
-              <td className="is-right">{item.quantity}</td>
-              {isSlip ? <td className="is-right"><span className="admin-print-box" /></td>
-                : <><td className="is-right">{money(item.unitPrice)}</td><td className="is-right">{money(item.lineTotal)}</td></>}
-            </tr>
-          ))}
-        </tbody>
-        {!isSlip && (
-          <tfoot>
-            {order.subtotal !== undefined && <tr><td colSpan={4}>Subtotal</td><td className="is-right">{money(order.subtotal)}</td></tr>}
-            {order.shippingAmount !== undefined && <tr><td colSpan={4}>Shipping</td><td className="is-right">{money(order.shippingAmount)}</td></tr>}
-            <tr className="is-total"><td colSpan={4}>Total</td><td className="is-right">{money(order.totalAmount)}</td></tr>
-          </tfoot>
-        )}
-      </table>
-      <p className="admin-print-note">
-        {isSlip ? 'Thank you for shopping with SILVORA.' : 'This order summary is not a GST tax invoice.'}
-      </p>
-    </div>,
-    document.body
+        <div className="admin-detail">
+          <h3>About</h3>
+          <p>{message.orderNumber ? <>Order <strong>{message.orderNumber}</strong></> : 'No order mentioned'}</p>
+          <p className="admin-muted">{message.status === 'DONE' && message.handledAt ? `Marked done ${formatDateTime(message.handledAt)}` : 'Not answered yet'}</p>
+        </div>
+      </div>
+      <h3 className="admin-subheading">Message</h3>
+      <p className="admin-message-body">{message.message}</p>
+    </Modal>
   );
 };
 
@@ -1527,11 +1940,11 @@ const FormSection: React.FC<{ title: string; description?: string; children: Rea
   </section>
 );
 
-const Field: React.FC<{ label: string; hint?: string; wide?: boolean; children: React.ReactNode }> = ({ label, hint, wide, children }) => (
+const Field: React.FC<{ label: string; hint?: string; error?: string; wide?: boolean; children: React.ReactNode }> = ({ label, hint, error, wide, children }) => (
   <label className={`admin-field ${wide ? 'is-wide' : ''}`}>
     <span className="admin-field-label">{label}</span>
     {children}
-    {hint && <small className="admin-field-hint">{hint}</small>}
+    {error ? <small className="admin-field-hint is-error" role="alert">{error}</small> : hint && <small className="admin-field-hint">{hint}</small>}
   </label>
 );
 

@@ -52,6 +52,10 @@ app:
   storage:
     product-images:
       bucket: ${SUPABASE_PRODUCT_IMAGE_BUCKET:product-images}
+  stock:
+    # A sale or stock edit that takes a piece down to this many emails the shop (once email is set up),
+    # and again when it sells out. The dashboard's low-stock list uses the same number.
+    low-threshold: ${APP_LOW_STOCK_THRESHOLD:3}
   reports:
     # "This week" and "this month" on the dashboard, and times in spreadsheet downloads, use this zone.
     time-zone: ${APP_REPORTS_TIME_ZONE:Asia/Kolkata}
@@ -66,3 +70,5 @@ app:
     shop-name: ${APP_SHOP_NAME:SILVORA}
     # Optional link at the bottom of each email, for example the storefront address.
     shop-url: ${APP_SHOP_URL:}
+    # Where contact form messages are forwarded. Defaults to the from address.
+    shop-inbox: ${APP_SHOP_INBOX:}

@@ -46,14 +46,20 @@ final class TestJwks {
     }
 
     static String accessToken(ECKey signingKey, String subject) {
-        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+        return accessToken(signingKey, subject, java.util.Map.of());
+    }
+
+    /** extraClaims are added as Supabase would, for example "amr" with the sign-in method and time. */
+    static String accessToken(ECKey signingKey, String subject, java.util.Map<String, Object> extraClaims) {
+        JWTClaimsSet.Builder builder = new JWTClaimsSet.Builder()
                 .subject(subject)
                 .issuer("https://project-ref.supabase.co/auth/v1")
                 .audience("authenticated")
                 .claim("role", "authenticated")
                 .issueTime(new Date())
-                .expirationTime(Date.from(Instant.now().plusSeconds(600)))
-                .build();
+                .expirationTime(Date.from(Instant.now().plusSeconds(600)));
+        extraClaims.forEach(builder::claim);
+        JWTClaimsSet claims = builder.build();
         SignedJWT token = new SignedJWT(new JWSHeader.Builder(JWSAlgorithm.ES256)
                 .keyID(signingKey.getKeyID()).type(JOSEObjectType.JWT).build(), claims);
         try {

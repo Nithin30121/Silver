@@ -30,11 +30,17 @@ public final class OrderDtos {
 
     public record CheckoutItem(@NotNull UUID productId, @Min(1) @Max(99) int quantity) { }
 
-    /** notifyCustomer defaults to true; customers are emailed only when email is set up on the server. */
+    /**
+     * notifyCustomer defaults to true; customers are emailed only when email is set up on the server.
+     * Tracking fields left null keep the order's current tracking; blank values clear it.
+     */
     public record StatusUpdate(@NotNull OrderStatus status,
                                @NotNull PaymentStatus paymentStatus,
                                @Size(max = 500) String note,
-                               Boolean notifyCustomer) { }
+                               Boolean notifyCustomer,
+                               @Size(max = 80) String trackingCarrier,
+                               @Size(max = 80) String trackingNumber,
+                               @Size(max = 500) String trackingUrl) { }
 
     public record ItemResponse(UUID productId, String productName, String productSku, BigDecimal unitPrice,
                                int quantity, BigDecimal lineTotal) { }
@@ -46,5 +52,8 @@ public final class OrderDtos {
                            BigDecimal totalAmount, String shippingFullName, String shippingEmail,
                            String shippingPhone, String shippingAddress, String shippingCity,
                            String shippingState, String shippingPostalCode, Instant createdAt,
-                           List<ItemResponse> items, List<StatusHistoryResponse> statusHistory) { }
+                           List<ItemResponse> items, List<StatusHistoryResponse> statusHistory,
+                           String trackingCarrier, String trackingNumber, String trackingUrl,
+                           /** Whether the customer may still cancel this order themselves. */
+                           boolean canCancel) { }
 }

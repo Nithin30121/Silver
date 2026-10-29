@@ -63,6 +63,9 @@ export type ViewType =
   | 'admin'
   | AccountView;
 
+/** The sections of My Account. */
+export type AccountTab = 'orders' | 'addresses' | 'profile';
+
 /** Pages belonging to customer accounts (sign-in, sign-up, password reset, account details). */
 export type AccountView = 'login' | 'signup' | 'forgot-password' | 'reset-password' | 'account';
 

@@ -8,6 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import com.silvestoluxe.api.notification.LowStockAlert;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -16,7 +20,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Writes and reads stock history. Callers record a change after applying it, inside their own transaction. */
+/**
+ * Writes and reads stock history. Callers record a change after applying it, inside their own
+ * transaction. When a sale or a hand edit takes a piece down to the low-stock line, or sells it
+ * out, the shop is told (see LowStockAlert).
+ */
 @Service
 public class StockLedger {
     static final int MAX_PAGE_SIZE = 100;
@@ -32,16 +40,41 @@ public class StockLedger {
 
     private final StockMovementRepository movements;
     private final JdbcTemplate jdbcTemplate;
+    private final ApplicationEventPublisher events;
+    private final int lowStock;
 
-    public StockLedger(StockMovementRepository movements, JdbcTemplate jdbcTemplate) {
+    @Autowired
+    public StockLedger(StockMovementRepository movements, JdbcTemplate jdbcTemplate, ApplicationEventPublisher events,
+                       @Value("${app.stock.low-threshold:3}") int lowStock) {
         this.movements = movements;
         this.jdbcTemplate = jdbcTemplate;
+        this.events = events;
+        this.lowStock = lowStock;
     }
 
     /** Records a change already applied to the product. A change of zero is not history, so it is skipped. */
     public void record(Product product, int quantityChange, StockMovementReason reason, UUID orderId, UUID actorId) {
         if (quantityChange == 0) return;
         movements.save(new StockMovement(product.getId(), quantityChange, product.getStockQuantity(), reason, orderId, actorId));
+        alertIfLow(product, quantityChange, reason, orderId);
+    }
+
+    /**
+     * Only the moment of crossing counts: dropping from above the line to on or below it, or from
+     * some stock to none. Later sales of an already-low piece don't send another alert.
+     */
+    private void alertIfLow(Product product, int quantityChange, StockMovementReason reason, UUID orderId) {
+        if (quantityChange > 0 || !product.isActive()) return;
+        if (reason != StockMovementReason.SALE && reason != StockMovementReason.MANUAL) return;
+        int after = product.getStockQuantity();
+        int before = after - quantityChange;
+        boolean soldOut = after <= 0 && before > 0;
+        boolean runningLow = after <= lowStock && before > lowStock;
+        if (!soldOut && !runningLow) return;
+        String orderNumber = orderId == null ? null : jdbcTemplate.query(
+                "select order_number from public.orders where id = ?", (resultSet, row) -> resultSet.getString(1), orderId)
+                .stream().findFirst().orElse(null);
+        events.publishEvent(new LowStockAlert(product.getName(), product.getSku(), Math.max(after, 0), soldOut, orderNumber));
     }
 
     /** Newest first; a null product id lists changes across the whole catalogue. */

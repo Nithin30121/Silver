@@ -34,7 +34,9 @@ public class SecurityConfig {
                         // It never includes messages or stack traces (server.error settings in application.yml).
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**", "/api/products", "/api/products/**").permitAll()
-                        .requestMatchers("/api/me").authenticated()
+                        // The contact form works for visitors too; it is rate limited and never emails the sender.
+                        .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
+                        .requestMatchers("/api/me", "/api/me/**").authenticated()
                         .requestMatchers("/api/orders/**").authenticated()
                         .requestMatchers("/api/admin/**").authenticated()
                         .anyRequest().denyAll())
