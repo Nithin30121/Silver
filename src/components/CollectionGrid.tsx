@@ -26,7 +26,7 @@ export const CollectionGrid: React.FC = () => {
           <h2 id="collection-heading" className="headline-editorial">
             Silver Ornaments for <em>Every Chapter.</em>
           </h2>
-          <p style={{ marginTop: '1rem', fontSize: '1.05rem', lineHeight: '1.75', color: 'var(--color-muted-grey)' }}>
+          <p style={{ marginTop: '1rem', fontSize: '1.05rem', lineHeight: '1.75', color: 'var(--color-text-muted)' }}>
             Explore our thoughtfully crafted silver pieces, designed to complement your style, always.
           </p>
         </motion.div>
@@ -49,7 +49,7 @@ export const CollectionGrid: React.FC = () => {
                 <div className="category-meta">
                   <div>
                     <h3 className="category-title">{category.name}</h3>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--color-muted-grey)', display: 'block', marginTop: '2px', letterSpacing: '0.04em' }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'block', marginTop: '2px', letterSpacing: '0.04em' }}>
                       {category.description || 'Explore the collection'}
                     </span>
                   </div>

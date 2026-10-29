@@ -52,8 +52,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
               <Heart
                 size={16}
                 style={{
-                  fill: wishlisted ? 'var(--color-rose-gold)' : 'none',
-                  stroke: wishlisted ? 'var(--color-rose-gold)' : 'currentColor',
+                  fill: wishlisted ? 'var(--color-silver-accent)' : 'none',
+                  stroke: wishlisted ? 'var(--color-silver-accent)' : 'currentColor',
                   strokeWidth: 1.8
                 }}
               />
@@ -92,9 +92,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
                 {...pressable}
                 style={{
                   flex: 1,
-                  background: 'rgba(27, 23, 20, 0.95)',
-                  border: '1px solid var(--color-metallic-copper)',
-                  color: 'var(--color-soft-ivory)',
+                  background: 'rgba(26, 27, 30, 0.95)',
+                  border: '1px solid var(--color-silver-deep)',
+                  color: 'var(--color-text)',
                   padding: '0.65rem 0.5rem',
                   fontSize: '0.6875rem',
                   fontWeight: 600,
@@ -109,8 +109,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
                 {...pressable}
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(184, 121, 81, 0.3)',
-                  color: 'var(--color-soft-ivory)',
+                  border: '1px solid rgba(143, 146, 153, 0.3)',
+                  color: 'var(--color-text)',
                   padding: '0.65rem 0.75rem',
                   display: 'flex',
                   alignItems: 'center',
@@ -154,9 +154,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
                   style={{
                     fontSize: '0.625rem',
                     letterSpacing: '0.04em',
-                    color: 'var(--color-muted-grey)',
-                    border: '1px solid rgba(184, 121, 81, 0.22)',
-                    backgroundColor: 'rgba(8, 7, 6, 0.5)',
+                    color: 'var(--color-text-muted)',
+                    border: '1px solid rgba(143, 146, 153, 0.22)',
+                    backgroundColor: 'rgba(7, 7, 8, 0.5)',
                     padding: '2px 6px'
                   }}
                 >
@@ -164,7 +164,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
                 </span>
               ))}
               {product.availableSizes.length > 3 && (
-                <span style={{ fontSize: '0.625rem', color: 'var(--color-muted-grey)', alignSelf: 'center' }}>
+                <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)', alignSelf: 'center' }}>
                   +{product.availableSizes.length - 3} more
                 </span>
               )}
@@ -181,7 +181,7 @@ export const FeaturedProducts: React.FC = () => {
   const featured = products.filter((p) => p.isFeatured).slice(0, 4);
 
   return (
-    <section className="section-padding" style={{ backgroundColor: 'var(--color-rich-black)', borderBottom: '1px solid rgba(184, 121, 81, 0.2)' }} aria-labelledby="selection-heading">
+    <section className="section-padding" style={{ backgroundColor: 'var(--color-ink)', borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }} aria-labelledby="selection-heading">
       <div className="container">
         {/* Section Header */}
         <motion.div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }} {...revealOnScroll()}>
@@ -202,9 +202,9 @@ export const FeaturedProducts: React.FC = () => {
         </motion.div>
 
         {catalogueStatus === 'loading' ? (
-          <p style={{ color: 'var(--color-muted-grey)', padding: '2rem 0' }} aria-live="polite">Loading the latest pieces…</p>
+          <p style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }} aria-live="polite">Loading the latest pieces…</p>
         ) : catalogueStatus === 'error' ? (
-          <div style={{ color: 'var(--color-muted-grey)', padding: '2rem 0' }} role="alert">
+          <div style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }} role="alert">
             <p>{catalogueError}</p>
             <button className="btn-text" style={{ marginTop: '0.75rem' }} onClick={() => void reloadCatalogue()}>Try Again</button>
           </div>
@@ -213,7 +213,7 @@ export const FeaturedProducts: React.FC = () => {
             {featured.map((product, index) => <ProductCard key={product.id} product={product} index={index} />)}
           </div>
         ) : (
-          <p style={{ color: 'var(--color-muted-grey)', padding: '2rem 0' }}>New pieces will appear here when they are published.</p>
+          <p style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }}>New pieces will appear here when they are published.</p>
         )}
       </div>
     </section>

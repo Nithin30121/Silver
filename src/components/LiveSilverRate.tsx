@@ -121,7 +121,7 @@ export const LiveSilverRate: React.FC = () => {
         {/* Desktop Detailed Presentation */}
         <span className="silver-rate-desktop-view">
           <span className="silver-rate-label">LIVE SILVER RATE</span>
-          <span className="silver-rate-separator">/</span>
+          <span className="silver-rate-separator" aria-hidden="true">/</span>
           <span className="silver-rate-price-main">
             {priceGram} <span className="silver-rate-unit">/ g</span>
           </span>
@@ -130,7 +130,7 @@ export const LiveSilverRate: React.FC = () => {
             ({price10Gram} / 10g)
           </span>
 
-          {/* Refined Trend Indicator (Restrained Rose Gold / Soft Ivory) */}
+          {/* Refined Trend Indicator (Restrained Silver) */}
           {direction === 'up' && (
             <span className="silver-rate-trend trend-up" title={`Price increased since last check (+${data?.changePercent || 0}%)`}>
               <ChevronUp size={12} strokeWidth={2.5} />
@@ -241,7 +241,7 @@ export const LiveSilverRate: React.FC = () => {
                 <span>Timestamp: {updatedTime}</span>
               </div>
               <div className="popover-hallmark-badge">
-                <Check size={11} style={{ color: 'var(--color-rose-gold)' }} />
+                <Check size={11} style={{ color: 'var(--color-silver-accent)' }} />
                 <span>BIS 925 Hallmark Standard</span>
               </div>
             </div>

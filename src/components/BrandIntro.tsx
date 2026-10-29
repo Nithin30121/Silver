@@ -111,7 +111,7 @@ export const BrandIntro: React.FC = () => {
           />
         </div>
 
-        {/* Thin Metallic Rose-Gold Hairline Divider */}
+        {/* Thin Polished Silver Hairline Divider */}
         <div className="brand-intro-divider" aria-hidden="true">
           <span className="divider-line" />
           <span className="divider-diamond" />
