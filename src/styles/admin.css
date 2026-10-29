@@ -387,6 +387,10 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-form-section > header p { margin-top: 0.25rem; color: var(--a-text-3); font-size: 0.8125rem; }
 .admin-form-grid, .admin-form.is-flat { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-content: start; }
 .admin-form-grid > .is-wide, .admin-form.is-flat > .is-wide { grid-column: 1 / -1; }
+.admin-silver-preview { display: grid; gap: 0.2rem; padding: 0.9rem 1rem; border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); background: var(--a-surface-2); }
+.admin-silver-preview > span { color: var(--a-text-2); font-size: 0.8125rem; font-weight: 600; }
+.admin-silver-preview strong { color: var(--a-text); font-size: 1.375rem; font-weight: 700; }
+.admin-silver-preview small { color: var(--a-text-3); font-size: 0.8125rem; }
 .admin-modal:not(.is-large) .admin-form-section { grid-template-columns: minmax(0, 1fr); gap: 0.9rem; }
 .admin-field { min-width: 0; display: grid; align-content: start; gap: 0.4rem; }
 .admin-field-label { color: var(--a-text); font-size: 0.8125rem; font-weight: 600; }

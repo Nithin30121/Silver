@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   ArrowRight, Boxes, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
-  Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
+  IndianRupee, Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
   Table2, TrendingDown, TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -11,10 +11,11 @@ import type { ApiProduct } from '../../services/catalogService';
 import type { OrderResponse } from '../../services/orderService';
 import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../../lib/orderFormat';
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
+import { formatINR } from '../../services/silverRateService';
 import {
   AdminApiError, createCategory, createProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
-  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getMessages, getSalesSeries, getSalesSummary, getStockMovements, getWishlistCounts,
-  setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, uploadProductImages, type AdminCustomer,
+  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getMessages, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
+  setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, type AdminCustomer,
   type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
   type MessageStatus, type ProductInput, type SalesInterval, type SalesPoint, type SalesSeries, type SalesSummary, type StockMovement, type WishlistCount,
   type StockReason
@@ -131,6 +132,7 @@ export const AdminDashboard: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<ApiProduct | null | undefined>(undefined);
   const [editingCategory, setEditingCategory] = useState<CatalogueCategory | null | undefined>(undefined);
   const [viewingOrder, setViewingOrder] = useState<OrderResponse | undefined>(undefined);
+  const [editingSilverRate, setEditingSilverRate] = useState(false);
   const [notice, setNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
 
   const userId = status === 'authenticated' ? user?.id ?? null : null;
@@ -292,6 +294,9 @@ export const AdminDashboard: React.FC = () => {
                   <RefreshCw size={15} className={isLoading ? 'is-spinning' : ''} /> {isLoading ? 'Refreshing…' : 'Refresh'}
                 </button>
                 <span className="admin-desktop-only">{themeToggle}</span>
+                {section === 'overview' && (
+                  <button className="admin-button is-secondary" onClick={() => setEditingSilverRate(true)}><IndianRupee size={15} /> Update silver rate</button>
+                )}
                 {(section === 'overview' || section === 'products') && (
                   <button className="admin-button is-primary" onClick={() => setEditingProduct(null)}><Plus size={16} /> Add product</button>
                 )}
@@ -331,6 +336,7 @@ export const AdminDashboard: React.FC = () => {
         <CategoryForm category={editingCategory} categories={flatCategories} onClose={() => setEditingCategory(undefined)}
           onSaved={() => { setEditingCategory(undefined); notify('success', 'Category saved.'); void reload(); }} />
       )}
+      {editingSilverRate && <SilverRateForm onClose={() => setEditingSilverRate(false)} notify={notify} />}
       {viewingOrder && (
         <OrderDetails order={viewingOrder} emailEnabled={emailEnabled} onClose={() => setViewingOrder(undefined)} notify={notify}
           onSaved={() => { setViewingOrder(undefined); void reload(); }} />
@@ -934,6 +940,82 @@ const SalesTable: React.FC<{ series: SalesSeries }> = ({ series }) => (
     </table>
   </div>
 );
+
+/* ---------- Silver rate ---------- */
+
+/** The silver rate customers see in the rate bar. It stays until it's changed; with none, the bar is hidden. */
+const SilverRateForm: React.FC<{ onClose: () => void; notify: Notify }> = ({ onClose, notify }) => {
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [rate, setRate] = useState('');
+  const [setAt, setSetAt] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getSilverRateSettings()
+      .then((current) => {
+        if (cancelled) return;
+        setRate(current.ratePerGram == null ? '' : String(Number(current.ratePerGram)));
+        setSetAt(current.rateSetAt);
+        setLoaded(true);
+      })
+      .catch((cause: unknown) => { if (!cancelled) setLoadError(unavailableText(cause, 'Unable to load the silver rate.')); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const rateNumber = rate.trim() === '' ? null : Number(rate);
+  const problem = rateNumber !== null && (!Number.isFinite(rateNumber) || rateNumber < 10 || rateNumber > 5000)
+    ? 'The rate must be between ₹10 and ₹5,000 per gram.' : '';
+
+  const save = async (ratePerGram: number | null) => {
+    setBusy(true);
+    setError('');
+    try {
+      await updateSilverRateSettings({ ratePerGram: ratePerGram === null ? null : Math.round(ratePerGram * 100) / 100 });
+      notify('success', ratePerGram === null ? 'Silver rate removed. The rate bar is hidden.' : 'Silver rate saved. Customers see it straight away.');
+      onClose();
+    } catch (cause) {
+      setError(errorText(cause, 'Unable to save the silver rate.'));
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Modal title="Update silver rate" subtitle="What customers see in the rate bar at the top of the shop" onClose={onClose}
+      footer={<>
+        {setAt && (
+          <button type="button" className="admin-button is-ghost admin-modal-footer-start" disabled={busy} onClick={() => void save(null)}>
+            <X size={15} /> Remove rate
+          </button>
+        )}
+        <button type="button" className="admin-button is-secondary" onClick={onClose}>Cancel</button>
+        <button type="button" className="admin-button is-primary" disabled={!loaded || busy || rateNumber === null || Boolean(problem)}
+          onClick={() => void save(rateNumber)}>
+          {busy ? <><LoaderCircle size={16} className="is-spinning" /> Saving…</> : 'Save'}
+        </button>
+      </>}>
+      {loadError ? <FormError text={loadError} /> : !loaded ? <LoadingRows /> : (
+        <div className="admin-form-grid">
+          <Field label="Silver rate per gram" wide
+            hint={setAt ? `Last set ${formatDateTime(setAt)}. It stays until you change it, and customers see when it was set.`
+              : 'Not set yet, so the rate bar is hidden. Enter the rate per gram for 99.9% fine silver.'}>
+            <span className="admin-affix"><span>₹</span><input type="number" min="10" max="5000" step="0.01" value={rate}
+              placeholder="e.g. 195.00" onChange={(e) => setRate(e.target.value)} /></span>
+          </Field>
+          <div className="admin-silver-preview is-wide" aria-live="polite">
+            <span>Customers will see</span>
+            <strong className="admin-num">{rateNumber === null || problem ? '—' : `${formatINR(rateNumber)} per gram`}</strong>
+            <small>{rateNumber === null || problem ? 'Enter a rate to preview it'
+              : `${formatINR(rateNumber * 10)} per 10 grams · ${formatINR(rateNumber * 1000)} per kilogram`}</small>
+          </div>
+          {(error || problem) && <div className="is-wide"><FormError text={error || problem} /></div>}
+        </div>
+      )}
+    </Modal>
+  );
+};
 
 const NotOnServerYet: React.FC = () => (
   <EmptyState icon={<CircleAlert size={20} />} title="Not available yet" text="Deploy the latest backend to see this." />

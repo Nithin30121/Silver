@@ -210,6 +210,18 @@ export async function getAdminOrders(options: { query?: string; status?: string;
 
 export const getSalesSummary = () => adminRequest<SalesSummary>('/admin/reports/summary');
 
+/** The silver rate shown in the storefront's rate bar; null when none is set. */
+export interface SilverRateSettings {
+  ratePerGram: number | string | null;
+  rateSetAt: string | null;
+}
+
+export const getSilverRateSettings = () => adminRequest<SilverRateSettings>('/admin/settings/silver-rate');
+
+/** ratePerGram is the new rate, or null to remove it and hide the rate bar. */
+export const updateSilverRateSettings = (update: { ratePerGram: number | null }) =>
+  adminRequest<SilverRateSettings>('/admin/settings/silver-rate', { method: 'PUT', body: JSON.stringify(update) });
+
 /** Only pieces added at least once are listed. */
 export const getWishlistCounts = () => adminRequest<WishlistCount[]>('/admin/wishlist-counts');
 
