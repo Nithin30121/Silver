@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { isAccountView, type AccountTab, type CatalogueCategory, type CartItem, type Product, type ProductCategory, type ViewType } from '../types';
-import { CatalogueRequestError, loadCatalogue, type ApiProduct } from '../services/catalogService';
+import { CatalogueRequestError, loadCatalogue, recordWishlistAdd, type ApiProduct } from '../services/catalogService';
 import { pageTitle, parseRoute, routePath, type Route } from '../lib/routes';
 
 type CatalogueStatus = 'loading' | 'ready' | 'error';
@@ -285,6 +285,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const toggleWishlist = (productId: string) => {
     if (wishlist.includes(productId)) { setWishlist((previous) => previous.filter((id) => id !== productId)); showToast('Removed from your wishlist.'); return; }
     setWishlist((previous) => [...previous, productId]);
+    recordWishlistAdd(productId);
     showToast(`Saved "${products.find((product) => product.id === productId)?.name ?? 'piece'}" to your wishlist.`);
   };
 

@@ -36,6 +36,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/categories", "/api/categories/**", "/api/products", "/api/products/**").permitAll()
                         // The contact form works for visitors too; it is rate limited and never emails the sender.
                         .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
+                        // Wishlist adds are counted for visitors too; only a per-day count is stored, never who.
+                        .requestMatchers(HttpMethod.POST, "/api/products/*/wishlist-adds").permitAll()
                         .requestMatchers("/api/me", "/api/me/**").authenticated()
                         .requestMatchers("/api/orders/**").authenticated()
                         .requestMatchers("/api/admin/**").authenticated()
