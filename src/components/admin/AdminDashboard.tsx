@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
-  ArrowRight, Boxes, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
+  ArrowRight, Boxes, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
   Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
   Table2, TrendingDown, TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
@@ -111,6 +111,8 @@ export const AdminDashboard: React.FC = () => {
   // The result of the server's role check, remembered per account so switching accounts re-checks.
   const [access, setAccess] = useState<{ userId: string; allowed: boolean; error: string } | null>(null);
   const [section, setSection] = useState<Section>('overview');
+  // Set when an Overview card opens Orders already filtered to one status.
+  const [orderStatusFilter, setOrderStatusFilter] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [productTotal, setProductTotal] = useState<number | null>(null);
@@ -213,8 +215,9 @@ export const AdminDashboard: React.FC = () => {
 
   const loaded = loadedAt !== null;
   const notify: Notify = (kind, text) => setNotice({ kind, text });
-  const navigate = (next: Section) => {
+  const navigate = (next: Section, orderStatus = '') => {
     setSection(next);
+    setOrderStatusFilter(orderStatus);
     setEditingProduct(undefined);
     setEditingCategory(undefined);
     setViewingOrder(undefined);
@@ -313,7 +316,7 @@ export const AdminDashboard: React.FC = () => {
               <CategoryManager categories={flatCategories} loaded={loaded} onEdit={setEditingCategory} onChanged={() => void reload()} notify={notify} />
             )}
             {section === 'inventory' && <Inventory products={products} loaded={loaded} refreshedAt={loadedAt} onEdit={setEditingProduct} />}
-            {section === 'orders' && <OrderManager refreshedAt={loadedAt} onView={setViewingOrder} notify={notify} />}
+            {section === 'orders' && <OrderManager initialStatus={orderStatusFilter} refreshedAt={loadedAt} onView={setViewingOrder} notify={notify} />}
             {section === 'customers' && <CustomerManager refreshedAt={loadedAt} onViewOrder={setViewingOrder} notify={notify} />}
             {section === 'messages' && <MessageManager refreshedAt={loadedAt} emailEnabled={emailEnabled} notify={notify} onChanged={refreshNewMessages} />}
           </main>
@@ -487,7 +490,7 @@ const Overview: React.FC<{
   products: ApiProduct[]; productTotal: number | null; recentOrders: OrderResponse[]; orderTotal: number | null; customerTotal: number | null;
   summary: SalesSummary | null | undefined; recentMovements: StockMovement[] | null | undefined; lowStock: ApiProduct[]; loaded: boolean;
   refreshedAt: Date | null;
-  onNavigate: (section: Section) => void; onEditProduct: (product: ApiProduct) => void; onViewOrder: (order: OrderResponse) => void;
+  onNavigate: (section: Section, orderStatus?: string) => void; onEditProduct: (product: ApiProduct) => void; onViewOrder: (order: OrderResponse) => void;
 }> = ({ products, productTotal, recentOrders, orderTotal, customerTotal, summary, recentMovements, lowStock, loaded, refreshedAt, onNavigate, onEditProduct, onViewOrder }) => {
   const liveCount = products.filter((product) => product.isActive).length;
   const byStatus = summary?.ordersByStatus ?? {};
@@ -495,10 +498,14 @@ const Overview: React.FC<{
   return (
     <>
       <div className="admin-stats">
-        <StatCard icon={<Package size={18} />} label="Products" value={productTotal ?? '—'} onClick={() => onNavigate('products')}
-          note={loaded ? `${liveCount} live · ${products.length - liveCount} hidden` : 'In your catalogue'} />
         <StatCard icon={<ShoppingBag size={18} />} label="Orders" value={orderTotal ?? '—'} onClick={() => onNavigate('orders')}
           note={summary && orderTotal ? `${toShip} to ship · ${byStatus.PENDING_PAYMENT ?? 0} awaiting payment` : 'All time'} />
+        <StatCard icon={<CircleCheck size={18} />} label="Completed" value={summary ? byStatus.DELIVERED ?? 0 : '—'}
+          note="Delivered to customers" onClick={() => onNavigate('orders', 'DELIVERED')} />
+        <StatCard icon={<CircleX size={18} />} label="Cancelled" value={summary ? byStatus.CANCELLED ?? 0 : '—'}
+          note="By you or the customer" onClick={() => onNavigate('orders', 'CANCELLED')} />
+        <StatCard icon={<Package size={18} />} label="Products" value={productTotal ?? '—'} onClick={() => onNavigate('products')}
+          note={loaded ? `${liveCount} live · ${products.length - liveCount} hidden` : 'In your catalogue'} />
         <StatCard icon={<TriangleAlert size={18} />} label="Low stock" value={loaded ? lowStock.length : '—'} onClick={() => onNavigate('inventory')}
           note={`${LOW_STOCK} or fewer pieces left`} tone={lowStock.length > 0 ? 'warning' : undefined} />
         <StatCard icon={<Users size={18} />} label="Customers" value={customerTotal ?? '—'} note="Shopper accounts" onClick={() => onNavigate('customers')} />
@@ -1368,9 +1375,9 @@ const unavailableText = (cause: unknown, fallback: string) => cause instanceof A
 
 type OrderFilters = { query: string; status: string; page: number };
 
-const OrderManager: React.FC<{ refreshedAt: Date | null; onView: (order: OrderResponse) => void; notify: Notify }> = ({ refreshedAt, onView, notify }) => {
+const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null; onView: (order: OrderResponse) => void; notify: Notify }> = ({ initialStatus = '', refreshedAt, onView, notify }) => {
   const [query, setQuery] = useState('');
-  const [filters, setFilters] = useState<OrderFilters>({ query: '', status: '', page: 0 });
+  const [filters, setFilters] = useState<OrderFilters>({ query: '', status: initialStatus, page: 0 });
   // Remembers which filters a result belongs to, so new filters show loading rows instead of stale orders.
   const [result, setResult] = useState<{ filters: OrderFilters; page?: AdminOrderPage; error?: string } | null>(null);
   useSearchAsYouType(query, setFilters);
