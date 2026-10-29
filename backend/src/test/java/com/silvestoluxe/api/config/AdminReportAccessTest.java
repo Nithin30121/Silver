@@ -67,11 +67,17 @@ class AdminReportAccessTest {
     @Test
     void refusesEveryoneButAdmins() throws Exception {
         for (String path : List.of("/api/admin/reports/summary", "/api/admin/reports/sales?from=2026-10-01&to=2026-10-29",
+                "/api/admin/reports/sales-by-category?from=2026-10-01&to=2026-10-29",
+                "/api/admin/reports/sales-by-payment-method?from=2026-10-01&to=2026-10-29",
+                "/api/admin/reports/customer-growth?from=2026-10-01&to=2026-10-29",
                 "/api/admin/reports/orders.csv", "/api/admin/reports/customers.csv", "/api/admin/notifications/email")) {
             mvc.perform(get(path)).andExpect(status().isUnauthorized());
         }
         when(authorization.isAdmin(any())).thenReturn(false);
         for (String path : List.of("/api/admin/reports/summary", "/api/admin/reports/sales?from=2026-10-01&to=2026-10-29",
+                "/api/admin/reports/sales-by-category?from=2026-10-01&to=2026-10-29",
+                "/api/admin/reports/sales-by-payment-method?from=2026-10-01&to=2026-10-29",
+                "/api/admin/reports/customer-growth?from=2026-10-01&to=2026-10-29",
                 "/api/admin/reports/orders.csv", "/api/admin/reports/customers.csv", "/api/admin/notifications/email")) {
             mvc.perform(get(path).header(HttpHeaders.AUTHORIZATION, bearer())).andExpect(status().isForbidden());
         }
@@ -110,6 +116,32 @@ class AdminReportAccessTest {
                 .andExpect(jsonPath("$.points[0].start").value("2026-09-28"))
                 .andExpect(jsonPath("$.points[0].orderValue").value(3888.00))
                 .andExpect(jsonPath("$.previous.orderCount").value(0));
+    }
+
+    @Test
+    void givesAdminsTheCategoryAndPaymentBreakdowns() throws Exception {
+        when(authorization.isAdmin(any())).thenReturn(true);
+        UUID rings = UUID.randomUUID();
+        LocalDate from = LocalDate.of(2026, 10, 1);
+        LocalDate to = LocalDate.of(2026, 10, 29);
+        when(reports.salesByCategory(from, to)).thenReturn(new ReportService.CategoryBreakdown("Asia/Kolkata", from, to,
+                List.of(new ReportService.CategorySales(rings, 2, 3, new BigDecimal("7200.00")), new ReportService.CategorySales(null, 1, 1, new BigDecimal("999.00"))),
+                new ReportService.Totals(3, new BigDecimal("8199.00"))));
+        when(reports.salesByPaymentMethod(from, to)).thenReturn(new ReportService.PaymentBreakdown("Asia/Kolkata", from, to,
+                List.of(new ReportService.PaymentMethodSales("UPI", 2, new BigDecimal("5000.00"), new BigDecimal("2500.00")))));
+
+        mvc.perform(get("/api/admin/reports/sales-by-category").param("from", "2026-10-01").param("to", "2026-10-29")
+                        .header(HttpHeaders.AUTHORIZATION, bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.categories[0].categoryId").value(rings.toString()))
+                .andExpect(jsonPath("$.categories[0].pieces").value(3))
+                .andExpect(jsonPath("$.categories[1].categoryId").doesNotExist())
+                .andExpect(jsonPath("$.total.orderCount").value(3));
+        mvc.perform(get("/api/admin/reports/sales-by-payment-method").param("from", "2026-10-01").param("to", "2026-10-29")
+                        .header(HttpHeaders.AUTHORIZATION, bearer()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.methods[0].method").value("UPI"))
+                .andExpect(jsonPath("$.methods[0].paidValue").value(2500.00));
     }
 
     @Test

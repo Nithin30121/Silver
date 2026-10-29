@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
-  ArrowRight, Boxes, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
+  ArrowRight, Boxes, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
   IndianRupee, Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
   Table2, TrendingDown, TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
@@ -14,15 +14,15 @@ import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import { formatINR } from '../../services/silverRateService';
 import {
   AdminApiError, createCategory, createProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
-  getAdminOrders, getAdminProducts, getCustomerOrders, getEmailStatus, getMessages, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
+  getAdminOrders, getAdminProducts, getCustomerGrowth, getCustomerOrders, getEmailStatus, getMessages, getSalesByCategory, getSalesByPaymentMethod, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
   setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, type AdminCustomer,
   type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
-  type MessageStatus, type ProductInput, type SalesInterval, type SalesPoint, type SalesSeries, type SalesSummary, type StockMovement, type WishlistCount,
+  type CategoryBreakdown, type CustomerGrowth, type MessageStatus, type PaymentBreakdown, type ProductInput, type SalesInterval, type SalesSeries, type SalesSummary, type StockMovement, type WishlistCount,
   type StockReason
 } from '../../services/adminService';
 import '../../styles/admin.css';
 
-type Section = 'overview' | 'products' | 'categories' | 'inventory' | 'orders' | 'customers' | 'messages';
+type Section = 'overview' | 'products' | 'categories' | 'inventory' | 'orders' | 'customers' | 'messages' | 'reports';
 type Theme = 'light' | 'dark';
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 type Notify = (kind: 'success' | 'error', text: string) => void;
@@ -42,11 +42,12 @@ const SECTIONS: Record<Section, { title: string; description: string; icon: Reac
   orders: { title: 'Orders', description: 'Review customer orders and move them along.', icon: <ShoppingBag size={18} /> },
   customers: { title: 'Customers', description: 'See who shops with you.', icon: <Users size={18} /> },
   messages: { title: 'Messages', description: 'Questions people send through the contact form.', icon: <Inbox size={18} /> },
+  reports: { title: 'Reports', description: 'Sales by category and payment method, and how your customers grow.', icon: <ChartColumn size={18} /> },
 };
 const NAV_GROUPS: Array<{ label: string; items: Section[] }> = [
   { label: '', items: ['overview'] },
   { label: 'Catalogue', items: ['products', 'categories', 'inventory'] },
-  { label: 'Sales', items: ['orders', 'customers', 'messages'] },
+  { label: 'Sales', items: ['orders', 'customers', 'messages', 'reports'] },
 ];
 
 const ORDER_STATUSES = ['PENDING_PAYMENT', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
@@ -324,6 +325,7 @@ export const AdminDashboard: React.FC = () => {
             {section === 'orders' && <OrderManager initialStatus={orderStatusFilter} refreshedAt={loadedAt} onView={setViewingOrder} notify={notify} />}
             {section === 'customers' && <CustomerManager refreshedAt={loadedAt} onViewOrder={setViewingOrder} notify={notify} />}
             {section === 'messages' && <MessageManager refreshedAt={loadedAt} emailEnabled={emailEnabled} notify={notify} onChanged={refreshNewMessages} />}
+            {section === 'reports' && <ReportsPage refreshedAt={loadedAt} categories={flatCategories} timeZone={summary?.timeZone} />}
           </main>
         </div>
       </div>
@@ -693,7 +695,7 @@ const spanText = (from: string, to: string) => from === to
   ? DAY_MONTH_YEAR.format(parseDay(from)) : DAY_MONTH_YEAR.formatRange(parseDay(from), parseDay(to));
 
 /** What one bar covers, trimmed to the chosen dates: a week can start before the range does. */
-const periodText = (point: SalesPoint, interval: SalesInterval, from: string, to: string) => {
+const periodText = (point: { start: string }, interval: SalesInterval, from: string, to: string) => {
   if (interval === 'DAY') return WEEKDAY_DATE.format(parseDay(point.start));
   const lastDay = addDays(nextBucket(point.start, interval), -1);
   const start = point.start < from ? from : point.start;
@@ -702,17 +704,18 @@ const periodText = (point: SalesPoint, interval: SalesInterval, from: string, to
   return spanText(start, end);
 };
 
-const axisText = (point: SalesPoint, interval: SalesInterval, from: string) => interval === 'MONTH'
+const axisText = (point: { start: string }, interval: SalesInterval, from: string) => interval === 'MONTH'
   ? SHORT_MONTH_YEAR.format(parseDay(point.start)) : DAY_MONTH.format(parseDay(point.start < from ? from : point.start));
 
 const orderCountText = (count: number) => `${count} ${count === 1 ? 'order' : 'orders'}`;
 
-/** A round top value and about four steps below it: ₹0, ₹2.5K, ₹5K, ₹7.5K, ₹10K. */
-const valueTicks = (max: number) => {
-  if (max <= 0) return [0, 250, 500, 750, 1000];
+/** A round top value and about four steps below it: ₹0, ₹2.5K, ₹5K, ₹7.5K, ₹10K. Counts step in whole numbers. */
+const valueTicks = (max: number, wholeNumbers = false) => {
+  if (max <= 0) return wholeNumbers ? [0, 1, 2, 3, 4] : [0, 250, 500, 750, 1000];
   const rough = max / 4;
   const magnitude = 10 ** Math.floor(Math.log10(rough));
-  const step = [1, 2, 2.5, 5, 10].map((factor) => factor * magnitude).find((candidate) => candidate >= rough) ?? 10 * magnitude;
+  const nice = [1, 2, 2.5, 5, 10].map((factor) => factor * magnitude).find((candidate) => candidate >= rough) ?? 10 * magnitude;
+  const step = wholeNumbers ? Math.max(1, Math.ceil(nice)) : nice;
   const top = Math.ceil(max / step) * step;
   return Array.from({ length: Math.round(top / step) + 1 }, (_, index) => index * step);
 };
@@ -724,12 +727,32 @@ const columnPath = (x: number, y: number, width: number, height: number) => {
     + `A${radius},${radius} 0 0 1 ${x + width},${y + radius}V${y + height}Z`;
 };
 
-const SalesTrend: React.FC<{ timeZone?: string; refreshedAt: Date | null }> = ({ timeZone, refreshedAt }) => {
+/** The date range shared by the sales chart and the Reports page: a preset or custom days, and an interval. */
+function useReportRange(timeZone?: string) {
   const today = todayIn(timeZone);
   const [range, setRange] = useState<SalesRange>({ preset: '30d', interval: 'DAY', customFrom: '', customTo: '' });
   const from = range.preset === 'custom' ? range.customFrom : presetFrom(range.preset, today);
   const to = range.preset === 'custom' ? range.customTo : today;
-  const { interval } = range;
+  const choosePreset = (preset: RangePreset) => setRange((current) => preset === 'custom'
+    ? { ...current, preset, customFrom: current.customFrom || from, customTo: current.customTo || to }
+    : { ...current, preset, interval: PRESET_INTERVALS[preset] });
+  const chooseInterval = (interval: SalesInterval) => setRange((current) => ({ ...current, interval }));
+  return { range, setRange, today, from, to, interval: range.interval, choosePreset, chooseInterval };
+}
+
+/** The From and To boxes, shown when the Custom preset is chosen. */
+const RangeDates: React.FC<{ range: SalesRange; today: string; setRange: React.Dispatch<React.SetStateAction<SalesRange>> }> = ({ range, today, setRange }) =>
+  range.preset !== 'custom' ? null : (
+    <div className="admin-trend-dates">
+      <label>From<input type="date" value={range.customFrom} max={range.customTo || today}
+        onChange={(event) => setRange((existing) => ({ ...existing, customFrom: event.target.value }))} /></label>
+      <label>To<input type="date" value={range.customTo} min={range.customFrom || undefined} max={today}
+        onChange={(event) => setRange((existing) => ({ ...existing, customTo: event.target.value }))} /></label>
+    </div>
+  );
+
+const SalesTrend: React.FC<{ timeZone?: string; refreshedAt: Date | null }> = ({ timeZone, refreshedAt }) => {
+  const { range, setRange, today, from, to, interval, choosePreset, chooseInterval } = useReportRange(timeZone);
   const problem = rangeProblem(from, to, interval);
   const request = `${from}/${to}/${interval}/${refreshedAt?.getTime() ?? 0}`;
 
@@ -745,10 +768,6 @@ const SalesTrend: React.FC<{ timeZone?: string; refreshedAt: Date | null }> = ({
       .catch((cause: unknown) => { if (!cancelled) setResult({ request, error: cause }); });
     return () => { cancelled = true; };
   }, [from, to, interval, request, problem]);
-
-  const choosePreset = (preset: RangePreset) => setRange((current) => preset === 'custom'
-    ? { ...current, preset, customFrom: current.customFrom || from, customTo: current.customTo || to }
-    : { ...current, preset, interval: PRESET_INTERVALS[preset] });
 
   const isLoading = !problem && result?.request !== request;
   const current = result?.request === request ? result : null;
@@ -767,22 +786,14 @@ const SalesTrend: React.FC<{ timeZone?: string; refreshedAt: Date | null }> = ({
           <div className="admin-trend-controls">
             <Segmented label="Date range" value={range.preset} options={RANGE_PRESETS} onChange={choosePreset} />
             <div className="admin-trend-controls-end">
-              <Segmented label="Show sales by" value={interval} options={INTERVAL_OPTIONS}
-                onChange={(value) => setRange((existing) => ({ ...existing, interval: value }))} />
+              <Segmented label="Show sales by" value={interval} options={INTERVAL_OPTIONS} onChange={chooseInterval} />
               <button type="button" className="admin-button is-secondary" aria-pressed={view === 'table'}
                 onClick={() => setView(view === 'chart' ? 'table' : 'chart')}>
                 {view === 'chart' ? <><Table2 size={15} /> Table</> : <><TrendingUp size={15} /> Chart</>}
               </button>
             </div>
           </div>
-          {range.preset === 'custom' && (
-            <div className="admin-trend-dates">
-              <label>From<input type="date" value={range.customFrom} max={range.customTo || today}
-                onChange={(event) => setRange((existing) => ({ ...existing, customFrom: event.target.value }))} /></label>
-              <label>To<input type="date" value={range.customTo} min={range.customFrom || undefined} max={today}
-                onChange={(event) => setRange((existing) => ({ ...existing, customTo: event.target.value }))} /></label>
-            </div>
-          )}
+          <RangeDates range={range} today={today} setRange={setRange} />
 
           {problem ? <div className="admin-trend-message"><FormError text={problem} /></div>
             : current?.error ? <div className="admin-trend-message"><FormError text={errorText(current.error, 'Unable to load sales.')} /></div>
@@ -828,7 +839,16 @@ const SalesTrendSummary: React.FC<{ series: SalesSeries }> = ({ series }) => {
   );
 };
 
-const SalesColumns: React.FC<{ series: SalesSeries }> = ({ series }) => {
+type ChartColumn = { start: string; value: number };
+
+/**
+ * A single-series column chart over days, weeks or months, with a tooltip on hover or keyboard
+ * focus. describe gives the tooltip's value and detail lines for a column.
+ */
+const ColumnChart: React.FC<{
+  columns: ChartColumn[]; interval: SalesInterval; from: string; to: string; label: string; wholeNumbers?: boolean;
+  formatTick: (value: number) => string; describe: (index: number) => { value: string; detail?: string };
+}> = ({ columns, interval, from, to, label, wholeNumbers = false, formatTick, describe }) => {
   const [width, setWidth] = useState(0);
   const [active, setActive] = useState<number | null>(null);
   const measure = useCallback((node: HTMLDivElement | null) => {
@@ -838,10 +858,10 @@ const SalesColumns: React.FC<{ series: SalesSeries }> = ({ series }) => {
     return () => observer.disconnect();
   }, []);
 
-  const { points, interval, from, to } = series;
+  const points = columns;
   const count = points.length;
-  const values = points.map((point) => Number(point.orderValue));
-  const ticks = valueTicks(Math.max(...values));
+  const values = points.map((point) => point.value);
+  const ticks = valueTicks(Math.max(...values), wholeNumbers);
   const top = ticks[ticks.length - 1];
   const plotWidth = Math.max(0, width - PLOT.left - PLOT.right);
   const plotHeight = CHART_HEIGHT - PLOT.top - PLOT.bottom;
@@ -870,13 +890,14 @@ const SalesColumns: React.FC<{ series: SalesSeries }> = ({ series }) => {
   };
 
   const point = shown === null ? null : points[shown];
+  const described = shown === null ? null : describe(shown);
   const tooltipSide = shown !== null && centreOf(shown) > width / 2
     ? { right: width - (centreOf(shown) - columnWidth / 2 - 8) }
     : { left: shown === null ? 0 : centreOf(shown) + columnWidth / 2 + 8 };
 
   return (
     <div ref={measure} className="admin-trend-plot" tabIndex={0} role="group"
-      aria-label="Sales chart. Use the left and right arrow keys to hear each bar, or switch to the table."
+      aria-label={label}
       onPointerDown={pick} onPointerMove={pick} onPointerLeave={(event) => { if (event.pointerType === 'mouse') setActive(null); }}
       onKeyDown={step} onFocus={() => setActive((index) => index ?? count - 1)} onBlur={() => setActive(null)}>
       {width > 0 && (
@@ -884,7 +905,7 @@ const SalesColumns: React.FC<{ series: SalesSeries }> = ({ series }) => {
           {ticks.map((tick) => (
             <g key={tick}>
               <line className={tick === 0 ? 'admin-trend-baseline' : 'admin-trend-grid'} x1={PLOT.left} x2={width - PLOT.right} y1={yOf(tick)} y2={yOf(tick)} />
-              <text className="admin-trend-tick" x={PLOT.left - 8} y={yOf(tick)} dy="0.32em" textAnchor="end">{COMPACT_MONEY.format(tick)}</text>
+              <text className="admin-trend-tick" x={PLOT.left - 8} y={yOf(tick)} dy="0.32em" textAnchor="end">{formatTick(tick)}</text>
             </g>
           ))}
           {shown !== null && <rect className="admin-trend-band" x={PLOT.left + shown * slot} y={PLOT.top} width={slot} height={plotHeight} rx={4} />}
@@ -908,16 +929,24 @@ const SalesColumns: React.FC<{ series: SalesSeries }> = ({ series }) => {
       {point && (
         <div className="admin-trend-tooltip" style={tooltipSide}>
           <span>{periodText(point, interval, from, to)}</span>
-          <strong>{money(point.orderValue)}</strong>
-          <span>{orderCountText(point.orderCount)}</span>
+          <strong>{described?.value}</strong>
+          {described?.detail && <span>{described.detail}</span>}
         </div>
       )}
       <p className="admin-sr-only" aria-live="polite">
-        {point ? `${periodText(point, interval, from, to)}: ${money(point.orderValue)}, ${orderCountText(point.orderCount)}` : ''}
+        {point && described ? `${periodText(point, interval, from, to)}: ${described.value}${described.detail ? `, ${described.detail}` : ''}` : ''}
       </p>
     </div>
   );
 };
+
+const SalesColumns: React.FC<{ series: SalesSeries }> = ({ series }) => (
+  <ColumnChart columns={series.points.map((point) => ({ start: point.start, value: Number(point.orderValue) }))}
+    interval={series.interval} from={series.from} to={series.to}
+    label="Sales chart. Use the left and right arrow keys to hear each bar, or switch to the table."
+    formatTick={(value) => COMPACT_MONEY.format(value)}
+    describe={(index) => ({ value: money(series.points[index].orderValue), detail: orderCountText(series.points[index].orderCount) })} />
+);
 
 const SalesTable: React.FC<{ series: SalesSeries }> = ({ series }) => (
   <div className="admin-table-scroll is-bordered admin-trend-table">
@@ -940,6 +969,201 @@ const SalesTable: React.FC<{ series: SalesSeries }> = ({ series }) => (
     </table>
   </div>
 );
+
+/* ---------- Reports ---------- */
+
+/**
+ * Loads one report for the current dates. While new dates load, the previous result stays on screen
+ * (faded) instead of jumping to a skeleton. key is null when the dates can't be reported on.
+ */
+function useReport<T>(key: string | null, load: () => Promise<T>) {
+  const [result, setResult] = useState<{ key: string; data?: T; error?: unknown } | null>(null);
+  const [last, setLast] = useState<T | null>(null);
+  useEffect(() => {
+    if (!key) return;
+    let cancelled = false;
+    load()
+      .then((data) => { if (!cancelled) { setResult({ key, data }); setLast(data); } })
+      .catch((cause: unknown) => { if (!cancelled) setResult({ key, error: cause }); });
+    return () => { cancelled = true; };
+  }, [key, load]);
+  const current = key && result?.key === key ? result : null;
+  const loading = Boolean(key) && !current;
+  return { data: current?.data ?? (loading ? last : null), error: current?.error, loading };
+}
+
+const ReportsPage: React.FC<{ refreshedAt: Date | null; categories: FlatCategory[]; timeZone?: string }> = ({ refreshedAt, categories, timeZone }) => {
+  const { range, setRange, today, from, to, interval, choosePreset, chooseInterval } = useReportRange(timeZone);
+  // The breakdowns don't depend on the interval, so only the growth chart can be held back by a daily limit.
+  const problem = rangeProblem(from, to, 'MONTH');
+  const refresh = refreshedAt?.getTime() ?? 0;
+  return (
+    <>
+      <section className="admin-card admin-report-range">
+        <div className="admin-trend-controls">
+          <Segmented label="Date range" value={range.preset} options={RANGE_PRESETS} onChange={choosePreset} />
+          <span className="admin-hint">Orders placed {from && to && !problem ? spanText(from, to) : '—'} · leaves out cancelled orders</span>
+        </div>
+        <RangeDates range={range} today={today} setRange={setRange} />
+        {problem && <div className="admin-trend-message"><FormError text={problem} /></div>}
+      </section>
+      <div className="admin-report-grid">
+        <CategoryReport from={from} to={to} active={!problem} refresh={refresh} categories={categories} />
+        <PaymentReport from={from} to={to} active={!problem} refresh={refresh} />
+      </div>
+      <CustomerGrowthReport from={from} to={to} interval={interval} onInterval={chooseInterval} active={!problem} refresh={refresh} />
+    </>
+  );
+};
+
+/** A row's share of the whole, as a thin bar with the percentage beside it. */
+const ShareBar: React.FC<{ value: number; total: number }> = ({ value, total }) => {
+  const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+  return (
+    <span className="admin-share" title={`${percent}% of order value`}>
+      <span className="admin-share-track" aria-hidden="true"><span className="admin-share-fill" style={{ width: `${Math.min(100, percent)}%` }} /></span>
+      <span className="admin-num">{percent}%</span>
+    </span>
+  );
+};
+
+const ReportMessage: React.FC<{ error: unknown; fallback: string }> = ({ error, fallback }) => (
+  <div className="admin-trend-message">{error instanceof AdminApiError && error.status === 404 ? <NotOnServerYet /> : <FormError text={errorText(error, fallback)} />}</div>
+);
+
+const CategoryReport: React.FC<{ from: string; to: string; active: boolean; refresh: number; categories: FlatCategory[] }> = ({ from, to, active, refresh, categories }) => {
+  const load = useCallback(() => getSalesByCategory(from, to), [from, to]);
+  const { data, error, loading } = useReport<CategoryBreakdown>(active ? `${from}/${to}/${refresh}` : null, load);
+  const trails = useMemo(() => new Map(categories.map((category) => [category.id, category.trail])), [categories]);
+  const total = data ? Number(data.total.orderValue) : 0;
+  return (
+    <Panel title="Sales by category" action={<span className="admin-hint">A piece in two categories counts in both</span>}>
+      {error ? <ReportMessage error={error} fallback="Unable to load sales by category." /> : !data ? <LoadingRows />
+        : data.categories.length === 0
+          ? <EmptyState icon={<FolderTree size={20} />} title="No sales in these dates" text="Pick a longer range to see which categories sell." />
+          : (
+            <div className={`admin-table-scroll${loading ? ' is-loading' : ''}`} aria-busy={loading}>
+              <table className="admin-table is-compact admin-report-table">
+                <thead><tr><th scope="col">Category</th><th scope="col" className="is-right">Orders</th><th scope="col" className="is-right">Pieces</th>
+                  <th scope="col" className="is-right">Order value</th><th scope="col">Share</th></tr></thead>
+                <tbody>
+                  {data.categories.map((row) => (
+                    <tr key={row.categoryId ?? 'none'}>
+                      <td>{row.categoryId ? trails.get(row.categoryId) ?? 'Deleted category' : <span className="admin-muted">No category</span>}</td>
+                      <td className="is-right admin-num">{row.orderCount}</td>
+                      <td className="is-right admin-num">{row.pieces}</td>
+                      <td className="is-right admin-num">{money(row.orderValue)}</td>
+                      <td><ShareBar value={Number(row.orderValue)} total={total} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot><tr><th scope="row">All orders</th><td className="is-right admin-num">{data.total.orderCount}</td><td />
+                  <td className="is-right admin-num">{money(data.total.orderValue)}</td><td /></tr></tfoot>
+              </table>
+            </div>
+          )}
+    </Panel>
+  );
+};
+
+const PaymentReport: React.FC<{ from: string; to: string; active: boolean; refresh: number }> = ({ from, to, active, refresh }) => {
+  const load = useCallback(() => getSalesByPaymentMethod(from, to), [from, to]);
+  const { data, error, loading } = useReport<PaymentBreakdown>(active ? `${from}/${to}/${refresh}` : null, load);
+  const total = data ? data.methods.reduce((sum, row) => sum + Number(row.orderValue), 0) : 0;
+  return (
+    <Panel title="Sales by payment method" action={<span className="admin-hint">"Paid" is what you've marked as paid</span>}>
+      {error ? <ReportMessage error={error} fallback="Unable to load sales by payment method." /> : !data ? <LoadingRows />
+        : data.methods.length === 0
+          ? <EmptyState icon={<ShoppingBag size={20} />} title="No sales in these dates" text="Pick a longer range to see how customers pay." />
+          : (
+            <div className={`admin-table-scroll${loading ? ' is-loading' : ''}`} aria-busy={loading}>
+              <table className="admin-table is-compact admin-report-table">
+                <thead><tr><th scope="col">Method</th><th scope="col" className="is-right">Orders</th><th scope="col" className="is-right">Order value</th>
+                  <th scope="col" className="is-right">Paid</th><th scope="col">Share</th></tr></thead>
+                <tbody>
+                  {data.methods.map((row) => (
+                    <tr key={row.method}>
+                      <td>{PAYMENT_METHODS[row.method] ?? humanize(row.method)}</td>
+                      <td className="is-right admin-num">{row.orderCount}</td>
+                      <td className="is-right admin-num">{money(row.orderValue)}</td>
+                      <td className="is-right admin-num">{money(row.paidValue)}</td>
+                      <td><ShareBar value={Number(row.orderValue)} total={total} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+    </Panel>
+  );
+};
+
+const customerCountText = (count: number) => `${count.toLocaleString('en-IN')} new ${count === 1 ? 'customer' : 'customers'}`;
+
+const CustomerGrowthReport: React.FC<{ from: string; to: string; interval: SalesInterval; onInterval: (interval: SalesInterval) => void; active: boolean; refresh: number }> = ({ from, to, interval, onInterval, active, refresh }) => {
+  const problem = active ? rangeProblem(from, to, interval) : '';
+  const load = useCallback(() => getCustomerGrowth(from, to, interval), [from, to, interval]);
+  const { data, error, loading } = useReport<CustomerGrowth>(active && !problem ? `${from}/${to}/${interval}/${refresh}` : null, load);
+  const [view, setView] = useState<'chart' | 'table'>('chart');
+  const change = data && data.previous > 0 ? Math.round(((data.total - data.previous) / data.previous) * 100) : null;
+  const previousSpan = data ? (() => { const days = daysBetween(data.from, data.to) + 1; const previousTo = addDays(data.from, -1);
+    return spanText(addDays(previousTo, -(days - 1)), previousTo); })() : '';
+  return (
+    <section className="admin-card admin-trend">
+      <header className="admin-card-header">
+        <h2>Customer growth</h2>
+        <span className="admin-hint">New customer accounts · admins left out</span>
+      </header>
+      <div className="admin-trend-controls">
+        <Segmented label="Show new customers by" value={interval} options={INTERVAL_OPTIONS} onChange={onInterval} />
+        <button type="button" className="admin-button is-secondary" aria-pressed={view === 'table'} onClick={() => setView(view === 'chart' ? 'table' : 'chart')}>
+          {view === 'chart' ? <><Table2 size={15} /> Table</> : <><TrendingUp size={15} /> Chart</>}
+        </button>
+      </div>
+      {problem ? <div className="admin-trend-message"><FormError text={problem} /></div>
+        : error ? <ReportMessage error={error} fallback="Unable to load customer growth." />
+          : !data ? <div className="admin-trend-message"><LoadingRows /></div>
+            : (
+              <div className={`admin-trend-body${loading ? ' is-loading' : ''}`} aria-busy={loading}>
+                <div className="admin-trend-summary">
+                  <div className="admin-trend-total">
+                    <strong className="admin-num">{customerCountText(data.total)}</strong>
+                    <span>{spanText(data.from, data.to)} · {data.allCustomers.toLocaleString('en-IN')} customers in all</span>
+                  </div>
+                  {change !== null ? (
+                    <p className={`admin-trend-delta${change > 0 ? ' is-up' : change < 0 ? ' is-down' : ''}`}>
+                      {change > 0 ? <TrendingUp size={15} aria-hidden="true" /> : change < 0 ? <TrendingDown size={15} aria-hidden="true" /> : null}
+                      <span>{change === 0 ? 'The same as' : `${Math.abs(change).toLocaleString('en-IN')}% ${change > 0 ? 'more' : 'fewer'} than`} {previousSpan} ({data.previous})</span>
+                    </p>
+                  ) : data.total > 0 ? <p className="admin-trend-delta">No new customers from {previousSpan} to compare with</p> : null}
+                </div>
+                {data.total === 0
+                  ? <EmptyState icon={<Users size={20} />} title="No new customers in these dates" text="Accounts appear here as people sign up." />
+                  : view === 'chart'
+                    ? <ColumnChart columns={data.points.map((point) => ({ start: point.start, value: point.newCustomers }))} wholeNumbers
+                        interval={data.interval} from={data.from} to={data.to}
+                        label="Customer growth chart. Use the left and right arrow keys to hear each bar, or switch to the table."
+                        formatTick={(value) => value.toLocaleString('en-IN')}
+                        describe={(index) => ({ value: customerCountText(data.points[index].newCustomers) })} />
+                    : (
+                      <div className="admin-table-scroll is-bordered admin-trend-table">
+                        <table className="admin-table is-compact">
+                          <thead><tr><th scope="col">{PERIOD_HEADINGS[data.interval]}</th><th scope="col" className="is-right">New customers</th></tr></thead>
+                          <tbody>
+                            {data.points.map((point) => (
+                              <tr key={point.start}><td>{periodText(point, data.interval, data.from, data.to)}</td>
+                                <td className="is-right admin-num">{point.newCustomers}</td></tr>
+                            ))}
+                          </tbody>
+                          <tfoot><tr><th scope="row">Total</th><td className="is-right admin-num">{data.total}</td></tr></tfoot>
+                        </table>
+                      </div>
+                    )}
+              </div>
+            )}
+    </section>
+  );
+};
 
 /* ---------- Silver rate ---------- */
 
@@ -1379,12 +1603,16 @@ const Inventory: React.FC<{ products: ApiProduct[]; loaded: boolean; refreshedAt
   const lowCount = products.filter((product) => product.stockQuantity > 0 && product.stockQuantity <= LOW_STOCK).length;
   const outCount = products.filter((product) => product.stockQuantity === 0).length;
   const units = products.reduce((sum, product) => sum + product.stockQuantity, 0);
+  // Only selling prices are stored, so stock is valued at what it would sell for, not what it cost.
+  const stockValue = products.reduce((sum, product) => sum + product.stockQuantity * Number(product.price), 0);
   const visible = sorted.filter((product) => filter === 'all'
     || (filter === 'out' ? product.stockQuantity === 0 : product.stockQuantity > 0 && product.stockQuantity <= LOW_STOCK));
   return (
     <>
-      <div className="admin-summary">
+      <div className="admin-summary is-four">
         <div><span>Pieces in stock</span><strong className="admin-num">{loaded ? units : '—'}</strong></div>
+        <div title="Every piece in stock at its selling price"><span>Stock value</span><strong className="admin-num">{loaded ? money(stockValue) : '—'}</strong>
+          <small>At selling price</small></div>
         <div className={lowCount ? 'is-warning' : ''}><span>Low stock</span><strong className="admin-num">{loaded ? lowCount : '—'}</strong></div>
         <div className={outCount ? 'is-danger' : ''}><span>Out of stock</span><strong className="admin-num">{loaded ? outCount : '—'}</strong></div>
       </div>
@@ -1403,7 +1631,8 @@ const Inventory: React.FC<{ products: ApiProduct[]; loaded: boolean; refreshedAt
           : (
             <div className="admin-table-scroll">
               <table className="admin-table">
-                <thead><tr><th>Product</th><th>SKU</th><th>Status</th><th>In stock</th><th><span className="admin-sr-only">Actions</span></th></tr></thead>
+                <thead><tr><th>Product</th><th>SKU</th><th>Status</th><th>In stock</th><th className="is-right">Value</th>
+                  <th><span className="admin-sr-only">Actions</span></th></tr></thead>
                 <tbody>
                   {visible.map((product) => (
                     <tr key={product.id}>
@@ -1411,6 +1640,7 @@ const Inventory: React.FC<{ products: ApiProduct[]; loaded: boolean; refreshedAt
                       <td data-label="SKU" className="admin-mono">{product.sku || '—'}</td>
                       <td data-label="Status"><LiveBadge isActive={product.isActive} /></td>
                       <td data-label="In stock"><StockLevel quantity={product.stockQuantity} /></td>
+                      <td data-label="Value" className="admin-num is-right">{money(product.stockQuantity * Number(product.price))}</td>
                       <td className="admin-row-actions">
                         <button className="admin-button is-ghost is-small" onClick={() => setHistoryFor(product)}><History size={14} /> History</button>
                         <button className="admin-button is-secondary is-small" onClick={() => onEdit(product)}>Update stock</button>

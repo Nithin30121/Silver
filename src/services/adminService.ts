@@ -225,6 +225,32 @@ export const updateSilverRateSettings = (update: { ratePerGram: number | null })
 /** Only pieces added at least once are listed. */
 export const getWishlistCounts = () => adminRequest<WishlistCount[]>('/admin/wishlist-counts');
 
+/** categoryId is null for pieces in no category. A piece in two categories counts in both. */
+export interface CategorySales { categoryId: string | null; orderCount: number; pieces: number; orderValue: number | string }
+export interface CategoryBreakdown { from: string; to: string; categories: CategorySales[]; total: { orderCount: number; orderValue: number | string } }
+
+/** method is UPI, CARD or COD, as chosen at checkout; paidValue is what an admin has marked as paid. */
+export interface PaymentMethodSales { method: string; orderCount: number; orderValue: number | string; paidValue: number | string }
+export interface PaymentBreakdown { from: string; to: string; methods: PaymentMethodSales[] }
+
+export interface CustomerGrowth {
+  from: string;
+  to: string;
+  interval: SalesInterval;
+  points: Array<{ start: string; newCustomers: number }>;
+  total: number;
+  previous: number;
+  allCustomers: number;
+}
+
+const rangeQuery = (from: string, to: string, extra: Record<string, string> = {}) => new URLSearchParams({ from, to, ...extra });
+export const getSalesByCategory = (from: string, to: string) =>
+  adminRequest<CategoryBreakdown>(`/admin/reports/sales-by-category?${rangeQuery(from, to)}`);
+export const getSalesByPaymentMethod = (from: string, to: string) =>
+  adminRequest<PaymentBreakdown>(`/admin/reports/sales-by-payment-method?${rangeQuery(from, to)}`);
+export const getCustomerGrowth = (from: string, to: string, interval: SalesInterval) =>
+  adminRequest<CustomerGrowth>(`/admin/reports/customer-growth?${rangeQuery(from, to, { interval })}`);
+
 /** Days are ISO dates in the shop's time zone, for example 2026-10-29; both ends are included. */
 export const getSalesSeries = (from: string, to: string, interval: SalesInterval) =>
   adminRequest<SalesSeries>(`/admin/reports/sales?${new URLSearchParams({ from, to, interval })}`);

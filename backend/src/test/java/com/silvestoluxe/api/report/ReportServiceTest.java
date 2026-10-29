@@ -88,6 +88,34 @@ class ReportServiceTest {
         assertEquals("Asia/Kolkata", series.timeZone());
     }
 
+    @Test
+    void refusesBadRangesForTheBreakdownsToo() {
+        ResponseStatusException reversed = assertThrows(ResponseStatusException.class,
+                () -> reports.salesByCategory(LocalDate.of(2026, 10, 29), LocalDate.of(2026, 10, 1)));
+        assertEquals(HttpStatus.BAD_REQUEST, reversed.getStatusCode());
+        assertThrows(ResponseStatusException.class, () -> reports.salesByPaymentMethod(null, LocalDate.of(2026, 10, 29)));
+        assertThrows(ResponseStatusException.class,
+                () -> reports.customerGrowth(LocalDate.of(2025, 1, 1), LocalDate.of(2026, 10, 29), ReportService.Interval.DAY));
+        verifyNoInteractions(jdbcTemplate);
+    }
+
+    @Test
+    void countsNewCustomersPerDayAndComparesWithTheSameLengthBefore() {
+        // 1 to 30 Oct is 30 days, so the comparison is 1 to 30 Sept, counted from midnight in India.
+        when(jdbcTemplate.queryForObject(anyString(), eq(Long.class),
+                eq(Timestamp.from(Instant.parse("2026-08-31T18:30:00Z"))), eq(Timestamp.from(Instant.parse("2026-09-30T18:30:00Z")))))
+                .thenReturn(3L);
+        when(jdbcTemplate.queryForObject(anyString(), eq(Long.class))).thenReturn(10L);
+
+        ReportService.CustomerGrowth growth = reports.customerGrowth(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 30), ReportService.Interval.DAY);
+
+        assertEquals(30, growth.points().size());
+        assertTrue(growth.points().stream().allMatch(point -> point.newCustomers() == 0));
+        assertEquals(0, growth.total());
+        assertEquals(3, growth.previous());
+        assertEquals(10, growth.allCustomers());
+    }
+
     private void assertRefused(LocalDate from, LocalDate to, ReportService.Interval interval, String message) {
         ResponseStatusException refused = assertThrows(ResponseStatusException.class, () -> reports.sales(from, to, interval));
         assertEquals(HttpStatus.BAD_REQUEST, refused.getStatusCode());
