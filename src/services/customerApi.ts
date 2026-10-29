@@ -2,6 +2,7 @@
 // Every request carries the customer's short-lived Supabase access token. The API checks it and
 // only ever shows or changes the token owner's own orders, addresses and account.
 
+import { fetchWhileWaking } from '../lib/serverRetry';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 
 const configuredBaseUrl = import.meta.env.VITE_CATALOG_API_URL?.trim();
@@ -46,14 +47,15 @@ async function optionalAccessToken(): Promise<string | null> {
 /**
  * Sends one request as the signed-in customer. The API's own message is shown when it has one
  * (it never contains internal details); otherwise `fallback` is. With signIn "optional" a visitor
- * may send it too, and a signed-in customer's token still goes along.
+ * may send it too, and a signed-in customer's token still goes along. Reads wait for a waking
+ * server; orders and other changes are sent once.
  */
 export async function customerRequest<T>(path: string, fallback: string,
   init: { method?: string; body?: unknown; signIn?: 'required' | 'optional' } = {}): Promise<T> {
   const accessToken = init.signIn === 'optional' ? await optionalAccessToken() : await customerAccessToken();
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetchWhileWaking(`${API_BASE_URL}${path}`, {
       method: init.method ?? 'GET',
       headers: {
         Accept: 'application/json',

@@ -1,3 +1,4 @@
+import { isWakingStatus, pause, WAKE_RETRY_DELAYS_MS } from '../lib/serverRetry';
 import type { CatalogueCategory } from '../types';
 
 const configuredBaseUrl = import.meta.env.VITE_CATALOG_API_URL?.trim();
@@ -38,13 +39,6 @@ export interface CatalogueSnapshot {
   products: ApiProduct[];
 }
 
-/**
- * The API runs on a free server that sleeps when nobody has visited for a while and takes 30 to
- * 50 seconds to wake. While it wakes, or restarts after a deploy, the browser can't reach it or it
- * answers 502 to 504, so those failures are retried with these pauses, about a minute in all.
- */
-const WAKE_RETRY_DELAYS_MS = [2000, 3000, 5000, 5000, 8000, 10000, 10000, 10000, 10000];
-
 /** retryable is true when the server looks asleep or mid-restart rather than truly failing. */
 export class CatalogueRequestError extends Error {
   readonly retryable: boolean;
@@ -69,17 +63,10 @@ async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
   }
 
   if (!response.ok) {
-    throw new CatalogueRequestError(`Catalogue request failed (${response.status}).`, response.status >= 502 && response.status <= 504);
+    throw new CatalogueRequestError(`Catalogue request failed (${response.status}).`, isWakingStatus(response.status));
   }
 
   return response.json() as Promise<T>;
-}
-
-function pause(milliseconds: number, signal?: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(resolve, milliseconds);
-    signal?.addEventListener('abort', () => { clearTimeout(timer); reject(signal.reason); }, { once: true });
-  });
 }
 
 async function allProducts(signal?: AbortSignal): Promise<ApiProduct[]> {
@@ -98,8 +85,9 @@ async function allProducts(signal?: AbortSignal): Promise<ApiProduct[]> {
 }
 
 /**
- * Fetches fresh public catalogue data on each application load. If the server is still waking up,
- * onWaking is called once and the whole load is tried again until the pauses run out.
+ * Fetches fresh public catalogue data on each application load. If the server is still waking up
+ * (see lib/serverRetry), onWaking is called once and the whole load is tried again until the
+ * pauses run out.
  */
 export async function loadCatalogue(signal?: AbortSignal, onWaking?: () => void): Promise<CatalogueSnapshot> {
   for (let attempt = 0; ; attempt += 1) {

@@ -1,3 +1,4 @@
+import { fetchWhileWaking } from '../lib/serverRetry';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import type { CatalogueCategory } from '../types';
 import type { ApiProduct } from './catalogService';
@@ -156,6 +157,9 @@ export class AdminApiError extends Error {
   }
 }
 
+/** Shown when the server still can't be reached after waiting for it to wake. */
+const UNREACHABLE = "The shop's server isn't answering. It may still be waking up; try again in a minute.";
+
 export async function getAdminIdentity(): Promise<AdminIdentity> {
   const identity = await adminRequest<AdminIdentity>('/me');
   if (identity.role.toLowerCase() !== 'admin') {
@@ -213,9 +217,14 @@ export async function downloadAdminCsv(kind: 'orders' | 'customers', filters: Re
   const search = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => { if (value?.trim()) search.set(key, value.trim()); });
   const token = await accessToken();
-  const response = await fetch(`${API_BASE_URL}/admin/reports/${kind}.csv?${search}`, {
-    headers: { Accept: 'text/csv', Authorization: `Bearer ${token}` }
-  });
+  let response: Response;
+  try {
+    response = await fetchWhileWaking(`${API_BASE_URL}/admin/reports/${kind}.csv?${search}`, {
+      headers: { Accept: 'text/csv', Authorization: `Bearer ${token}` }
+    });
+  } catch {
+    throw new AdminApiError(UNREACHABLE);
+  }
   if (!response.ok) {
     throw new AdminApiError(response.status === 404 ? "Your server doesn't have downloads yet. Deploy the latest backend, then try again."
       : response.status === 401 ? 'Please sign in again.' : `The download failed (${response.status}).`, response.status);
@@ -314,6 +323,7 @@ export function setCategoryActive(id: string, isActive: boolean) {
   return adminRequest<CatalogueCategory>(`/admin/categories/${id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive }) });
 }
 
+/** Reads wait for a waking server (see lib/serverRetry); saves, uploads and status changes are sent once. */
 async function adminRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = await accessToken();
   const headers = new Headers(init.headers);
@@ -321,7 +331,12 @@ async function adminRequest<T>(path: string, init: RequestInit = {}): Promise<T>
   headers.set('Authorization', `Bearer ${token}`);
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json');
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
+  let response: Response;
+  try {
+    response = await fetchWhileWaking(`${API_BASE_URL}${path}`, { ...init, headers });
+  } catch {
+    throw new AdminApiError(UNREACHABLE);
+  }
   const body = await response.json().catch(() => null) as { message?: string } | T | null;
   if (!response.ok) {
     const message = body && typeof body === 'object' && 'message' in body && typeof body.message === 'string'
