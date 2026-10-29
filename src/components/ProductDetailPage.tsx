@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
-  const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo, catalogueStatus } = useShop();
+  const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo, catalogueStatus, catalogueWaking } = useShop();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>('Standard');
@@ -36,7 +36,7 @@ export const ProductDetailPage: React.FC = () => {
   if (!currentProduct && catalogueStatus === 'loading') {
     return (
       <div className="container" style={{ padding: '8rem 2rem', textAlign: 'center', backgroundColor: 'var(--color-black)' }}>
-        <p className="auth-loading" style={{ justifyContent: 'center' }}><span className="auth-spinner" aria-hidden="true" /> Loading this piece…</p>
+        <p className="auth-loading" role="status" style={{ justifyContent: 'center' }}><span className="auth-spinner" aria-hidden="true" /> {catalogueWaking ? 'Opening this piece… The shop is waking up, which can take up to a minute.' : 'Loading this piece…'}</p>
       </div>
     );
   }
