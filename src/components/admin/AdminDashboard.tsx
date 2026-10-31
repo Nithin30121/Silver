@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
-  ArrowRight, Boxes, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, Eye, EyeOff, FolderTree, History, ImagePlus,
+  ArrowRight, Boxes, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, ExternalLink, Eye, EyeOff, FolderTree, History, ImagePlus,
   IndianRupee, Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
   Table2, TrendingDown, TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
@@ -14,10 +14,10 @@ import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import { formatINR } from '../../services/silverRateService';
 import {
   AdminApiError, createCategory, createProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
-  getAdminOrders, getAdminProducts, getCustomerGrowth, getCustomerOrders, getEmailStatus, getMessages, getSalesByCategory, getSalesByPaymentMethod, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
+  getAdminOrders, getAdminProducts, getCustomerGrowth, getCustomerOrders, getEmailStatus, getMessages, getOrderPayments, getRefundsToMake, getSalesByCategory, getSalesByPaymentMethod, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
   setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, type AdminCustomer,
   type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
-  type CategoryBreakdown, type CustomerGrowth, type MessageStatus, type PaymentBreakdown, type ProductInput, type SalesInterval, type SalesSeries, type SalesSummary, type StockMovement, type WishlistCount,
+  type CategoryBreakdown, type CustomerGrowth, type MessageStatus, type OrderPaymentRow, type PaymentBreakdown, type ProductInput, type RefundToMake, type SalesInterval, type SalesSeries, type SalesSummary, type StockMovement, type WishlistCount,
   type StockReason
 } from '../../services/adminService';
 import '../../styles/admin.css';
@@ -63,6 +63,9 @@ const ORDER_TONES: Record<string, Tone> = {
   PENDING_PAYMENT: 'warning', CONFIRMED: 'info', PROCESSING: 'info', SHIPPED: 'info', DELIVERED: 'success', CANCELLED: 'danger'
 };
 const PAYMENT_TONES: Record<string, Tone> = { PENDING: 'warning', PAID: 'success', FAILED: 'danger', REFUNDED: 'neutral' };
+const ONLINE_PAYMENT_TONES: Record<string, Tone> = { CREATED: 'neutral', PAID: 'success', FAILED: 'danger', NEEDS_REFUND: 'warning', REFUNDED: 'neutral' };
+const ONLINE_PAYMENT_LABELS: Record<string, string> = { CREATED: 'Not finished', PAID: 'Paid', FAILED: 'Failed', NEEDS_REFUND: 'Needs refund', REFUNDED: 'Refunded' };
+const razorpayPaymentLink = (paymentId: string) => `https://dashboard.razorpay.com/app/payments/${encodeURIComponent(paymentId)}`;
 // Statuses the server emails customers about; Processing is internal.
 const EMAIL_STATUSES = new Set(['CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED']);
 const STOCK_REASONS: Record<StockReason, string> = {
@@ -494,6 +497,35 @@ function Segmented<T extends string>({ value, options, onChange, label }: { valu
 
 /* ---------- Overview ---------- */
 
+/** Money that arrived for an order that couldn't take it. Shown here so it can't be missed without email. */
+const RefundsToMake: React.FC<{ refreshedAt: Date | null }> = ({ refreshedAt }) => {
+  const [refunds, setRefunds] = useState<RefundToMake[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    getRefundsToMake().then((rows) => { if (!cancelled) setRefunds(rows); }).catch(() => { /* the order pages still show these */ });
+    return () => { cancelled = true; };
+  }, [refreshedAt]);
+  if (refunds.length === 0) return null;
+  return (
+    <div className="admin-callout is-warning admin-refunds" role="status">
+      <TriangleAlert size={16} />
+      <div>
+        <strong>{refunds.length === 1 ? '1 payment needs a refund.' : `${refunds.length} payments need a refund.`}</strong>
+        <ul>
+          {refunds.map((refund) => (
+            <li key={refund.razorpayPaymentId}>
+              {money(refund.amount)} for order {refund.orderNumber}.{refund.reason ? ` ${refund.reason}` : ''}{' '}
+              <a className="admin-link" href={razorpayPaymentLink(refund.razorpayPaymentId)} target="_blank" rel="noopener noreferrer">
+                Refund in Razorpay <ExternalLink size={12} aria-hidden="true" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
 const Overview: React.FC<{
   products: ApiProduct[]; productTotal: number | null; recentOrders: OrderResponse[]; orderTotal: number | null; customerTotal: number | null;
   summary: SalesSummary | null | undefined; recentMovements: StockMovement[] | null | undefined; lowStock: ApiProduct[]; loaded: boolean;
@@ -505,6 +537,7 @@ const Overview: React.FC<{
   const toShip = (byStatus.CONFIRMED ?? 0) + (byStatus.PROCESSING ?? 0);
   return (
     <>
+      <RefundsToMake refreshedAt={refreshedAt} />
       <div className="admin-stats">
         <StatCard icon={<ShoppingBag size={18} />} label="Orders" value={orderTotal ?? '—'} onClick={() => onNavigate('orders')}
           note={summary && orderTotal ? `${toShip} to ship · ${byStatus.PENDING_PAYMENT ?? 0} awaiting payment` : 'All time'} />
@@ -1836,6 +1869,47 @@ const DownloadButton: React.FC<{ title: string; onDownload: () => Promise<void>;
 /** Today's date as 2026-10-27, for download file names. */
 const today = () => new Date().toLocaleDateString('en-CA');
 
+/** Each attempt to pay this order online; hidden for orders that never used Razorpay. */
+const OnlinePayments: React.FC<{ orderId: string }> = ({ orderId }) => {
+  const [payments, setPayments] = useState<OrderPaymentRow[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    getOrderPayments(orderId).then((rows) => { if (!cancelled) setPayments(rows); }).catch(() => { /* the order still shows its payment status */ });
+    return () => { cancelled = true; };
+  }, [orderId]);
+  if (payments.length === 0) return null;
+  return (
+    <>
+      <h3 className="admin-subheading">Online payments</h3>
+      <div className="admin-table-scroll is-bordered">
+        <table className="admin-table is-compact">
+          <thead><tr><th>Started</th><th>Status</th><th>Method</th><th className="is-right">Amount</th><th>Razorpay</th></tr></thead>
+          <tbody>
+            {payments.map((payment) => (
+              <tr key={payment.id}>
+                <td data-label="Started">{formatDateTime(payment.createdAt)}</td>
+                <td data-label="Status">
+                  <Badge tone={ONLINE_PAYMENT_TONES[payment.status] ?? 'neutral'}>{ONLINE_PAYMENT_LABELS[payment.status] ?? humanize(payment.status)}</Badge>
+                  {payment.failureReason && <small>{payment.failureReason}</small>}
+                </td>
+                <td data-label="Method">{payment.method ? PAYMENT_METHODS[payment.method.toUpperCase()] ?? humanize(payment.method.toUpperCase()) : '—'}</td>
+                <td data-label="Amount" className="admin-num is-right">{money(payment.amount)}</td>
+                <td data-label="Razorpay">
+                  {payment.razorpayPaymentId ? (
+                    <a className="admin-link" href={razorpayPaymentLink(payment.razorpayPaymentId)} target="_blank" rel="noopener noreferrer">
+                      {payment.razorpayPaymentId} <ExternalLink size={12} aria-hidden="true" />
+                    </a>
+                  ) : '—'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+};
+
 const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | null; onClose: () => void; onSaved: () => void; notify: Notify }> = ({ order, emailEnabled, onClose, onSaved, notify }) => {
   const [status, setStatus] = useState(order.status);
   const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus);
@@ -1923,6 +1997,8 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
         </table>
       </div>
 
+      <OnlinePayments orderId={order.id} />
+
       <h3 className="admin-subheading">Update order</h3>
       <div className="admin-form is-flat">
         <Field label="Order status" hint={isClosed ? 'This order is closed, so its status can no longer change.' : 'Only the next allowed steps are listed.'}>
@@ -1951,6 +2027,9 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
         </>}
         {status === 'CANCELLED' && order.status !== 'CANCELLED' && (
           <p className="admin-callout is-warning is-wide"><TriangleAlert size={16} /> Cancelling returns this order's pieces to stock. It can't be undone.</p>
+        )}
+        {status === 'CANCELLED' && order.status !== 'CANCELLED' && order.paymentStatus === 'PAID' && (
+          <p className="admin-callout is-warning is-wide"><TriangleAlert size={16} /> This order was paid. Cancelling doesn't return the money. If it was paid online, refund it in Razorpay and this order will show Refunded by itself.</p>
         )}
         {customerHearsAboutIt && emailEnabled !== null && (
           <Switch checked={emailEnabled && emailCustomer} disabled={!emailEnabled} onChange={setEmailCustomer}

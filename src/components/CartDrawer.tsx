@@ -3,12 +3,26 @@ import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { drawerSlide } from '../lib/motion';
 import { useAuth } from '../context/AuthContext';
-import { createOrder, type PaymentMethod } from '../services/orderService';
+import { createOrder, loadPaymentOptions, type OrderResponse, type PaymentMethod } from '../services/orderService';
+import { payForOrder } from '../lib/razorpayCheckout';
+import { formatTime, PAYMENT_METHODS } from '../lib/orderFormat';
 import { createAddress, formatAddress, listAddresses, MAX_SAVED_ADDRESSES, type SavedAddress } from '../services/accountService';
 import { INDIAN_STATES, normalisePin } from '../lib/addressValidation';
-import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2, Sparkles } from 'lucide-react';
+import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2, CreditCard, Sparkles } from 'lucide-react';
 
 const NEW_ADDRESS = 'new';
+const LATER_PAYMENT_CHOICES = [
+  { id: 'upi', label: 'UPI (Instant Google Pay / PhonePe / Paytm)' },
+  { id: 'card', label: 'Credit / Debit Card (Visa, Mastercard, RuPay)' },
+  { id: 'cod', label: 'Cash on Delivery (Verified PIN)' }
+];
+const ONLINE_PAYMENT_CHOICES = [
+  { id: 'online', label: 'Pay Online (UPI, Cards, Netbanking, Wallets)' },
+  { id: 'cod', label: 'Cash on Delivery (Verified PIN)' }
+];
+
+/** How far an order that pays online has got: not yet paid, confirming with Razorpay, or paid. */
+type PaymentStage = 'unpaid' | 'confirming' | 'paid';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -43,6 +57,12 @@ export const CartDrawer: React.FC = () => {
   const [orderId, setOrderId] = useState<string>('');
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [onlinePayments, setOnlinePayments] = useState(false);
+  // The order being paid online; null for orders paid some other way.
+  const [payingOrder, setPayingOrder] = useState<OrderResponse | null>(null);
+  const [paymentStage, setPaymentStage] = useState<PaymentStage>('unpaid');
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isPaying, setIsPaying] = useState(false);
 
   const fillFromAddress = (address: SavedAddress) => setFormData((current) => ({
     ...current,
@@ -76,6 +96,15 @@ export const CartDrawer: React.FC = () => {
       })
       // Checkout still works without them: the customer types the address instead.
       .catch(() => { if (!cancelled) { setSavedAddresses(null); setSelectedAddressId(NEW_ADDRESS); } });
+    loadPaymentOptions()
+      .then(({ online }) => {
+        if (cancelled) return;
+        setOnlinePayments(online);
+        const choices = online ? ONLINE_PAYMENT_CHOICES : LATER_PAYMENT_CHOICES;
+        setFormData((current) => choices.some((choice) => choice.id === current.paymentMethod)
+          ? current : { ...current, paymentMethod: choices[0].id });
+      })
+      .catch(() => { /* Checkout still offers the other choices; the server has the final say. */ });
     return () => { cancelled = true; };
   }, [isAtShipping]);
 
@@ -87,6 +116,24 @@ export const CartDrawer: React.FC = () => {
     currency: 'INR',
     maximumFractionDigits: 0
   }).format(cartSubtotal);
+
+  const paymentChoices = onlinePayments ? ONLINE_PAYMENT_CHOICES : LATER_PAYMENT_CHOICES;
+  const paysOnline = formData.paymentMethod === 'online';
+
+  // Opens Razorpay's window. Closing it leaves the order saved, so the customer can pay again from here.
+  const payNow = async (order: OrderResponse) => {
+    setIsPaying(true);
+    setPaymentError(null);
+    try {
+      const outcome = await payForOrder(order.id);
+      if (outcome.kind === 'paid') setPaymentStage('paid');
+      else if (outcome.kind === 'confirming') setPaymentStage('confirming');
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'We could not start the payment. Please try again.');
+    } finally {
+      setIsPaying(false);
+    }
+  };
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,8 +158,12 @@ export const CartDrawer: React.FC = () => {
         shippingPostalCode: normalisePin(formData.pincode),
       });
       setOrderId(order.orderNumber);
+      setPayingOrder(paysOnline ? order : null);
+      setPaymentStage('unpaid');
+      setPaymentError(null);
       setCheckoutStep('confirmation');
       clearCart();
+      if (paysOnline) void payNow(order);
       if (!usingSavedAddress && saveNewAddress && canSaveAddress) {
         // The order is already placed, so a problem saving the address is only mentioned, never blocking.
         createAddress({
@@ -145,7 +196,7 @@ export const CartDrawer: React.FC = () => {
           <h2 className="drawer-title">
             {checkoutStep === 'cart' && `Shopping Bag (${cartCount})`}
             {checkoutStep === 'shipping' && 'Secure Checkout'}
-            {checkoutStep === 'confirmation' && 'Order Request Recorded'}
+            {checkoutStep === 'confirmation' && (payingOrder ? 'Your Order' : 'Order Request Recorded')}
           </h2>
           <button onClick={closeDrawer} aria-label="Close drawer" style={{ color: 'var(--color-text)' }}>
             <X size={20} />
@@ -397,11 +448,7 @@ export const CartDrawer: React.FC = () => {
               <div style={{ marginTop: '0.5rem' }}>
                 <span className="eyebrow" style={{ marginBottom: '0.5rem' }}>SELECT PAYMENT METHOD</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  {[
-                    { id: 'upi', label: 'UPI (Instant Google Pay / PhonePe / Paytm)' },
-                    { id: 'card', label: 'Credit / Debit Card (Visa, Mastercard, RuPay)' },
-                    { id: 'cod', label: 'Cash on Delivery (Verified PIN)' }
-                  ].map((method) => (
+                  {paymentChoices.map((method) => (
                     <label
                       key={method.id}
                       style={{
@@ -429,7 +476,9 @@ export const CartDrawer: React.FC = () => {
                   ))}
                 </div>
                 <p style={{ margin: '0.75rem 0 0', color: 'var(--color-text-muted)', fontSize: '0.6875rem', lineHeight: 1.5 }}>
-                  Payment details are confirmed separately; we never collect card numbers or CVV here.
+                  {onlinePayments
+                    ? "Online payments happen in Razorpay's secure window; we never see your card number or CVV."
+                    : 'Payment details are confirmed separately; we never collect card numbers or CVV here.'}
                 </p>
               </div>
             </form>
@@ -438,10 +487,15 @@ export const CartDrawer: React.FC = () => {
           {/* Confirmation Step */}
           {checkoutStep === 'confirmation' && (
             <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-              <CheckCircle2 size={48} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 1.25rem' }} />
-              <span className="eyebrow">ORDER REQUEST RECORDED</span>
+              {payingOrder && paymentStage === 'unpaid'
+                ? <CreditCard size={48} style={{ display: 'block', color: 'var(--color-silver-accent)', margin: '0 auto 1.25rem' }} />
+                : <CheckCircle2 size={48} style={{ display: 'block', color: 'var(--color-silver-accent)', margin: '0 auto 1.25rem' }} />}
+              <span className="eyebrow">
+                {!payingOrder ? 'ORDER REQUEST RECORDED' : paymentStage === 'paid' ? 'PAYMENT RECEIVED'
+                  : paymentStage === 'confirming' ? 'CONFIRMING YOUR PAYMENT' : 'AWAITING PAYMENT'}
+              </span>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>
-                Thank You for Choosing SILVORA
+                {payingOrder && paymentStage === 'unpaid' ? 'Your Order Is Saved' : 'Thank You for Choosing SILVORA'}
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
                 Reference Order Number: <strong style={{ color: 'var(--color-silver-accent)' }}>{orderId}</strong>
@@ -449,13 +503,30 @@ export const CartDrawer: React.FC = () => {
               <div style={{ padding: '1.25rem', backgroundColor: '#121315', fontSize: '0.8125rem', textAlign: 'left', marginBottom: '2rem', border: '1px solid rgba(143, 146, 153, 0.25)', color: 'var(--color-text)' }}>
                 <p><strong>Customer:</strong> {formData.fullName || 'Valued Client'}</p>
                 <p><strong>Destination:</strong> {formData.city || 'India'}, {formData.pincode}</p>
-                <p><strong>Method:</strong> {formData.paymentMethod.toUpperCase()}</p>
+                <p><strong>Method:</strong> {PAYMENT_METHODS[formData.paymentMethod.toUpperCase()] ?? formData.paymentMethod.toUpperCase()}</p>
                 <p style={{ marginTop: '0.75rem', color: 'var(--color-silver-highlight)' }}>
-                  Your order is pending payment confirmation. We will confirm the payment and dispatch steps separately; no payment details were collected here.
+                  {!payingOrder && 'Your order is pending payment confirmation. We will confirm the payment and dispatch steps separately; no payment details were collected here.'}
+                  {payingOrder && paymentStage === 'paid' && "Your payment was received and your order is confirmed. We're getting it ready."}
+                  {payingOrder && paymentStage === 'confirming' && "We're confirming your payment with Razorpay. Your order page will update shortly, so please don't pay again."}
+                  {payingOrder && paymentStage === 'unpaid' && `This order isn't paid yet.${payingOrder.paymentDueAt ? ` Please pay by ${formatTime(payingOrder.paymentDueAt)}, or the pieces go back on sale.` : ''}`}
                 </p>
               </div>
+              {paymentError && (
+                <p role="alert" style={{ margin: '0 0 1rem', color: '#f4a2a2', fontSize: '0.75rem', lineHeight: 1.5 }}>{paymentError}</p>
+              )}
+              {payingOrder && paymentStage === 'unpaid' && (
+                <button
+                  className="btn-primary"
+                  style={{ width: '100%', marginBottom: '0.75rem' }}
+                  disabled={isPaying}
+                  onClick={() => void payNow(payingOrder)}
+                >
+                  <span>{isPaying ? 'Opening Payment…' : 'Pay Now'}</span>
+                  <ShieldCheck size={16} />
+                </button>
+              )}
               <button
-                className="btn-primary"
+                className={payingOrder && paymentStage === 'unpaid' ? 'btn-secondary' : 'btn-primary'}
                 style={{ width: '100%' }}
                 onClick={() => {
                   closeDrawer();
@@ -520,7 +591,7 @@ export const CartDrawer: React.FC = () => {
                 style={{ width: '100%' }}
                 disabled={isSubmitting}
               >
-                <span>{isSubmitting ? 'Recording Order…' : 'Record Order Request'}</span>
+                <span>{isSubmitting ? 'Recording Order…' : paysOnline ? 'Continue to Payment' : onlinePayments ? 'Place Order' : 'Record Order Request'}</span>
                 <ShieldCheck size={16} />
               </button>
             )}

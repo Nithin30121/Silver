@@ -341,6 +341,29 @@ export function updateOrderStatus(id: string, status: string, paymentStatus: str
   });
 }
 
+/** One attempt to pay online. NEEDS_REFUND is money that arrived for an order that couldn't take it. */
+export interface OrderPaymentRow {
+  id: string;
+  amount: number | string;
+  status: 'CREATED' | 'PAID' | 'FAILED' | 'NEEDS_REFUND' | 'REFUNDED';
+  method: string | null;
+  razorpayOrderId: string;
+  razorpayPaymentId: string | null;
+  failureReason: string | null;
+  createdAt: string;
+}
+
+export interface RefundToMake {
+  orderId: string;
+  orderNumber: string;
+  amount: number | string;
+  razorpayPaymentId: string;
+  reason: string | null;
+}
+
+export const getOrderPayments = (orderId: string) => adminRequest<OrderPaymentRow[]>(`/admin/orders/${orderId}/payments`);
+export const getRefundsToMake = () => adminRequest<RefundToMake[]>('/admin/payments/refunds-to-make');
+
 export function createProduct(input: ProductInput) {
   return adminRequest<ApiProduct>('/admin/products', { method: 'POST', body: JSON.stringify(input) });
 }

@@ -55,5 +55,11 @@ public final class OrderDtos {
                            List<ItemResponse> items, List<StatusHistoryResponse> statusHistory,
                            String trackingCarrier, String trackingNumber, String trackingUrl,
                            /** Whether the customer may still cancel this order themselves. */
-                           boolean canCancel) { }
+                           boolean canCancel,
+                           /** Whether the customer can pay for this order online, and until when. */
+                           boolean canPay, Instant paymentDueAt) { }
+
+    /** The customer's own order, as much of it as a payment needs. */
+    public record PaymentTarget(UUID id, String orderNumber, BigDecimal totalAmount, String customerName,
+                                String customerEmail, String customerPhone) { }
 }

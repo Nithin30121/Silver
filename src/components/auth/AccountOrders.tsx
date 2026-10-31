@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useEffectEvent, useState } from 'react';
-import { ArrowLeft, Check, ChevronRight, ExternalLink, Package, Printer, X } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, CreditCard, ExternalLink, Package, Printer, X } from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 import { cancelOrder, loadOrder, loadOrderHistory, type OrderResponse } from '../../services/orderService';
-import { formatDate, isSecureLink, money, PAYMENT_METHODS } from '../../lib/orderFormat';
+import { formatDate, formatTime, isSecureLink, money, PAYMENT_METHODS } from '../../lib/orderFormat';
+import { payForOrder } from '../../lib/razorpayCheckout';
 import { OrderPrintSheet } from '../OrderPrintSheet';
 import { AuthAlert } from './AuthUI';
 
@@ -26,6 +27,8 @@ const STEPS = [
   { label: 'Shipped', reachedBy: ['SHIPPED', 'DELIVERED'] },
   { label: 'Delivered', reachedBy: ['DELIVERED'] },
 ];
+
+const CONFIRMATION_CHECK_MS = 5000;
 
 const pieceCount = (order: OrderResponse) => order.items?.reduce((total, item) => total + item.quantity, 0) ?? 0;
 const pieces = (count: number) => `${count} ${count === 1 ? 'piece' : 'pieces'}`;
@@ -125,6 +128,8 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onBack, onChange }) 
   const { products, navigateTo, showToast } = useShop();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isPaying, setIsPaying] = useState(false);
+  const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPrinting, setIsPrinting] = useState(false);
   const stopPrinting = useCallback(() => setIsPrinting(false), []);
@@ -136,6 +141,19 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onBack, onChange }) 
     loadOrder(order.id).then((latest) => { if (!cancelled) showLatest(latest); }).catch(() => { /* keep showing the list's copy */ });
     return () => { cancelled = true; };
   }, [order.id]);
+
+  // Razorpay has the money but the server hasn't said so yet, so keep looking until it has.
+  useEffect(() => {
+    if (!isConfirmingPayment) return;
+    const check = setInterval(() => {
+      loadOrder(order.id).then((latest) => {
+        if (latest.paymentStatus !== 'PAID') return;
+        showLatest(latest);
+        setIsConfirmingPayment(false);
+      }).catch(() => { /* try again on the next check */ });
+    }, CONFIRMATION_CHECK_MS);
+    return () => clearInterval(check);
+  }, [isConfirmingPayment, order.id]);
 
   const handleCancel = async () => {
     setIsCancelling(true);
@@ -151,7 +169,30 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onBack, onChange }) 
     }
   };
 
-  const { message } = statusText(order.status);
+  const handlePay = async () => {
+    setIsPaying(true);
+    setError(null);
+    try {
+      const outcome = await payForOrder(order.id);
+      if (outcome.kind === 'paid') {
+        onChange(outcome.order);
+        showToast('Payment received. Your order is confirmed.');
+      } else if (outcome.kind === 'confirming') {
+        setIsConfirmingPayment(true);
+      }
+    } catch (cause) {
+      setError(errorMessage(cause, 'We could not start the payment. Please try again.'));
+      // The server may have found the order already paid, so show where it really stands.
+      loadOrder(order.id).then(onChange).catch(() => { /* keep showing the current copy */ });
+    } finally {
+      setIsPaying(false);
+    }
+  };
+
+  const message = order.canPay
+    ? `Please complete your payment${order.paymentDueAt ? ` by ${formatTime(order.paymentDueAt)}` : ''}, or the pieces go back on sale.`
+    : statusText(order.status).message;
+  const canPay = order.canPay && !isConfirmingPayment;
   const isCancelled = order.status === 'CANCELLED';
   const reachedAt = (states: string[]) => order.statusHistory?.find((entry) => states.includes(entry.status))?.createdAt;
   const tracking = [order.trackingCarrier, order.trackingNumber].filter(Boolean);
@@ -244,6 +285,9 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onBack, onChange }) 
       </div>
 
       {error && <AuthAlert kind="error">{error}</AuthAlert>}
+      {isConfirmingPayment && (
+        <AuthAlert kind="info">We're confirming your payment with Razorpay. This page will update shortly, so please don't pay again.</AuthAlert>
+      )}
 
       {confirmingCancel ? (
         <div className="account-confirm" role="group" aria-labelledby="cancel-order-question">
@@ -258,6 +302,12 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onBack, onChange }) 
         </div>
       ) : (
         <div className="auth-actions account-order-actions">
+          {canPay && (
+            <button type="button" className="btn-primary" onClick={() => void handlePay()} disabled={isPaying}>
+              <CreditCard size={15} aria-hidden="true" />
+              <span>{isPaying ? 'Opening Payment…' : 'Pay Now'}</span>
+            </button>
+          )}
           <button type="button" className="btn-secondary" onClick={() => setIsPrinting(true)}>
             <Printer size={15} aria-hidden="true" />
             <span>Download Summary</span>

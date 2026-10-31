@@ -121,6 +121,26 @@ public class OrderEmailService {
         }
     }
 
+    /** Tells the shop about a failed payment, or money that needs refunding. */
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void notifyPayment(PaymentAlert alert) {
+        if (sender == null) return;
+        try {
+            MimeMessage message = sender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(from);
+            helper.setTo(shopInbox);
+            helper.setSubject(PaymentAlertContent.subject(alert, shopName));
+            helper.setText(PaymentAlertContent.text(alert), PaymentAlertContent.html(alert));
+            sender.send(message);
+            log.info("Sent a payment alert for order {} to the shop inbox.", alert.orderNumber());
+        } catch (MessagingException | MailException exception) {
+            // The payment is saved and shown in the dashboard, so a failed email loses nothing.
+            log.warn("Could not send a payment alert to the shop inbox ({}).", exception.getClass().getSimpleName());
+        }
+    }
+
     private static JavaMailSender smtp(String host, int port, String username, String password) {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
         sender.setHost(host);
