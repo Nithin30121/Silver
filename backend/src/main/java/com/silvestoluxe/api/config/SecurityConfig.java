@@ -38,6 +38,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
                         // Wishlist adds are counted for visitors too; only a per-day count is stored, never who.
                         .requestMatchers(HttpMethod.POST, "/api/products/*/wishlist-adds").permitAll()
+                        // Razorpay signs its messages instead of signing in; the controller checks every signature.
+                        .requestMatchers(HttpMethod.POST, "/api/webhooks/razorpay").permitAll()
                         .requestMatchers("/api/me", "/api/me/**").authenticated()
                         .requestMatchers("/api/orders/**").authenticated()
                         .requestMatchers("/api/admin/**").authenticated()

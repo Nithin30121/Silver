@@ -59,6 +59,16 @@ app:
   reports:
     # "This week" and "this month" on the dashboard, and times in spreadsheet downloads, use this zone.
     time-zone: ${APP_REPORTS_TIME_ZONE:Asia/Kolkata}
+  razorpay:
+    # Online payments stay off until RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET are both set. The key secret
+    # and webhook secret are server-only secrets like the database password. See docs/razorpay-setup.md.
+    key-id: ${RAZORPAY_KEY_ID:}
+    key-secret: ${RAZORPAY_KEY_SECRET:}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
+    api-url: ${RAZORPAY_API_URL:https://api.razorpay.com}
+    # An online order that isn't paid in this time is cancelled and its pieces go back on sale.
+    pay-within: ${APP_PAYMENT_WINDOW:PT30M}
+    check-every: ${APP_PAYMENT_CHECK_EVERY:PT5M}
   mail:
     # Customer order emails stay off until SMTP_HOST and APP_MAIL_FROM are both set. Any SMTP
     # provider works; SMTP_PASSWORD is a server-only secret like the database password.

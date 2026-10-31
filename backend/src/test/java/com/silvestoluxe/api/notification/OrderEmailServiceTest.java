@@ -170,4 +170,16 @@ class OrderEmailServiceTest {
         assertTrue(text.contains("Total: ₹3,888\n"));
         assertTrue(text.endsWith("SILVORA\nhttps://shop.example.com\n"));
     }
+
+    @Test
+    void paymentAlertsNameTheOrderAndTheNextStep() {
+        PaymentAlert refund = new PaymentAlert(PaymentAlert.Kind.NEEDS_REFUND, "SL-1", new java.math.BigDecimal("1250.50"), "<b>Too late</b>");
+        PaymentAlert failed = new PaymentAlert(PaymentAlert.Kind.FAILED, "SL-2", new java.math.BigDecimal("500.00"), null);
+
+        assertEquals("SILVORA: A payment for order SL-1 needs a refund", PaymentAlertContent.subject(refund, "SILVORA"));
+        assertEquals("SILVORA: A payment for order SL-2 failed", PaymentAlertContent.subject(failed, "SILVORA"));
+        org.junit.jupiter.api.Assertions.assertTrue(PaymentAlertContent.text(refund).contains("₹1,250.50"));
+        org.junit.jupiter.api.Assertions.assertTrue(PaymentAlertContent.html(refund).contains("&lt;b&gt;Too late&lt;/b&gt;"));
+        org.junit.jupiter.api.Assertions.assertTrue(PaymentAlertContent.text(failed).contains("No money was taken."));
+    }
 }

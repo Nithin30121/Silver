@@ -4,6 +4,8 @@ import static com.silvestoluxe.api.order.OrderDtos.*;
 
 import java.math.BigDecimal;
 import java.net.URI;
+import java.time.Clock;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -15,11 +17,14 @@ import java.util.UUID;
 import com.silvestoluxe.api.account.AccountProfileService;
 import com.silvestoluxe.api.common.LikePattern;
 import com.silvestoluxe.api.notification.OrderEmail;
+import com.silvestoluxe.api.payment.RazorpayClient;
 import com.silvestoluxe.api.product.Product;
 import com.silvestoluxe.api.product.ProductRepository;
 import com.silvestoluxe.api.product.StockLedger;
 import com.silvestoluxe.api.product.StockMovementReason;
 import jakarta.persistence.EntityManager;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +47,8 @@ public class OrderService {
     /** Orders that are still on their way, which keep a customer from deleting their account. */
     static final Set<OrderStatus> IN_PROGRESS = EnumSet.of(OrderStatus.PENDING_PAYMENT, OrderStatus.CONFIRMED,
             OrderStatus.PROCESSING, OrderStatus.SHIPPED);
+    /** Without Razorpay the shop arranges these by hand; with it, customers pay online or on delivery. */
+    private static final Set<PaymentMethod> OFFLINE_ONLY = EnumSet.of(PaymentMethod.UPI, PaymentMethod.CARD);
 
     private final CustomerOrderRepository orders;
     private final ProductRepository products;
@@ -49,20 +56,35 @@ public class OrderService {
     private final EntityManager entityManager;
     private final StockLedger stock;
     private final ApplicationEventPublisher events;
+    private final RazorpayClient razorpay;
+    private final Duration payWithin;
+    private final Clock clock;
 
+    @Autowired
     public OrderService(CustomerOrderRepository orders, ProductRepository products, AccountProfileService profiles,
-                        EntityManager entityManager, StockLedger stock, ApplicationEventPublisher events) {
+                        EntityManager entityManager, StockLedger stock, ApplicationEventPublisher events, RazorpayClient razorpay,
+                        @Value("${app.razorpay.pay-within:PT30M}") Duration payWithin) {
+        this(orders, products, profiles, entityManager, stock, events, razorpay, payWithin, Clock.systemUTC());
+    }
+
+    OrderService(CustomerOrderRepository orders, ProductRepository products, AccountProfileService profiles,
+                 EntityManager entityManager, StockLedger stock, ApplicationEventPublisher events, RazorpayClient razorpay,
+                 Duration payWithin, Clock clock) {
         this.orders = orders;
         this.products = products;
         this.profiles = profiles;
         this.entityManager = entityManager;
         this.stock = stock;
         this.events = events;
+        this.razorpay = razorpay;
+        this.payWithin = payWithin;
+        this.clock = clock;
     }
 
     @Transactional
     public Response checkout(String subject, CheckoutRequest request) {
         UUID customerId = profiles.currentUser(subject).id();
+        checkPaymentMethod(request.paymentMethod());
         Map<UUID, Integer> requested = mergeQuantities(request.items());
         List<Product> lockedProducts = requested.keySet().stream()
                 .sorted(Comparator.comparing(UUID::toString))
@@ -86,6 +108,8 @@ public class OrderService {
                 clean(request.shippingAddress()), clean(request.shippingCity()), clean(request.shippingState()),
                 clean(request.shippingPostalCode()));
         order.recordStatus(OrderStatus.PENDING_PAYMENT, "Order created; payment is pending.");
+        boolean paysOnline = request.paymentMethod() == PaymentMethod.ONLINE;
+        if (paysOnline) order.setPaymentDueAt(clock.instant().plus(payWithin));
         for (Product product : lockedProducts) {
             int quantity = requested.get(product.getId());
             order.addItem(new OrderItem(order, product.getId(), product.getName(), product.getSku(), product.getPrice(), quantity));
@@ -97,8 +121,18 @@ public class OrderService {
         for (Product product : lockedProducts) {
             stock.record(product, -requested.get(product.getId()), StockMovementReason.SALE, saved.getId(), customerId);
         }
-        events.publishEvent(email(saved, OrderEmail.Kind.PLACED));
+        // An online order is confirmed by its payment, and that is when the customer hears about it.
+        if (!paysOnline) events.publishEvent(email(saved, OrderEmail.Kind.PLACED));
         return response(saved);
+    }
+
+    private void checkPaymentMethod(PaymentMethod method) {
+        if (method == PaymentMethod.ONLINE && !razorpay.isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Online payment isn't available right now. Please choose another way to pay.");
+        }
+        if (OFFLINE_ONLY.contains(method) && razorpay.isEnabled()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Please choose online payment or cash on delivery.");
+        }
     }
 
     public Page<Response> history(String subject, Pageable pageable) {
@@ -136,6 +170,89 @@ public class OrderService {
         order.recordStatus(OrderStatus.CANCELLED, "Cancelled by the customer.");
         events.publishEvent(email(order, OrderEmail.Kind.CANCELLED));
         return response(order);
+    }
+
+    /** The customer's own order, provided it can still be paid online. */
+    public PaymentTarget paymentTarget(String subject, UUID orderId) {
+        UUID customerId = profiles.currentUser(subject).id();
+        CustomerOrder order = find(orderId);
+        if (!customerId.equals(order.getCustomerId())) throw notFound();
+        if (order.getPaymentStatus() == PaymentStatus.PAID) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This order has already been paid.");
+        }
+        if (!canPay(order)) throw new ResponseStatusException(HttpStatus.CONFLICT, "This order can no longer be paid online.");
+        return new PaymentTarget(order.getId(), order.getOrderNumber(), order.getTotalAmount(), order.getShippingFullName(),
+                order.getShippingEmail(), order.getShippingPhone());
+    }
+
+    private static boolean canPay(CustomerOrder order) {
+        return order.getPaymentMethod() == PaymentMethod.ONLINE && order.getStatus() == OrderStatus.PENDING_PAYMENT
+                && (order.getPaymentStatus() == PaymentStatus.PENDING || order.getPaymentStatus() == PaymentStatus.FAILED);
+    }
+
+    /** A customer starting to pay gets the full time again, so their order isn't cancelled mid-payment. */
+    @Transactional
+    public void extendPaymentTime(UUID orderId) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (canPay(order)) order.setPaymentDueAt(clock.instant().plus(payWithin));
+    }
+
+    /**
+     * Records a confirmed online payment. Returns false when the order can't take it, because it was
+     * cancelled or has been paid already; the money then needs refunding.
+     */
+    @Transactional
+    public boolean applyPayment(UUID orderId, PaymentMethod method) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (order.getStatus() == OrderStatus.CANCELLED || order.getPaymentStatus() == PaymentStatus.PAID
+                || order.getPaymentStatus() == PaymentStatus.REFUNDED) return false;
+        order.setPaymentStatus(PaymentStatus.PAID);
+        order.setPaymentMethod(method);
+        order.setPaymentDueAt(null);
+        if (order.getStatus() == OrderStatus.PENDING_PAYMENT) {
+            order.setStatus(OrderStatus.CONFIRMED);
+            order.recordStatus(OrderStatus.CONFIRMED, "Paid online; order confirmed.");
+            events.publishEvent(email(order, OrderEmail.Kind.CONFIRMED));
+        } else {
+            order.recordStatus(order.getStatus(), "Paid online.");
+        }
+        return true;
+    }
+
+    /** A failed attempt changes nothing else: the customer can try again until the payment time runs out. */
+    @Transactional
+    public void markPaymentFailed(UUID orderId) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (order.getPaymentStatus() == PaymentStatus.PENDING) order.setPaymentStatus(PaymentStatus.FAILED);
+    }
+
+    /** A full refund of the payment that paid for this order. */
+    @Transactional
+    public void markRefunded(UUID orderId) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (order.getPaymentStatus() == PaymentStatus.PAID) order.setPaymentStatus(PaymentStatus.REFUNDED);
+    }
+
+    /** Adds a line to the order's history without changing its status. */
+    @Transactional
+    public void addNote(UUID orderId, String note) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        order.recordStatus(order.getStatus(), note);
+    }
+
+    public String orderNumber(UUID orderId) { return find(orderId).getOrderNumber(); }
+
+    public List<UUID> overduePayments() { return orders.findOverduePayments(clock.instant()); }
+
+    /** Cancels an online order nobody paid for and returns its pieces, unless it was paid or given more time. */
+    @Transactional
+    public void expireUnpaid(UUID orderId) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (!canPay(order) || order.getPaymentDueAt() == null || order.getPaymentDueAt().isAfter(clock.instant())) return;
+        restoreStock(order, order.getCustomerId());
+        order.setStatus(OrderStatus.CANCELLED);
+        order.setPaymentDueAt(null);
+        order.recordStatus(OrderStatus.CANCELLED, "Cancelled automatically: the payment wasn't completed in time.");
     }
 
     /** Whether any of this customer's orders is still on its way. */
@@ -299,6 +416,7 @@ public class OrderService {
                 order.getStatusHistory().stream().map(history -> new StatusHistoryResponse(history.getStatus(),
                         history.getNote(), history.getCreatedAt())).toList(),
                 order.getTrackingCarrier(), order.getTrackingNumber(), order.getTrackingUrl(),
-                CUSTOMER_CANCELLABLE.contains(order.getStatus()) && order.getPaymentStatus() != PaymentStatus.PAID);
+                CUSTOMER_CANCELLABLE.contains(order.getStatus()) && order.getPaymentStatus() != PaymentStatus.PAID,
+                canPay(order), order.getPaymentDueAt());
     }
 }

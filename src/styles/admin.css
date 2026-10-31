@@ -364,6 +364,9 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-callout { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.65rem 0.8rem; border-radius: var(--a-radius-sm); font-size: 0.8125rem; font-weight: 500; }
 .admin-page .admin-callout.is-warning { background: var(--a-warning-bg); color: var(--a-warning); }
 .admin-page .admin-callout.is-info { background: var(--a-info-bg); color: var(--a-info); }
+.admin-refunds { margin-bottom: 1rem; }
+.admin-refunds ul { margin: 0.35rem 0 0; padding: 0; list-style: none; font-weight: 400; }
+.admin-refunds li + li { margin-top: 0.25rem; }
 
 /* ---------- Forms ---------- */
 

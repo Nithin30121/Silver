@@ -44,6 +44,8 @@ public class CustomerOrder {
     private String trackingCarrier;
     private String trackingNumber;
     private String trackingUrl;
+    /** When an unpaid online order is cancelled and its pieces go back on sale. */
+    private Instant paymentDueAt;
     @CreationTimestamp @Column(nullable = false, updatable = false) private Instant createdAt;
     @UpdateTimestamp @Column(nullable = false) private Instant updatedAt;
 
@@ -80,6 +82,9 @@ public class CustomerOrder {
     public PaymentStatus getPaymentStatus() { return paymentStatus; }
     public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
     public PaymentMethod getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(PaymentMethod paymentMethod) { this.paymentMethod = paymentMethod; }
+    public Instant getPaymentDueAt() { return paymentDueAt; }
+    public void setPaymentDueAt(Instant paymentDueAt) { this.paymentDueAt = paymentDueAt; }
     public BigDecimal getSubtotal() { return subtotal; }
     public BigDecimal getShippingAmount() { return shippingAmount; }
     public BigDecimal getTotalAmount() { return totalAmount; }
