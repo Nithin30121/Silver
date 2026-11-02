@@ -89,6 +89,17 @@ export function cancelOrder(id: string): Promise<OrderResponse> {
 }
 
 /** Whether customers can pay online yet; the shop turns this on by adding its Razorpay keys to the server. */
+/** checked is false when the shop's courier isn't set up or couldn't be asked; checkout then carries on as before. */
+export interface DeliveryCheck {
+  checked: boolean;
+  serviceable: boolean;
+  cashOnDelivery: boolean;
+}
+
+export function checkDelivery(pin: string): Promise<DeliveryCheck> {
+  return customerRequest<DeliveryCheck>(`/orders/delivery-check?pin=${encodeURIComponent(pin)}`, 'We could not check delivery to this PIN code.');
+}
+
 export function loadPaymentOptions(): Promise<{ online: boolean }> {
   return customerRequest<{ online: boolean }>('/orders/payment-options', 'We could not load the payment options.');
 }

@@ -62,4 +62,11 @@ public final class OrderDtos {
     /** The customer's own order, as much of it as a payment needs. */
     public record PaymentTarget(UUID id, String orderNumber, BigDecimal totalAmount, String customerName,
                                 String customerEmail, String customerPhone) { }
+
+    /** As much of an order as booking its parcel with a courier needs. */
+    public record Parcel(UUID id, String orderNumber, OrderStatus status, PaymentStatus paymentStatus, PaymentMethod paymentMethod,
+                         BigDecimal totalAmount, String fullName, String phone, String address, String city, String state,
+                         String postalCode, List<ParcelItem> items) { }
+
+    public record ParcelItem(UUID productId, String name, int quantity) { }
 }

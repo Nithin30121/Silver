@@ -256,6 +256,82 @@ class OrderServiceTest {
     }
 
     @Test
+    void aCourierBookingKeepsTheOrderFromBeingCancelledUntilItIsUndone() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 2);
+        signedInCustomer();
+        CustomerOrder order = orderFor(ring, 1, OrderStatus.CONFIRMED);
+
+        service.recordCourierBooking(order.getId(), "Delhivery", "DL123", "https://www.delhivery.com/track/package/DL123");
+
+        assertEquals(OrderStatus.PROCESSING, order.getStatus());
+        assertEquals("DL123", order.getTrackingNumber());
+        assertEquals(HttpStatus.CONFLICT, assertThrows(ResponseStatusException.class,
+                () -> service.cancelByCustomer(customerId.toString(), order.getId())).getStatusCode());
+        StatusUpdate cancel = new StatusUpdate(OrderStatus.CANCELLED, PaymentStatus.PENDING, null, false, null, null, null);
+        assertEquals(HttpStatus.CONFLICT, assertThrows(ResponseStatusException.class,
+                () -> service.updateStatus(order.getId(), cancel, adminId)).getStatusCode());
+        assertEquals(2, ring.getStockQuantity());
+
+        service.clearCourierBooking(order.getId(), "DL123", "Delhivery booking DL123 cancelled.");
+        assertNull(order.getTrackingNumber());
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+        service.updateStatus(order.getId(), cancel, adminId);
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+        assertEquals(3, ring.getStockQuantity());
+    }
+
+    @Test
+    void theCourierMovesTheOrderAlongAndTheCustomerHearsOnceEach() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 2);
+        CustomerOrder order = orderFor(ring, 1, OrderStatus.PROCESSING);
+        order.setTracking("Delhivery", "DL123", "https://www.delhivery.com/track/package/DL123");
+
+        service.markPickedUpByCourier(order.getId(), "Collected by Delhivery.");
+        service.markPickedUpByCourier(order.getId(), "Collected by Delhivery.");
+        service.markDeliveredByCourier(order.getId(), "Delivered by Delhivery.");
+        service.markDeliveredByCourier(order.getId(), "Delivered by Delhivery.");
+
+        assertEquals(OrderStatus.DELIVERED, order.getStatus());
+        ArgumentCaptor<OrderEmail> emails = ArgumentCaptor.forClass(OrderEmail.class);
+        verify(events, org.mockito.Mockito.times(2)).publishEvent(emails.capture());
+        assertEquals(List.of(OrderEmail.Kind.SHIPPED, OrderEmail.Kind.DELIVERED), emails.getAllValues().stream().map(OrderEmail::kind).toList());
+        assertEquals("DL123", emails.getValue().tracking().number());
+    }
+
+    @Test
+    void aParcelDeliveredBeforeItsPickupWasSeenPassesThroughShippedQuietly() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 2);
+        CustomerOrder order = orderFor(ring, 1, OrderStatus.PROCESSING);
+
+        service.markDeliveredByCourier(order.getId(), "Delivered by Delhivery.");
+
+        assertEquals(OrderStatus.DELIVERED, order.getStatus());
+        assertEquals(List.of(OrderStatus.SHIPPED, OrderStatus.DELIVERED),
+                order.getStatusHistory().stream().map(OrderStatusHistory::getStatus).toList());
+        ArgumentCaptor<OrderEmail> email = ArgumentCaptor.forClass(OrderEmail.class);
+        verify(events).publishEvent(email.capture());
+        assertEquals(OrderEmail.Kind.DELIVERED, email.getValue().kind());
+    }
+
+    @Test
+    void aReturnedParcelClosesItsOrderAndPutsThePiecesBack() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 1);
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+        CustomerOrder returned = orderFor(ring, 1, OrderStatus.SHIPPED);
+        CustomerOrder delivered = orderFor(ring, 1, OrderStatus.DELIVERED);
+
+        service.cancelReturnedByCourier(returned.getId(), adminId);
+        service.cancelReturnedByCourier(returned.getId(), adminId);
+
+        assertEquals(OrderStatus.CANCELLED, returned.getStatus());
+        assertEquals(2, ring.getStockQuantity());
+        verify(stock).record(ring, 1, StockMovementReason.CANCELLATION, returned.getId(), adminId);
+        verifyNoInteractions(events);
+        assertEquals(HttpStatus.CONFLICT, assertThrows(ResponseStatusException.class,
+                () -> service.cancelReturnedByCourier(delivered.getId(), adminId)).getStatusCode());
+    }
+
+    @Test
     void emailsCustomersOnlyAboutStatusesTheyCareAbout() {
         assertEquals(OrderEmail.Kind.SHIPPED, OrderService.emailFor(OrderStatus.SHIPPED));
         assertNull(OrderService.emailFor(OrderStatus.PROCESSING));

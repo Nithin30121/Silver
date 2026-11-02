@@ -3,12 +3,12 @@ import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { drawerSlide } from '../lib/motion';
 import { useAuth } from '../context/AuthContext';
-import { createOrder, loadPaymentOptions, type OrderResponse, type PaymentMethod } from '../services/orderService';
+import { checkDelivery, createOrder, loadPaymentOptions, type DeliveryCheck, type OrderResponse, type PaymentMethod } from '../services/orderService';
 import { payForOrder } from '../lib/razorpayCheckout';
 import { formatTime, PAYMENT_METHODS } from '../lib/orderFormat';
 import { createAddress, formatAddress, listAddresses, MAX_SAVED_ADDRESSES, type SavedAddress } from '../services/accountService';
-import { INDIAN_STATES, normalisePin } from '../lib/addressValidation';
-import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2, CreditCard, Sparkles } from 'lucide-react';
+import { INDIAN_STATES, isValidPin, normalisePin } from '../lib/addressValidation';
+import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2, CreditCard, Sparkles, Truck } from 'lucide-react';
 
 const NEW_ADDRESS = 'new';
 const LATER_PAYMENT_CHOICES = [
@@ -107,6 +107,22 @@ export const CartDrawer: React.FC = () => {
       .catch(() => { /* Checkout still offers the other choices; the server has the final say. */ });
     return () => { cancelled = true; };
   }, [isAtShipping]);
+
+  // Whether the courier delivers to this PIN code, asked a moment after it is typed. An answer for an older PIN is ignored.
+  const [delivery, setDelivery] = useState<{ pin: string; check: DeliveryCheck } | null>(null);
+  const deliveryPin = normalisePin(formData.pincode);
+  useEffect(() => {
+    if (!isAtShipping || !isValidPin(deliveryPin)) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      checkDelivery(deliveryPin)
+        .then((check) => { if (!cancelled) setDelivery({ pin: deliveryPin, check }); })
+        .catch(() => { /* checkout carries on; the shop arranges delivery itself */ });
+    }, 400);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [isAtShipping, deliveryPin]);
+  const deliveryCheck = isAtShipping && delivery?.pin === deliveryPin && delivery.check.checked ? delivery.check : null;
+  const cashOnDeliveryUnavailable = formData.paymentMethod === 'cod' && deliveryCheck !== null && !deliveryCheck.cashOnDelivery;
 
   const usingSavedAddress = selectedAddressId !== NEW_ADDRESS && Boolean(savedAddresses?.some((address) => address.id === selectedAddressId));
   const canSaveAddress = savedAddresses !== null && savedAddresses.length < MAX_SAVED_ADDRESSES;
@@ -438,6 +454,19 @@ export const CartDrawer: React.FC = () => {
                 </>
               )}
 
+              {deliveryCheck && (
+                <p className={`checkout-delivery ${deliveryCheck.serviceable && !cashOnDeliveryUnavailable ? '' : 'is-warning'}`} aria-live="polite">
+                  <Truck size={14} aria-hidden="true" />
+                  <span>
+                    {!deliveryCheck.serviceable
+                      ? `Our courier doesn't deliver to ${deliveryPin} yet. You can still order without cash on delivery, and we'll arrange delivery with you.`
+                      : !deliveryCheck.cashOnDelivery
+                        ? `Delivery is available to ${deliveryPin}, but cash on delivery isn't, so please pay online.`
+                        : `Delivery is available to ${deliveryPin}.`}
+                  </span>
+                </p>
+              )}
+
               {checkoutError && (
                 <p role="alert" style={{ margin: 0, color: '#f4a2a2', fontSize: '0.75rem', lineHeight: 1.5 }}>
                   {checkoutError}
@@ -589,7 +618,7 @@ export const CartDrawer: React.FC = () => {
                 form="checkout-form"
                 className="btn-primary"
                 style={{ width: '100%' }}
-                disabled={isSubmitting}
+                disabled={isSubmitting || cashOnDeliveryUnavailable}
               >
                 <span>{isSubmitting ? 'Recording Order…' : paysOnline ? 'Continue to Payment' : onlinePayments ? 'Place Order' : 'Record Order Request'}</span>
                 <ShieldCheck size={16} />

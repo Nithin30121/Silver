@@ -342,6 +342,53 @@ export function updateOrderStatus(id: string, status: string, paymentStatus: str
 }
 
 /** One attempt to pay online. NEEDS_REFUND is money that arrived for an order that couldn't take it. */
+export type ShipmentState = 'BOOKED' | 'IN_TRANSIT' | 'DELIVERED' | 'RETURNING' | 'RETURNED' | 'LOST' | 'CANCELLED';
+
+/** A parcel booked with Delhivery; courierStatus and courierLocation are Delhivery's own words for its latest scan. */
+export interface OrderShipment {
+  id: string;
+  waybill: string;
+  state: ShipmentState;
+  paymentMode: 'PREPAID' | 'COD';
+  codAmount: number | string;
+  weightGrams: number;
+  courierStatus: string | null;
+  courierLocation: string | null;
+  courierStatusAt: string | null;
+  trackingUrl: string;
+  bookedAt: string;
+  checkedAt: string | null;
+  cancelledAt: string | null;
+}
+
+export interface OrderShipments {
+  /** False until the Delhivery settings are on the server. */
+  enabled: boolean;
+  suggestedWeightGrams: number;
+  shipments: OrderShipment[];
+}
+
+export function getOrderShipments(orderId: string) {
+  return adminRequest<OrderShipments>(`/admin/orders/${orderId}/shipments`);
+}
+
+export function bookShipment(orderId: string, weightGrams: number) {
+  return adminRequest<OrderShipment>(`/admin/orders/${orderId}/shipments`, { method: 'POST', body: JSON.stringify({ weightGrams }) });
+}
+
+export function refreshShipment(orderId: string, shipmentId: string) {
+  return adminRequest<OrderShipment>(`/admin/orders/${orderId}/shipments/${shipmentId}/refresh`, { method: 'POST' });
+}
+
+export function cancelShipment(orderId: string, shipmentId: string) {
+  return adminRequest<OrderShipment>(`/admin/orders/${orderId}/shipments/${shipmentId}/cancel`, { method: 'POST' });
+}
+
+/** Closes the order of a parcel Delhivery brought back, and puts its pieces back in stock. */
+export function closeReturnedShipment(orderId: string, shipmentId: string) {
+  return adminRequest<void>(`/admin/orders/${orderId}/shipments/${shipmentId}/returned`, { method: 'POST' });
+}
+
 export interface OrderPaymentRow {
   id: string;
   amount: number | string;

@@ -2787,6 +2787,28 @@ button.account-item-name:hover {
   accent-color: var(--color-silver-deep);
 }
 
+/* Whether the courier delivers to the PIN code typed at checkout */
+.checkout-delivery {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+}
+
+.checkout-delivery svg {
+  flex: none;
+  margin-top: 0.15rem;
+  color: var(--color-silver-accent);
+}
+
+.checkout-delivery.is-warning,
+.checkout-delivery.is-warning svg {
+  color: #f2c48d;
+}
+
 /* Contact page */
 .contact-layout {
   display: grid;

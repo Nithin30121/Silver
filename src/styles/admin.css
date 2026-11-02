@@ -471,6 +471,13 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-modal-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.6rem; padding: 0.9rem 1.5rem; border-top: 1px solid var(--a-border); background: var(--a-surface-2); }
 .admin-modal-footer .admin-form-error { flex-basis: 100%; }
 .admin-modal-footer-start { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-right: auto; }
+.admin-delivery { display: grid; gap: 0.6rem; margin-bottom: 1.5rem; padding: 1rem; border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); background: var(--a-surface-2); }
+.admin-delivery p { margin: 0; }
+.admin-delivery-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.admin-delivery-scan { color: var(--a-text); font-weight: 500; }
+.admin-delivery-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.admin-delivery-book { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; }
+.admin-delivery-book .admin-field { flex: 1 1 12rem; max-width: 16rem; }
 .admin-delete-note { display: grid; gap: 0.6rem; color: var(--a-text-2); font-size: 0.9375rem; line-height: 1.55; }
 .admin-delete-note p { margin: 0; }
 .admin-delete-note strong { color: var(--a-text); }
