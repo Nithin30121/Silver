@@ -69,6 +69,24 @@ app:
     # An online order that isn't paid in this time is cancelled and its pieces go back on sale.
     pay-within: ${APP_PAYMENT_WINDOW:PT30M}
     check-every: ${APP_PAYMENT_CHECK_EVERY:PT5M}
+  delhivery:
+    # Booking parcels stays off until DELHIVERY_API_TOKEN and DELHIVERY_PICKUP_LOCATION are both set. The token is a
+    # server-only secret like the database password. See docs/delhivery-setup.md.
+    api-token: ${DELHIVERY_API_TOKEN:}
+    api-url: ${DELHIVERY_API_URL:https://track.delhivery.com}
+    # The pickup address's name exactly as it appears in Delhivery One.
+    pickup-location: ${DELHIVERY_PICKUP_LOCATION:}
+    seller-gst: ${DELHIVERY_SELLER_GST:}
+    # 7113 is the HSN code for articles of jewellery of precious metal.
+    hsn-code: ${DELHIVERY_HSN_CODE:7113}
+    # Surface or Express. Delhivery keeps precious metals off its air network, so Surface is the default.
+    shipping-mode: ${DELHIVERY_SHIPPING_MODE:Surface}
+    # A new booking's suggested weight: the pieces' weights plus this much for the box, or the default when a piece has none.
+    packaging-grams: ${DELHIVERY_PACKAGING_GRAMS:100}
+    default-weight-grams: ${DELHIVERY_DEFAULT_WEIGHT_GRAMS:250}
+    # Parcels are checked this soon after the server starts, then at every interval while it stays awake.
+    first-check-after: ${DELHIVERY_FIRST_CHECK_AFTER:PT2M}
+    check-every: ${DELHIVERY_CHECK_EVERY:PT30M}
   mail:
     # Customer order emails stay off until SMTP_HOST and APP_MAIL_FROM are both set. Any SMTP
     # provider works; SMTP_PASSWORD is a server-only secret like the database password.

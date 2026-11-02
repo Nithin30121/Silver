@@ -13,7 +13,8 @@ import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../.
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import { formatINR } from '../../services/silverRateService';
 import {
-  AdminApiError, createCategory, createProduct, deleteProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
+  AdminApiError, bookShipment, cancelShipment, closeReturnedShipment, createCategory, createProduct, deleteProduct, downloadAdminCsv,
+  getOrderShipments, refreshShipment, type OrderShipments, type ShipmentState, getAdminCategories, getAdminCustomers, getAdminIdentity,
   getAdminOrders, getAdminProducts, getCustomerGrowth, getCustomerOrders, getEmailStatus, getMessages, getOrderPayments, getRefundsToMake, getSalesByCategory, getSalesByPaymentMethod, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
   setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, type AdminCustomer,
   type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
@@ -75,6 +76,13 @@ const STOCK_REASONS: Record<StockReason, string> = {
 };
 // Suggestions for the courier box; any other courier can be typed in.
 const COURIERS = ['Delhivery', 'Blue Dart', 'DTDC', 'India Post', 'Ekart', 'Xpressbees', 'Shadowfax', 'Shiprocket'];
+const SHIPMENT_LABELS: Record<ShipmentState, string> = {
+  BOOKED: 'Waiting for pickup', IN_TRANSIT: 'On the way', DELIVERED: 'Delivered', RETURNING: 'Coming back to you',
+  RETURNED: 'Back at the shop', LOST: 'Lost', CANCELLED: 'Booking cancelled'
+};
+const SHIPMENT_TONES: Record<ShipmentState, Tone> = {
+  BOOKED: 'info', IN_TRANSIT: 'info', DELIVERED: 'success', RETURNING: 'warning', RETURNED: 'warning', LOST: 'danger', CANCELLED: 'neutral'
+};
 const CATEGORY_TYPES: Record<CatalogueCategory['categoryType'], string> = {
   audience: 'Audience', collection: 'Collection', items: 'Items', landing_page: 'Landing page'
 };
@@ -1918,6 +1926,120 @@ const DownloadButton: React.FC<{ title: string; onDownload: () => Promise<void>;
 const today = () => new Date().toLocaleDateString('en-CA');
 
 /** Each attempt to pay this order online; hidden for orders that never used Razorpay. */
+/**
+ * Books the order's parcel with Delhivery and shows where it is. Booking, cancelling and closing a returned parcel change
+ * the order itself, so those close the order and reload the list; checking the status only refreshes this part.
+ */
+const DelhiveryParcel: React.FC<{ order: OrderResponse; notify: Notify; onOrderChanged: (message: string) => void }> = ({ order, notify, onOrderChanged }) => {
+  const [data, setData] = useState<OrderShipments | null>(null);
+  const [weight, setWeight] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let cancelled = false;
+    getOrderShipments(order.id)
+      .then((result) => { if (!cancelled) { setData(result); setWeight(result.suggestedWeightGrams); } })
+      .catch(() => { /* an older server has no Delhivery part; the order still shows everything else */ });
+    return () => { cancelled = true; };
+  }, [order.id]);
+  if (!data) return null;
+
+  const live = data.shipments.find((shipment) => shipment.state !== 'CANCELLED');
+  const cancelled = data.shipments.filter((shipment) => shipment.state === 'CANCELLED');
+  const canBook = !live && (order.status === 'CONFIRMED' || order.status === 'PROCESSING');
+  const cashOnDelivery = order.paymentStatus !== 'PAID' && order.paymentMethod === 'COD';
+  const ready = order.paymentStatus === 'PAID' || cashOnDelivery;
+  if (!live && !canBook && cancelled.length === 0) return null;
+
+  const act = async (task: () => Promise<unknown>, done: string, changesOrder: boolean) => {
+    setBusy(true);
+    setError('');
+    try {
+      await task();
+      if (changesOrder) { onOrderChanged(done); return; }
+      notify('success', done);
+      setData(await getOrderShipments(order.id));
+    } catch (cause) {
+      setError(errorText(cause, 'Delhivery could not be reached. Please try again.'));
+    }
+    setBusy(false);
+  };
+  const scan = live?.courierStatus
+    ? [live.courierStatus, live.courierLocation, live.courierStatusAt && formatDateTime(live.courierStatusAt)].filter(Boolean).join(' · ')
+    : 'No scan from Delhivery yet.';
+
+  return (
+    <>
+      <h3 className="admin-subheading">Delivery</h3>
+      <div className="admin-delivery">
+        {live ? (
+          <>
+            <div className="admin-delivery-head">
+              <Badge tone={SHIPMENT_TONES[live.state]}>{SHIPMENT_LABELS[live.state]}</Badge>
+              <span>Delhivery <strong className="admin-mono">{live.waybill}</strong></span>
+            </div>
+            <p className="admin-delivery-scan">{scan}</p>
+            <p className="admin-hint">
+              {live.paymentMode === 'COD' ? `Cash on delivery: Delhivery collects ${money(live.codAmount)}.` : 'Prepaid.'}
+              {` ${live.weightGrams} g. Booked ${formatDateTime(live.bookedAt)}. Last checked ${live.checkedAt ? formatDateTime(live.checkedAt) : 'not yet'}.`}
+            </p>
+            {live.state === 'BOOKED' && <p className="admin-hint">Print the label and book the pickup in Delhivery One. This page follows the parcel from there.</p>}
+            {live.state === 'RETURNED' && order.status !== 'CANCELLED' && (
+              <p className="admin-callout is-warning"><TriangleAlert size={16} /> The parcel is back. Closing the order puts its pieces back in stock.
+                {order.paymentStatus === 'PAID' ? ' It was paid, so refund the customer too.' : ''}</p>
+            )}
+            {live.state === 'LOST' && <p className="admin-callout is-warning"><TriangleAlert size={16} /> Raise a claim in Delhivery One.</p>}
+            <div className="admin-delivery-actions">
+              <a className="admin-button is-secondary is-small" href={live.trackingUrl} target="_blank" rel="noopener noreferrer">
+                Track on Delhivery <ExternalLink size={13} aria-hidden="true" />
+              </a>
+              {(live.state === 'BOOKED' || live.state === 'IN_TRANSIT' || live.state === 'RETURNING') && (
+                <button type="button" className="admin-button is-ghost is-small" disabled={busy}
+                  onClick={() => void act(() => refreshShipment(order.id, live.id), 'Checked with Delhivery.', false)}>
+                  <RefreshCw size={14} /> Check now
+                </button>
+              )}
+              {live.state === 'BOOKED' && (
+                <button type="button" className="admin-button is-ghost is-small is-danger" disabled={busy}
+                  onClick={() => void act(() => cancelShipment(order.id, live.id), `Delhivery booking ${live.waybill} cancelled.`, true)}>
+                  <X size={14} /> Cancel booking
+                </button>
+              )}
+              {live.state === 'RETURNED' && order.status !== 'CANCELLED' && (
+                <button type="button" className="admin-button is-secondary is-small" disabled={busy}
+                  onClick={() => void act(() => closeReturnedShipment(order.id, live.id), `Order ${order.orderNumber} closed and restocked.`, true)}>
+                  Close order and restock
+                </button>
+              )}
+            </div>
+          </>
+        ) : canBook && !data.enabled ? (
+          <p className="admin-hint">Add the Delhivery settings on Render to book this parcel from here.</p>
+        ) : canBook ? (
+          <>
+            <p>{!ready ? "This order isn't paid yet. Mark it as paid before booking, unless it's cash on delivery."
+              : cashOnDelivery ? `Cash on delivery: Delhivery will collect ${money(order.totalAmount)} from the customer.`
+                : 'Paid, so the parcel goes as prepaid.'}</p>
+            <div className="admin-delivery-book">
+              <Field label="Parcel weight" hint="Packed, box included. Delhivery charges by weight.">
+                <span className="admin-affix is-suffix"><NumberInput min="1" max="50000" step="1" inputMode="numeric"
+                  value={weight} onValueChange={setWeight} /><span>grams</span></span>
+              </Field>
+              <button type="button" className="admin-button is-primary" disabled={busy || !ready || !weight || weight < 1 || weight > 50000}
+                onClick={() => void act(() => bookShipment(order.id, Math.round(weight ?? 0)),
+                  'Booked with Delhivery. The customer can now see the tracking number.', true)}>
+                {busy ? <><LoaderCircle size={16} className="is-spinning" /> Booking…</> : 'Book with Delhivery'}
+              </button>
+            </div>
+          </>
+        ) : null}
+        {cancelled.length > 0 && <p className="admin-hint">Cancelled bookings: {cancelled.map((shipment) => shipment.waybill).join(', ')}</p>}
+        {error && <FormError text={error} />}
+      </div>
+    </>
+  );
+};
+
 const OnlinePayments: React.FC<{ orderId: string }> = ({ orderId }) => {
   const [payments, setPayments] = useState<OrderPaymentRow[]>([]);
   useEffect(() => {
@@ -2046,6 +2168,8 @@ const OrderDetails: React.FC<{ order: OrderResponse; emailEnabled: boolean | nul
       </div>
 
       <OnlinePayments orderId={order.id} />
+
+      <DelhiveryParcel order={order} notify={notify} onOrderChanged={(message) => { notify('success', message); onSaved(); }} />
 
       <h3 className="admin-subheading">Update order</h3>
       <div className="admin-form is-flat">

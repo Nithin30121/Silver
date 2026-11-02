@@ -165,6 +165,10 @@ public class OrderService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "This order has been paid, so please contact us to cancel it and arrange your refund.");
         }
+        if (isBookedWithCourier(order)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Your order is packed and booked with our courier, so please contact us to cancel it.");
+        }
         restoreStock(order, customerId);
         order.setStatus(OrderStatus.CANCELLED);
         order.recordStatus(OrderStatus.CANCELLED, "Cancelled by the customer.");
@@ -281,6 +285,10 @@ public class OrderService {
         CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
         OrderStatus previous = order.getStatus();
         validateTransition(previous, request.status());
+        if (request.status() == OrderStatus.CANCELLED && isBookedWithCourier(order)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "This order is booked with Delhivery. Cancel the booking in its Delivery section first.");
+        }
         if (previous != OrderStatus.CANCELLED && request.status() == OrderStatus.CANCELLED) restoreStock(order, actorId);
         applyTracking(order, request);
         order.setStatus(request.status());
@@ -291,6 +299,82 @@ public class OrderService {
         boolean notify = request.notifyCustomer() == null || request.notifyCustomer();
         if (notify && kind != null && previous != request.status()) events.publishEvent(email(order, kind));
         return response(order);
+    }
+
+    /**
+     * Tracking details on an order that hasn't shipped can only come from a courier booking (by hand they're added when
+     * marking it shipped), so such an order is packed and waiting for the courier.
+     */
+    private static boolean isBookedWithCourier(CustomerOrder order) {
+        return order.getTrackingNumber() != null && (order.getStatus() == OrderStatus.CONFIRMED || order.getStatus() == OrderStatus.PROCESSING);
+    }
+
+    public Parcel parcel(UUID orderId) {
+        CustomerOrder order = find(orderId);
+        return new Parcel(order.getId(), order.getOrderNumber(), order.getStatus(), order.getPaymentStatus(), order.getPaymentMethod(),
+                order.getTotalAmount(), order.getShippingFullName(), order.getShippingPhone(), order.getShippingAddress(),
+                order.getShippingCity(), order.getShippingState(), order.getShippingPostalCode(),
+                order.getItems().stream().map(item -> new ParcelItem(item.getProductId(), item.getProductName(), item.getQuantity())).toList());
+    }
+
+    /** A parcel booked with a courier: the order is now being packed, and the customer can see its tracking number. */
+    @Transactional
+    public void recordCourierBooking(UUID orderId, String carrier, String trackingNumber, String trackingUrl) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (order.getStatus() == OrderStatus.CONFIRMED) order.setStatus(OrderStatus.PROCESSING);
+        order.setTracking(carrier, trackingNumber, trackingUrl);
+        order.recordStatus(order.getStatus(), "Booked with " + carrier + ". Tracking number " + trackingNumber + ".");
+    }
+
+    /** A courier booking that was cancelled; the order goes back to waiting to be booked or cancelled. */
+    @Transactional
+    public void clearCourierBooking(UUID orderId, String trackingNumber, String note) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (trackingNumber.equals(order.getTrackingNumber()) && order.getStatus() != OrderStatus.SHIPPED
+                && order.getStatus() != OrderStatus.DELIVERED) {
+            order.setTracking(null, null, null);
+        }
+        order.recordStatus(order.getStatus(), note);
+    }
+
+    /** The courier collected the parcel. An order already marked shipped by hand is left as it is. */
+    @Transactional
+    public void markPickedUpByCourier(UUID orderId, String note) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (order.getStatus() != OrderStatus.CONFIRMED && order.getStatus() != OrderStatus.PROCESSING) return;
+        order.setStatus(OrderStatus.SHIPPED);
+        order.recordStatus(OrderStatus.SHIPPED, note);
+        events.publishEvent(email(order, OrderEmail.Kind.SHIPPED));
+    }
+
+    /** The courier delivered the parcel. A parcel delivered before its pickup was noticed goes through shipped first, quietly. */
+    @Transactional
+    public void markDeliveredByCourier(UUID orderId, String note) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (order.getStatus() == OrderStatus.CONFIRMED || order.getStatus() == OrderStatus.PROCESSING) {
+            order.setStatus(OrderStatus.SHIPPED);
+            order.recordStatus(OrderStatus.SHIPPED, "Picked up by the courier.");
+        }
+        if (order.getStatus() != OrderStatus.SHIPPED) return;
+        order.setStatus(OrderStatus.DELIVERED);
+        order.recordStatus(OrderStatus.DELIVERED, note);
+        events.publishEvent(email(order, OrderEmail.Kind.DELIVERED));
+    }
+
+    /**
+     * Closes an order whose parcel the courier brought back to the shop, for example one the customer refused, and puts
+     * its pieces back on sale. The shop speaks to the customer itself, since a paid order also needs a refund.
+     */
+    @Transactional
+    public void cancelReturnedByCourier(UUID orderId, UUID actorId) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (order.getStatus() == OrderStatus.CANCELLED) return;
+        if (order.getStatus() == OrderStatus.DELIVERED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "This order was delivered, so it can't be closed as returned.");
+        }
+        restoreStock(order, actorId);
+        order.setStatus(OrderStatus.CANCELLED);
+        order.recordStatus(OrderStatus.CANCELLED, "The courier returned the parcel to the shop; its pieces are back in stock.");
     }
 
     /** Courier details belong to shipped orders; null fields leave the saved details alone. */
@@ -416,7 +500,8 @@ public class OrderService {
                 order.getStatusHistory().stream().map(history -> new StatusHistoryResponse(history.getStatus(),
                         history.getNote(), history.getCreatedAt())).toList(),
                 order.getTrackingCarrier(), order.getTrackingNumber(), order.getTrackingUrl(),
-                CUSTOMER_CANCELLABLE.contains(order.getStatus()) && order.getPaymentStatus() != PaymentStatus.PAID,
+                CUSTOMER_CANCELLABLE.contains(order.getStatus()) && order.getPaymentStatus() != PaymentStatus.PAID
+                        && !isBookedWithCourier(order),
                 canPay(order), order.getPaymentDueAt());
     }
 }
