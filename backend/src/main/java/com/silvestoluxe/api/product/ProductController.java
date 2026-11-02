@@ -61,6 +61,11 @@ public class ProductController {
     @PatchMapping("/admin/products/{id}/status") @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
     public Response status(@PathVariable UUID id, @RequestBody @Valid Status request) { return products.updateStatus(id, request); }
 
+    /** The product goes first; its photo files are removed only once that has committed. */
+    @DeleteMapping("/admin/products/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
+    public void delete(@PathVariable UUID id) { images.deleteStoredFiles(products.delete(id)); }
+
     @PostMapping("/admin/products/{id}/categories/{categoryId}") @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
     public void addCategory(@PathVariable UUID id, @PathVariable UUID categoryId) { products.addCategory(id, categoryId); }

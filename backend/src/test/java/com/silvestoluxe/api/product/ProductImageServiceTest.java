@@ -4,14 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import com.silvestoluxe.api.storage.SupabaseStorageClient;
+import com.silvestoluxe.api.storage.SupabaseStorageException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,5 +63,16 @@ class ProductImageServiceTest {
 
         verify(storage).upload(org.mockito.ArgumentMatchers.startsWith(productId + "/"), eq(png), eq("image/png"));
         verify(product).setImageUrl("https://cdn.example/product.png");
+    }
+
+    @Test
+    void aDeletedProductsPhotoThatCannotBeRemovedDoesNotStopTheRest() {
+        SupabaseStorageClient storage = mock(SupabaseStorageClient.class);
+        doThrow(new SupabaseStorageException("Storage is down.")).when(storage).delete("ring/front.webp");
+
+        new ProductImageService(mock(ProductRepository.class), mock(ProductImageRepository.class), storage)
+                .deleteStoredFiles(List.of("ring/front.webp", "ring/side.webp"));
+
+        verify(storage).delete("ring/side.webp");
     }
 }

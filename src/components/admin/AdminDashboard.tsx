@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import {
   ArrowRight, Boxes, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, ExternalLink, Eye, EyeOff, FolderTree, History, ImagePlus,
   IndianRupee, Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
-  Table2, TrendingDown, TrendingUp, TriangleAlert, Users, X
+  Table2, Trash2, TrendingDown, TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toAccountError } from '../../services/authService';
@@ -13,7 +13,7 @@ import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../.
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import { formatINR } from '../../services/silverRateService';
 import {
-  AdminApiError, createCategory, createProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
+  AdminApiError, createCategory, createProduct, deleteProduct, downloadAdminCsv, getAdminCategories, getAdminCustomers, getAdminIdentity,
   getAdminOrders, getAdminProducts, getCustomerGrowth, getCustomerOrders, getEmailStatus, getMessages, getOrderPayments, getRefundsToMake, getSalesByCategory, getSalesByPaymentMethod, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
   setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, type AdminCustomer,
   type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
@@ -27,6 +27,8 @@ type Theme = 'light' | 'dark';
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 type Notify = (kind: 'success' | 'error', text: string) => void;
 type FlatCategory = CatalogueCategory & { depth: number; path: string; trail: string };
+// Price and stock can be empty while typing; both boxes are required, so an empty one is never saved.
+type ProductDraft = Omit<ProductInput, 'price' | 'stockQuantity'> & { price: number | null; stockQuantity: number | null };
 
 const LOW_STOCK = 3;
 const CUSTOMER_PAGE_SIZE = 25;
@@ -77,9 +79,9 @@ const CATEGORY_TYPES: Record<CatalogueCategory['categoryType'], string> = {
   audience: 'Audience', collection: 'Collection', items: 'Items', landing_page: 'Landing page'
 };
 
-const emptyProduct = (): ProductInput => ({
-  name: '', slug: '', sku: '', description: '', price: 0, imageUrl: '', weightGrams: null,
-  stockQuantity: 0, isActive: true, categoryIds: []
+const emptyProduct = (): ProductDraft => ({
+  name: '', slug: '', sku: '', description: '', price: null, imageUrl: '', weightGrams: null,
+  stockQuantity: null, isActive: true, categoryIds: []
 });
 const emptyCategory = (): CategoryInput => ({
   name: '', slug: '', parentId: null, categoryType: 'collection', description: '', imageUrl: '', displayOrder: 0, isActive: true
@@ -1324,6 +1326,7 @@ const ProductManager: React.FC<{
 }> = ({ products, categories, loaded, onEdit, onChanged, notify }) => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'live' | 'hidden'>('all');
+  const [deleting, setDeleting] = useState<ApiProduct | null>(null);
   // undefined while loading, null when this server doesn't count wishlist adds yet.
   const [wishlistCounts, setWishlistCounts] = useState<Map<string, WishlistCount> | null | undefined>(undefined);
   useEffect(() => {
@@ -1362,7 +1365,7 @@ const ProductManager: React.FC<{
               <th><span className="admin-sr-only">Actions</span></th></tr></thead>
             <tbody>
               {visible.map((product) => (
-                <ProductRow key={product.id} product={product} onEdit={() => onEdit(product)} onChanged={onChanged} notify={notify}
+                <ProductRow key={product.id} product={product} onEdit={() => onEdit(product)} onDelete={() => setDeleting(product)} onChanged={onChanged} notify={notify}
                   wishlist={wishlistCounts ? wishlistCounts.get(product.id) ?? { productId: product.id, allTime: 0, recent: 0 } : null}
                   categoryText={product.categoryIds.map((id) => trails.get(id)).filter(Boolean).join(', ')} />
               ))}
@@ -1370,11 +1373,46 @@ const ProductManager: React.FC<{
           </table>
         </div>
       )}
+      {deleting && <DeleteProduct product={deleting} notify={notify} onClose={() => setDeleting(null)}
+        onDeleted={() => { setDeleting(null); onChanged(); }} />}
     </section>
   );
 };
 
-const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist: WishlistCount | null; onEdit: () => void; onChanged: () => void; notify: Notify }> = ({ product, categoryText, wishlist, onEdit, onChanged, notify }) => {
+const DeleteProduct: React.FC<{ product: ApiProduct; onClose: () => void; onDeleted: () => void; notify: Notify }> = ({ product, onClose, onDeleted, notify }) => {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const remove = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await deleteProduct(product.id);
+      notify('success', `“${product.name}” was deleted.`);
+      onDeleted();
+    } catch (cause) {
+      setError(errorText(cause, 'Unable to delete the product.'));
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal title="Delete this product?" subtitle={product.name} onClose={onClose}
+      footer={<>
+        {error && <FormError text={error} />}
+        <button type="button" className="admin-button is-secondary" onClick={onClose} disabled={busy}>Cancel</button>
+        <button type="button" className="admin-button is-danger" onClick={() => void remove()} disabled={busy}>
+          {busy ? <><LoaderCircle size={16} className="is-spinning" /> Deleting…</> : <><Trash2 size={16} /> Delete for good</>}
+        </button>
+      </>}>
+      <div className="admin-delete-note">
+        <p>This removes the product, its photos and its stock history from your shop. It can't be undone.</p>
+        <p>Past orders keep the name, SKU and price the customer paid.</p>
+        {product.isActive && <p>To take it off the shop but keep it for later, use <strong>Hide</strong> instead.</p>}
+      </div>
+    </Modal>
+  );
+};
+
+const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist: WishlistCount | null; onEdit: () => void; onDelete: () => void; onChanged: () => void; notify: Notify }> = ({ product, categoryText, wishlist, onEdit, onDelete, onChanged, notify }) => {
   const [busy, setBusy] = useState(false);
   const toggle = async () => {
     setBusy(true);
@@ -1408,6 +1446,7 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist
         <button className="admin-button is-ghost is-small" onClick={() => void toggle()} disabled={busy}>
           {product.isActive ? <><EyeOff size={14} /> Hide</> : <><Eye size={14} /> Publish</>}
         </button>
+        <button className="admin-button is-ghost is-small is-danger" onClick={onDelete} disabled={busy}><Trash2 size={14} /> Delete</button>
       </td>
     </tr>
   );
@@ -1415,20 +1454,24 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist
 
 const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueCategory[]; onClose: () => void; onSaved: () => void }> = ({ product, categories, onClose, onSaved }) => {
   const formId = useId();
-  const [form, setForm] = useState<ProductInput>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds] }) : emptyProduct());
+  const [form, setForm] = useState<ProductDraft>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds] }) : emptyProduct());
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   // Once the product exists, saving again updates it, so retrying a failed photo upload never creates a duplicate.
   const [savedId, setSavedId] = useState<string | null>(product?.id ?? null);
   const [changed, setChanged] = useState(false);
-  const update = <K extends keyof ProductInput>(key: K, value: ProductInput[K]) => setForm((current) => ({ ...current, [key]: value }));
+  const update = <K extends keyof ProductDraft>(key: K, value: ProductDraft[K]) => setForm((current) => ({ ...current, [key]: value }));
   const close = changed ? onSaved : onClose;
   const toggleCategory = (id: string) => update('categoryIds', form.categoryIds.includes(id) ? form.categoryIds.filter((item) => item !== id) : [...form.categoryIds, id]);
   const submit = async (event: React.FormEvent) => {
-    event.preventDefault(); setSaving(true); setError('');
+    event.preventDefault();
+    const { price, stockQuantity } = form;
+    if (price === null || stockQuantity === null) { setError('Enter a price and a stock quantity.'); return; }
+    const input: ProductInput = { ...form, price, stockQuantity };
+    setSaving(true); setError('');
     let id = savedId;
-    try { id = (id ? await updateProduct(id, form) : await createProduct(form)).id; setSavedId(id); setChanged(true); }
+    try { id = (id ? await updateProduct(id, input) : await createProduct(input)).id; setSavedId(id); setChanged(true); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to save product.'); setSaving(false); return; }
     try { if (files.length) await uploadProductImages(id, files); onSaved(); }
     catch (cause) { setError(`The product was saved, but its photos were not. ${cause instanceof Error ? cause.message : ''} Fix the photo and click Save product to try again; the product will not be duplicated.`); }
@@ -1458,14 +1501,17 @@ const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueC
 
         <FormSection title="Price and stock">
           <Field label="Price">
-            <span className="admin-affix"><span>₹</span><input required min="0" step="0.01" type="number" value={form.price} onChange={(e) => update('price', Number(e.target.value))} /></span>
+            <span className="admin-affix"><span>₹</span><NumberInput required min="0" step="0.01" inputMode="decimal" placeholder="e.g. 2500"
+              value={form.price} onValueChange={(value) => update('price', value)} /></span>
           </Field>
           <Field label="Stock quantity" hint={`${LOW_STOCK} or fewer counts as low stock.`}>
-            <input required min="0" type="number" value={form.stockQuantity} onChange={(e) => update('stockQuantity', Number(e.target.value))} />
+            <NumberInput required min="0" step="1" inputMode="numeric" placeholder="e.g. 5"
+              value={form.stockQuantity} onValueChange={(value) => update('stockQuantity', value)} />
           </Field>
           <Field label="SKU" hint="Your own stock code. Optional."><input value={form.sku} onChange={(e) => update('sku', e.target.value)} /></Field>
           <Field label="Weight" hint="Optional.">
-            <span className="admin-affix is-suffix"><input min="0" step="0.001" type="number" value={form.weightGrams ?? ''} onChange={(e) => update('weightGrams', e.target.value === '' ? null : Number(e.target.value))} /><span>grams</span></span>
+            <span className="admin-affix is-suffix"><NumberInput min="0" step="0.001" inputMode="decimal"
+              value={form.weightGrams} onValueChange={(value) => update('weightGrams', value)} /><span>grams</span></span>
           </Field>
         </FormSection>
 
@@ -1606,7 +1652,9 @@ const CategoryForm: React.FC<{ category: CatalogueCategory | null; categories: F
               <option value="audience">Audience</option><option value="collection">Collection</option><option value="items">Items</option>
             </select>
           </Field>
-          <Field label="Display order" hint="Lower numbers show first."><input min="0" type="number" value={form.displayOrder} onChange={(e) => update('displayOrder', Number(e.target.value))} /></Field>
+          {/* Required, so the 0 that stands in while the box is empty is never saved. */}
+          <Field label="Display order" hint="Lower numbers show first."><NumberInput required min="0" step="1" inputMode="numeric"
+            value={form.displayOrder} onValueChange={(value) => update('displayOrder', value ?? 0)} /></Field>
           <Field label="Image link" hint="Optional."><input value={form.imageUrl} onChange={(e) => update('imageUrl', e.target.value)} placeholder="https://" /></Field>
           <Field label="Description" wide><textarea value={form.description} onChange={(e) => update('description', e.target.value)} /></Field>
         </FormSection>
@@ -2378,6 +2426,22 @@ const Field: React.FC<{ label: string; hint?: string; error?: string; wide?: boo
     {error ? <small className="admin-field-hint is-error" role="alert">{error}</small> : hint && <small className="admin-field-hint">{hint}</small>}
   </label>
 );
+
+/**
+ * A number box that can be emptied while typing. It keeps the typed text itself, so clearing it doesn't put a 0 back,
+ * and reports null while it's empty. Its value changes only through the box.
+ */
+const NumberInput: React.FC<Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'value' | 'onChange'> & {
+  value: number | null; onValueChange: (value: number | null) => void;
+}> = ({ value, onValueChange, ...props }) => {
+  const [text, setText] = useState(() => value === null ? '' : String(value));
+  return (
+    <input {...props} type="number" value={text}
+      onChange={(e) => { setText(e.target.value); onValueChange(e.target.value === '' ? null : Number(e.target.value)); }}
+      // Scrolling the page over a focused box would otherwise change the number without anyone noticing.
+      onWheel={(e) => e.currentTarget.blur()} />
+  );
+};
 
 const Switch: React.FC<{ checked: boolean; label: string; description: string; disabled?: boolean; onChange: (value: boolean) => void }> = ({ checked, label, description, disabled, onChange }) => (
   <label className={`admin-switch is-wide ${disabled ? 'is-disabled' : ''}`}>
