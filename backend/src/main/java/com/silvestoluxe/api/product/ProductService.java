@@ -2,6 +2,7 @@ package com.silvestoluxe.api.product;
 
 import static com.silvestoluxe.api.product.ProductDtos.*;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import com.silvestoluxe.api.category.Category;
@@ -19,10 +20,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Transactional(readOnly = true)
 public class ProductService {
     private final ProductRepository products;
+    private final ProductImageRepository images;
     private final CategoryRepository categories;
     private final StockLedger stock;
-    public ProductService(ProductRepository products, CategoryRepository categories, StockLedger stock) {
+    public ProductService(ProductRepository products, ProductImageRepository images, CategoryRepository categories, StockLedger stock) {
         this.products = products;
+        this.images = images;
         this.categories = categories;
         this.stock = stock;
     }
@@ -83,6 +86,24 @@ public class ProductService {
         Product product = find(id);
         product.setActive(request.isActive());
         return response(product);
+    }
+
+    /**
+     * Deletes a product for good and returns where its photos are stored, so they can be removed once this commits.
+     * Past orders keep their own copy of its name, SKU and price; the database clears their link to it and removes
+     * its photo records, category places, stock history and wishlist counts with it.
+     */
+    @Transactional
+    public List<String> delete(UUID id) {
+        Product product = find(id);
+        List<ProductImage> photos = images.findByProductIdOrderByDisplayOrderAscCreatedAtAsc(id);
+        List<String> photoPaths = photos.stream().map(ProductImage::getStoragePath).toList();
+        // Removed first and by name: a loaded photo record still pointing at a deleted product makes Hibernate refuse to flush.
+        images.deleteAll(photos);
+        products.delete(product);
+        // Fails here, inside the transaction, rather than after the photos are already gone.
+        products.flush();
+        return photoPaths;
     }
 
     @Transactional

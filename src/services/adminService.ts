@@ -376,6 +376,11 @@ export function setProductActive(id: string, isActive: boolean) {
   return adminRequest<ApiProduct>(`/admin/products/${id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive }) });
 }
 
+/** Deletes the product for good. Past orders keep their own copy of its name, SKU and price. */
+export function deleteProduct(id: string) {
+  return adminRequest<void>(`/admin/products/${id}`, { method: 'DELETE' });
+}
+
 export async function uploadProductImages(productId: string, files: File[]): Promise<void> {
   for (let index = 0; index < files.length; index += 1) {
     const form = new FormData();

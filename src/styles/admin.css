@@ -29,6 +29,7 @@
   --a-warning-bg: #fcf1df;
   --a-danger: #b42318;
   --a-danger-bg: #fdecea;
+  --a-on-danger: #ffffff;
   --a-info: #4f46b8;
   --a-info-bg: #eeedfb;
   --a-neutral-bg: #eceef1;
@@ -83,6 +84,7 @@
   --a-warning-bg: rgba(242, 184, 96, 0.13);
   --a-danger: #f4928a;
   --a-danger-bg: rgba(244, 146, 138, 0.13);
+  --a-on-danger: #2b0d0a;
   --a-info: #aca6f7;
   --a-info-bg: rgba(172, 166, 247, 0.13);
   --a-neutral-bg: rgba(255, 255, 255, 0.07);
@@ -161,6 +163,10 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-button.is-secondary:hover:not(:disabled) { background: var(--a-hover); }
 .admin-button.is-ghost { background: transparent; color: var(--a-text-2); }
 .admin-button.is-ghost:hover:not(:disabled) { background: var(--a-hover); color: var(--a-text); }
+.admin-button.is-danger { background: var(--a-danger); color: var(--a-on-danger); box-shadow: var(--a-shadow-sm); }
+.admin-button.is-danger:hover:not(:disabled) { background: color-mix(in srgb, var(--a-danger) 86%, var(--a-text)); }
+.admin-button.is-ghost.is-danger { background: transparent; color: var(--a-danger); box-shadow: none; }
+.admin-button.is-ghost.is-danger:hover:not(:disabled) { background: var(--a-danger-bg); color: var(--a-danger); }
 .admin-button.is-small { min-height: 2rem; padding: 0.375rem 0.65rem; font-size: 0.8125rem; }
 .admin-button.is-block { width: 100%; }
 .admin-button.is-wide { min-height: 2.75rem; margin-top: 0.5rem; }
@@ -465,6 +471,9 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-modal-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.6rem; padding: 0.9rem 1.5rem; border-top: 1px solid var(--a-border); background: var(--a-surface-2); }
 .admin-modal-footer .admin-form-error { flex-basis: 100%; }
 .admin-modal-footer-start { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-right: auto; }
+.admin-delete-note { display: grid; gap: 0.6rem; color: var(--a-text-2); font-size: 0.9375rem; line-height: 1.55; }
+.admin-delete-note p { margin: 0; }
+.admin-delete-note strong { color: var(--a-text); }
 
 .admin-order-facts { display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; margin: 0 0 1.25rem; }
 .admin-order-facts dt { margin-bottom: 0.3rem; color: var(--a-text-3); font-size: 0.75rem; font-weight: 600; }

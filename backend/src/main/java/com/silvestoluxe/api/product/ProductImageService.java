@@ -7,6 +7,8 @@ import java.util.UUID;
 import com.silvestoluxe.api.storage.SupabaseStorageClient;
 import com.silvestoluxe.api.storage.SupabaseStorageException;
 import jakarta.validation.constraints.Min;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly = true)
 public class ProductImageService {
+    private static final Logger log = LoggerFactory.getLogger(ProductImageService.class);
     private static final int MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     private final ProductRepository products;
     private final ProductImageRepository images;
@@ -80,6 +83,20 @@ public class ProductImageService {
         images.flush();
         if (wasPrimary) product.setImageUrl(images.findFirstByProductIdOrderByDisplayOrderAscCreatedAtAsc(productId)
                 .map(ProductImage::getImageUrl).orElse(null));
+    }
+
+    /**
+     * Removes the stored photo files of a product that has already been deleted. Each file is tried on its own, and one
+     * that can't be removed is left behind unused rather than undoing the deletion.
+     */
+    public void deleteStoredFiles(List<String> paths) {
+        for (String path : paths) {
+            try {
+                storage.delete(path);
+            } catch (SupabaseStorageException exception) {
+                log.warn("Could not remove a deleted product's photo from storage; the file is left unused.");
+            }
+        }
     }
 
     private Product findProduct(UUID productId) {
