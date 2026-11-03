@@ -3,6 +3,9 @@ package com.silvestoluxe.api.category;
 import java.time.Instant;
 import java.util.UUID;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,8 +36,10 @@ public class Category {
     private int displayOrder;
     @Column(nullable = false)
     private boolean isActive;
+    @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
+    @UpdateTimestamp
     @Column(nullable = false)
     private Instant updatedAt;
 
