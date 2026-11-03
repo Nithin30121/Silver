@@ -23,11 +23,13 @@ function validateContact(form: ContactInput): Partial<Record<ContactField, strin
 }
 
 export const ShippingPage: React.FC = () => {
+  const { navigateTo } = useShop();
+
   return (
     <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
       <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
-          <span className="eyebrow">TRANSIT & EXCHANGES</span>
+          <span className="eyebrow">TRANSIT & RETURNS</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
             Shipping & <em>Returns.</em>
           </h1>
@@ -59,13 +61,57 @@ export const ShippingPage: React.FC = () => {
 
           <section style={{ padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)' }}>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-text)' }}>
-              14-Day Complimentary Returns & Exchanges
+              Returns
             </h2>
             <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: '1.8' }}>
-              We understand the importance of perfect proportions. If you need a size exchange or wish to return an unworn piece in its original packaging with tags intact, we arrange complimentary doorstep courier pickup within <strong style={{ color: 'var(--color-text)' }}>14 days of delivery</strong>.
+              To protect the authenticity of our genuine 925 sterling silver products, all return requests are personally reviewed. If your order arrives damaged, defective, incorrect, or otherwise problematic, contact us with your order ID and we will guide you through the next steps.
             </p>
+            <a href="/return-policy" className="btn-text" style={{ display: 'inline-flex', marginTop: '1.25rem' }}
+              onClick={(event) => { event.preventDefault(); navigateTo('returns'); }}>
+              Read our Return Policy
+            </a>
           </section>
         </div>
+      </div>
+    </div>
+  );
+};
+
+export const ReturnPolicyPage: React.FC = () => {
+  return (
+    <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
+      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
+        <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
+          <span className="eyebrow">RETURN POLICY</span>
+          <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
+            Returns & <em>Customer Support.</em>
+          </h1>
+          <p style={{ fontSize: '1.0625rem', color: 'var(--color-text-muted)', lineHeight: '1.75' }}>
+            At SILVORA, every piece of jewellery matters.
+          </p>
+        </div>
+      </div>
+
+      <div className="container" style={{ maxWidth: '840px', marginTop: '4rem' }}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)', fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: '1.8' }}>
+          <p>
+            To protect the authenticity of our genuine 925 sterling silver products, all return requests are personally reviewed.
+          </p>
+          <p>
+            If you receive a damaged, defective, incorrect, or otherwise problematic order, please contact us at{' '}
+            <a href="mailto:silvoraluxeforyou@gmail.com" style={{ color: 'var(--color-accent)', textDecoration: 'underline', textUnderlineOffset: '3px' }}>silvoraluxeforyou@gmail.com</a>{' '}
+            with your order ID and details of the issue.
+          </p>
+          <p>
+            We will personally review your concern and guide you through the next steps.
+          </p>
+          <p>
+            Returned items are subject to an authenticity and condition inspection before any return or refund is approved.
+          </p>
+          <p style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', fontStyle: 'italic', color: 'var(--color-text)' }}>
+            Your trust matters to us, and we’re always here to help.
+          </p>
+        </section>
       </div>
     </div>
   );
@@ -263,8 +309,8 @@ export const FAQPage: React.FC = () => {
       a: 'Each ornament arrives in our signature bespoke presentation box, nestled inside an anti-tarnish suede pouch, accompanied by a certificate of authenticity and a polishing cloth.'
     },
     {
-      q: 'Can I exchange my piece if the size does not fit?',
-      a: 'Yes. We offer a complimentary 14-day exchange window for unworn items in original condition. Contact our concierge team to schedule a pickup.'
+      q: 'Can I return or exchange my piece?',
+      a: 'To protect the authenticity of our genuine 925 sterling silver products, all return requests are personally reviewed. If your order arrives damaged, defective, incorrect, or otherwise problematic, email us at silvoraluxeforyou@gmail.com with your order ID and details of the issue, and we will guide you through the next steps. Returned items are inspected for authenticity and condition before any return or refund is approved.'
     }
   ];
 

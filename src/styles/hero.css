@@ -193,6 +193,20 @@
   color: rgba(214, 218, 225, 0.72);
 }
 
+/* A narrow band of light crosses the line a moment before it crosses the wordmark, on the same slow loop. */
+.lux-hero-label-text {
+  background: linear-gradient(100deg,
+    var(--lux-silver-2) 0%, var(--lux-silver-2) 38%, var(--lux-silver-1) 46%, #fff 50%,
+    var(--lux-silver-1) 54%, var(--lux-silver-2) 62%, var(--lux-silver-2) 100%);
+  background-size: 260% 100%;
+  background-position: 100% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 6px rgba(244, 245, 247, 0.3));
+  animation: lux-sheen 12s cubic-bezier(0.45, 0, 0.2, 1) 2.2s infinite;
+}
+
 .lux-hero-label::before,
 .lux-hero-label::after {
   content: '';
@@ -384,6 +398,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lux-hero-wordmark,
+  .lux-hero-label-text,
   .lux-hero-streak,
   .lux-hero-still span {
     animation: none;
