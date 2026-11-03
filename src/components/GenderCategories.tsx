@@ -25,7 +25,7 @@ export const GenderCategories: React.FC = () => {
 
   return (
     <section className="gender-categories-section" aria-labelledby="gender-categories-heading">
-      <div className="container">
+      <div className="container gender-categories-container">
         <motion.div className="gender-categories-header" {...revealOnScroll()}>
           <span className="eyebrow">DISCOVER YOUR STYLE</span>
           <h2 id="gender-categories-heading" className="headline-editorial">Jewellery, <em>Defined by You.</em></h2>
