@@ -145,6 +145,7 @@ export const Footer: React.FC = () => {
         <div className="footer-bottom">
           <span>&copy; {new Date().getFullYear()} SILVORA. All Rights Reserved. Crafted in Pure 925 Sterling Silver.</span>
           <div style={{ display: 'flex', gap: '1.5rem' }}>
+            <a href="#returns" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('returns'); }}>Return Policy</a>
             <a href="#privacy" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('faq'); }}>Privacy Policy</a>
             <a href="#terms" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('shipping'); }}>Terms & Conditions</a>
           </div>

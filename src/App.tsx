@@ -9,7 +9,7 @@ import { CatalogPage } from './components/CatalogPage';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { StoryPage } from './components/StoryPage';
 import { CarePage } from './components/CarePage';
-import { ShippingPage, ContactPage, FAQPage } from './components/SupportingPages';
+import { ShippingPage, ReturnPolicyPage, ContactPage, FAQPage } from './components/SupportingPages';
 import { CartDrawer } from './components/CartDrawer';
 import { WishlistDrawer } from './components/WishlistDrawer';
 import { SearchModal } from './components/SearchModal';
@@ -26,10 +26,10 @@ import { AuthFlowCoordinator } from './components/auth/AuthFlowCoordinator';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { AnimatePresence, MotionConfig, motion } from 'motion/react';
 import { luxeEase, revealOnScroll } from './lib/motion';
-import { Sparkles, ShieldCheck, RefreshCw, Check } from 'lucide-react';
+import { Sparkles, ShieldCheck, RotateCcw, ArrowRight, Check } from 'lucide-react';
 
 const MainContent: React.FC = () => {
-  const { currentView, toastMessage } = useShop();
+  const { currentView, toastMessage, navigateTo } = useShop();
 
   return (
     <>
@@ -69,15 +69,17 @@ const MainContent: React.FC = () => {
                     </p>
                   </motion.div>
 
-                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(14, 15, 17, 0.6)', border: '1px solid rgba(143, 146, 153, 0.15)' }} {...revealOnScroll(0.2)}>
-                    <RefreshCw size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
+                  <motion.a href="/return-policy" className="assurance-link" style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(14, 15, 17, 0.6)', border: '1px solid rgba(143, 146, 153, 0.15)' }} {...revealOnScroll(0.2)}
+                    onClick={(event) => { event.preventDefault(); navigateTo('returns'); }}>
+                    <RotateCcw size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
                     <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
-                      Complimentary 14-Day Exchange
+                      Return Policy
                     </h3>
                     <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.65' }}>
-                      Insured doorstep delivery and hassle-free size exchanges for total confidence in your selection.
+                      To protect the authenticity of our genuine 925 sterling silver products, all return requests are personally reviewed.
                     </p>
-                  </motion.div>
+                    <span className="assurance-link-cue">Read the policy <ArrowRight size={12} aria-hidden="true" /></span>
+                  </motion.a>
                 </div>
               </div>
             </section>
@@ -91,6 +93,7 @@ const MainContent: React.FC = () => {
         {currentView === 'story' && <StoryPage />}
         {currentView === 'care' && <CarePage />}
         {currentView === 'shipping' && <ShippingPage />}
+        {currentView === 'returns' && <ReturnPolicyPage />}
         {currentView === 'contact' && <ContactPage />}
         {currentView === 'faq' && <FAQPage />}
 

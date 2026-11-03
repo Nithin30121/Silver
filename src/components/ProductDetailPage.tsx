@@ -328,7 +328,7 @@ export const ProductDetailPage: React.FC = () => {
                 <span style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text)' }}>
                   Atelier Guarantee
                 </span>
-                <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>14-Day Size Exchange</span>
+                <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Returns Personally Reviewed</span>
               </div>
             </div>
 
@@ -419,6 +419,11 @@ export const ProductDetailPage: React.FC = () => {
                 {activeAccordion === 'shipping' && (
                   <div style={{ paddingBottom: '1.25rem', fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: '1.75' }}>
                     <p>{currentProduct.shippingInfo}</p>
+                    <p style={{ marginTop: '0.75rem' }}>
+                      All return requests are personally reviewed to protect the authenticity of our genuine 925 sterling silver.{' '}
+                      <a href="/return-policy" style={{ color: 'var(--color-accent)', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                        onClick={(event) => { event.preventDefault(); navigateTo('returns'); }}>Read our Return Policy</a>
+                    </p>
                   </div>
                 )}
               </div>
