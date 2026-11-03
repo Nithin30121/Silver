@@ -69,6 +69,32 @@ export const StoryPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Story Section 3: Thank-You Note */}
+        <section className="story-thanks" aria-labelledby="story-thanks-title">
+          <div>
+            <span className="eyebrow">A Little More Than Jewellery</span>
+            <h2 id="story-thanks-title" className="headline-editorial" style={{ fontSize: 'clamp(2rem, 3.6vw, 2.75rem)', marginBottom: '1.5rem' }}>
+              Thank You for Making SILVORA Part of <em>Your Story</em>.
+            </h2>
+            <p style={{ fontSize: '1rem', lineHeight: '1.8', color: 'var(--color-text-muted)', marginBottom: '1.75rem' }}>
+              Whether you’re choosing your first silver ring, finding a meaningful gift, or adding something special to your collection, we’re glad you’re here. Your trust means more to us than any sale.
+            </p>
+            <p style={{ fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
+              SILVORA — Made to be worn. Chosen to be kept.
+            </p>
+          </div>
+
+          <div style={{ aspectRatio: '4/3', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(143, 146, 153, 0.25)', overflow: 'hidden' }}>
+            {/* Framed to keep the ring and the SILVORA name on the box in view. */}
+            <img
+              src="/images/story_gift_box.webp"
+              alt="Engraved silver ring beside a black SILVORA gift box tied with a satin ribbon"
+              loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '20% 50%' }}
+            />
+          </div>
+        </section>
+
         {/* Pillars */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', padding: '3rem 2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.22)', textAlign: 'center', marginBottom: '5rem' }}>
           <div>
@@ -106,32 +132,6 @@ export const StoryPage: React.FC = () => {
             <ArrowRight size={14} />
           </button>
         </div>
-
-        {/* Closing Thank-You Note */}
-        <section className="story-thanks" aria-labelledby="story-thanks-title">
-          <div>
-            <span className="eyebrow">A Little More Than Jewellery</span>
-            <h2 id="story-thanks-title" className="headline-editorial" style={{ fontSize: 'clamp(2rem, 3.6vw, 2.75rem)', marginBottom: '1.5rem' }}>
-              Thank You for Making SILVORA Part of <em>Your Story</em>.
-            </h2>
-            <p style={{ fontSize: '1rem', lineHeight: '1.8', color: 'var(--color-text-muted)', marginBottom: '1.75rem' }}>
-              Whether you’re choosing your first silver ring, finding a meaningful gift, or adding something special to your collection, we’re glad you’re here. Your trust means more to us than any sale.
-            </p>
-            <p style={{ fontSize: '0.875rem', fontWeight: 600, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--color-accent)' }}>
-              SILVORA — Made to be worn. Chosen to be kept.
-            </p>
-          </div>
-
-          <div style={{ aspectRatio: '4/3', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(143, 146, 153, 0.25)', overflow: 'hidden' }}>
-            {/* Framed to keep the ring and the SILVORA name on the box in view. */}
-            <img
-              src="/images/story_gift_box.webp"
-              alt="Engraved silver ring beside a black SILVORA gift box tied with a satin ribbon"
-              loading="lazy"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: '20% 50%' }}
-            />
-          </div>
-        </section>
       </div>
     </div>
   );
