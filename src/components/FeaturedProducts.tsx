@@ -4,6 +4,7 @@ import { useShop } from '../context/ShopContext';
 import type { Product } from '../types';
 import { gentleSpring, revealOnScroll, useBumpOnIncrease } from '../lib/motion';
 import { Heart, Eye, ArrowRight } from 'lucide-react';
+import { PriceTag } from './PriceTag';
 
 interface ProductCardProps {
   product: Product;
@@ -17,20 +18,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
   const { navigateTo, isWishlisted, toggleWishlist, addToCart, setQuickViewProduct } = useShop();
   const wishlisted = isWishlisted(product.id);
   const heartRef = useBumpOnIncrease<HTMLSpanElement>(wishlisted ? 1 : 0);
-
-  const formattedPrice = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(product.price);
-
-  const formattedOriginal = product.originalPrice
-    ? new Intl.NumberFormat('en-IN', {
-        style: 'currency',
-        currency: 'INR',
-        maximumFractionDigits: 0
-      }).format(product.originalPrice)
-    : null;
 
   return (
     <motion.div className="reveal-cell" {...revealOnScroll((index % 4) * 0.08)}>
@@ -139,10 +126,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
           <span className="product-subtitle">{product.material}</span>
 
           <div className="product-price-row">
-            <span className="product-price">{formattedPrice}</span>
-            {formattedOriginal && (
-              <span className="product-price-original">{formattedOriginal}</span>
-            )}
+            <PriceTag price={product.price} originalPrice={product.originalPrice} />
           </div>
 
           {/* Available Sizes Tagging */}

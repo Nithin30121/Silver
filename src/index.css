@@ -1174,11 +1174,42 @@ img {
   color: var(--color-accent-bright);
 }
 
-.product-price-original {
+/* A product's price; with a discount, the original price sits crossed out above it with the % off. */
+.price-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.price-tag-was {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.8125rem;
   color: var(--color-text-muted);
-  text-decoration: line-through;
 }
+
+.price-tag-off {
+  padding: 0.1rem 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-black);
+  background-color: var(--color-accent);
+}
+
+.price-tag-now {
+  font-weight: 600;
+  color: var(--color-accent-bright);
+}
+
+.price-tag.is-card .price-tag-now { font-size: 0.9375rem; }
+.price-tag.is-modal .price-tag-was { font-size: 0.9375rem; }
+.price-tag.is-modal .price-tag-now { font-size: 1.35rem; color: var(--color-silver-highlight); }
+.price-tag.is-page .price-tag-was { font-size: 1.05rem; }
+.price-tag.is-page .price-tag-now { font-size: 1.65rem; color: var(--color-silver-highlight); }
 
 /* Slide-over Drawers (Cart, Wishlist & mobile menu); Motion slides the panels */
 .drawer-backdrop {

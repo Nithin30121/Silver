@@ -18,6 +18,8 @@ export interface ApiProduct {
   sku: string | null;
   description: string;
   price: number | string;
+  /** The crossed-out price before a discount, or null when there is none. Always higher than price. */
+  originalPrice?: number | string | null;
   imageUrl: string | null;
   weightGrams: number | string | null;
   stockQuantity: number;

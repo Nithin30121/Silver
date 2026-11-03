@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { ProductCard } from './FeaturedProducts';
 import { AnimatedModal } from './AnimatedModal';
-import { 
+import { PriceTag } from './PriceTag';
+import {
   Heart, 
   ShoppingBag, 
   ShieldCheck, 
@@ -60,11 +61,6 @@ export const ProductDetailPage: React.FC = () => {
 
   const wishlisted = isWishlisted(currentProduct.id);
 
-  const formattedPrice = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(currentProduct.price);
 
   const relatedProducts = products
     .filter((p) => p.id !== currentProduct.id && (p.category === currentProduct.category || p.gender === currentProduct.gender))
@@ -167,16 +163,9 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Price Row */}
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '1rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }}>
-              <span style={{ fontSize: '1.65rem', fontWeight: 600, color: 'var(--color-silver-highlight)' }}>
-                {formattedPrice}
-              </span>
-              {currentProduct.originalPrice && (
-                <span style={{ fontSize: '1.1rem', color: 'var(--color-text-muted)', textDecoration: 'line-through' }}>
-                  ₹{currentProduct.originalPrice.toLocaleString('en-IN')}
-                </span>
-              )}
-              <span style={{ fontSize: '0.75rem', color: 'var(--color-silver-accent)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.5rem 1rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }}>
+              <PriceTag price={currentProduct.price} originalPrice={currentProduct.originalPrice} size="page" />
+              <span style={{ fontSize: '0.75rem', color: 'var(--color-silver-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', paddingBottom: '0.35rem' }}>
                 Includes GST & Insured Transit
               </span>
             </div>

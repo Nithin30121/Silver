@@ -23,6 +23,45 @@ import org.springframework.web.server.ResponseStatusException;
 class ProductServiceTest {
 
     @Test
+    void anOriginalPriceAboveThePriceIsKeptAsTheDiscount() {
+        ProductRepository products = mock(ProductRepository.class);
+        when(products.save(any(Product.class))).thenAnswer(call -> call.getArgument(0));
+
+        ProductDtos.Response ring = service(products, mock(ProductImageRepository.class))
+                .create(upsert(new BigDecimal("2000.00"), new BigDecimal("2500.00")), UUID.randomUUID());
+
+        assertEquals(new BigDecimal("2000.00"), ring.price());
+        assertEquals(new BigDecimal("2500.00"), ring.originalPrice());
+    }
+
+    @Test
+    void anOriginalPriceThatIsNotHigherShowsNoDiscount() {
+        BigDecimal price = new BigDecimal("2000.00");
+        assertEquals(null, ProductService.discountedFrom(null, price));
+        assertEquals(null, ProductService.discountedFrom(new BigDecimal("2000.00"), price));
+        assertEquals(null, ProductService.discountedFrom(new BigDecimal("1500.00"), price));
+        assertEquals(new BigDecimal("2000.01"), ProductService.discountedFrom(new BigDecimal("2000.01"), price));
+    }
+
+    @Test
+    void raisingThePriceToTheOriginalPriceEndsTheDiscount() {
+        ProductRepository products = mock(ProductRepository.class);
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("2000.00"), 3);
+        ring.setOriginalPrice(new BigDecimal("2500.00"));
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+
+        service(products, mock(ProductImageRepository.class))
+                .update(ring.getId(), upsert(new BigDecimal("2500.00"), new BigDecimal("2500.00")), UUID.randomUUID());
+
+        assertEquals(new BigDecimal("2500.00"), ring.getPrice());
+        assertEquals(null, ring.getOriginalPrice());
+    }
+
+    private static ProductDtos.Upsert upsert(BigDecimal price, BigDecimal originalPrice) {
+        return new ProductDtos.Upsert("Moon Ring", "moon-ring", "MR-1", "", price, originalPrice, null, null, 3, true, java.util.Set.of());
+    }
+
+    @Test
     void deletingAProductRemovesItsPhotoRecordsFirstAndHandsBackTheirFiles() {
         ProductRepository products = mock(ProductRepository.class);
         ProductImageRepository images = mock(ProductImageRepository.class);
