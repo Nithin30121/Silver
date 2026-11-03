@@ -445,6 +445,11 @@ export function updateCategory(id: string, input: CategoryInput) {
   return adminRequest<CatalogueCategory>(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(input) });
 }
 
+/** The server refuses while the category still has sections or products in it. */
+export function deleteCategory(id: string) {
+  return adminRequest<void>(`/admin/categories/${id}`, { method: 'DELETE' });
+}
+
 export function setCategoryActive(id: string, isActive: boolean) {
   return adminRequest<CatalogueCategory>(`/admin/categories/${id}/status`, { method: 'PATCH', body: JSON.stringify({ isActive }) });
 }

@@ -13,7 +13,7 @@ import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../.
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import { formatINR } from '../../services/silverRateService';
 import {
-  AdminApiError, bookShipment, cancelShipment, closeReturnedShipment, createCategory, createProduct, deleteProduct, downloadAdminCsv,
+  AdminApiError, bookShipment, cancelShipment, closeReturnedShipment, createCategory, createProduct, deleteCategory, deleteProduct, downloadAdminCsv,
   getOrderShipments, refreshShipment, type OrderShipments, type ShipmentState, getAdminCategories, getAdminCustomers, getAdminIdentity,
   getAdminOrders, getAdminProducts, getCustomerGrowth, getCustomerOrders, getEmailStatus, getMessages, getOrderPayments, getRefundsToMake, getSalesByCategory, getSalesByPaymentMethod, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
   setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, type AdminCustomer,
@@ -332,7 +332,7 @@ export const AdminDashboard: React.FC = () => {
                 onChanged={() => void reload()} notify={notify} />
             )}
             {section === 'categories' && (
-              <CategoryManager categories={flatCategories} loaded={loaded} onEdit={setEditingCategory} onChanged={() => void reload()} notify={notify} />
+              <CategoryManager categories={flatCategories} products={products} loaded={loaded} onEdit={setEditingCategory} onChanged={() => void reload()} notify={notify} />
             )}
             {section === 'inventory' && <Inventory products={products} loaded={loaded} refreshedAt={loadedAt} onEdit={setEditingProduct} />}
             {section === 'orders' && <OrderManager initialStatus={orderStatusFilter} refreshedAt={loadedAt} onView={setViewingOrder} notify={notify} />}
@@ -1571,23 +1571,73 @@ const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueC
 
 /* ---------- Categories ---------- */
 
-const CategoryManager: React.FC<{ categories: FlatCategory[]; loaded: boolean; onEdit: (category: CatalogueCategory | null) => void; onChanged: () => void; notify: Notify }> = ({ categories, loaded, onEdit, onChanged, notify }) => (
-  <section className="admin-card">
-    {!loaded ? <LoadingRows /> : categories.length === 0
-      ? <EmptyState icon={<FolderTree size={20} />} title="No categories yet" text="Categories group your products in the shop menu."
-          action={<button className="admin-button is-primary" onClick={() => onEdit(null)}><Plus size={16} /> Add category</button>} />
-      : (
-        <div className="admin-table-scroll">
-          <table className="admin-table">
-            <thead><tr><th>Category</th><th>Type</th><th>URL slug</th><th className="is-right">Order</th><th>Status</th><th><span className="admin-sr-only">Actions</span></th></tr></thead>
-            <tbody>{categories.map((category) => <CategoryRow key={category.id} category={category} onEdit={() => onEdit(category)} onChanged={onChanged} notify={notify} />)}</tbody>
-          </table>
-        </div>
-      )}
-  </section>
-);
+const CategoryManager: React.FC<{ categories: FlatCategory[]; products: ApiProduct[]; loaded: boolean; onEdit: (category: CatalogueCategory | null) => void; onChanged: () => void; notify: Notify }> = ({ categories, products, loaded, onEdit, onChanged, notify }) => {
+  const [deleting, setDeleting] = useState<FlatCategory | null>(null);
+  return (
+    <section className="admin-card">
+      {!loaded ? <LoadingRows /> : categories.length === 0
+        ? <EmptyState icon={<FolderTree size={20} />} title="No categories yet" text="Categories group your products in the shop menu."
+            action={<button className="admin-button is-primary" onClick={() => onEdit(null)}><Plus size={16} /> Add category</button>} />
+        : (
+          <div className="admin-table-scroll">
+            <table className="admin-table">
+              <thead><tr><th>Category</th><th>Type</th><th>URL slug</th><th className="is-right">Order</th><th>Status</th><th><span className="admin-sr-only">Actions</span></th></tr></thead>
+              <tbody>{categories.map((category) => <CategoryRow key={category.id} category={category} onEdit={() => onEdit(category)}
+                onDelete={() => setDeleting(category)} onChanged={onChanged} notify={notify} />)}</tbody>
+            </table>
+          </div>
+        )}
+      {deleting && <DeleteCategory category={deleting} products={products.filter((product) => product.categoryIds.includes(deleting.id))}
+        notify={notify} onClose={() => setDeleting(null)} onDeleted={() => { setDeleting(null); onChanged(); }} />}
+    </section>
+  );
+};
 
-const CategoryRow: React.FC<{ category: FlatCategory; onEdit: () => void; onChanged: () => void; notify: Notify }> = ({ category, onEdit, onChanged, notify }) => {
+/** Only an empty category can go: its sections and products are listed first, so nothing disappears from the shop by surprise. */
+const DeleteCategory: React.FC<{ category: FlatCategory; products: ApiProduct[]; onClose: () => void; onDeleted: () => void; notify: Notify }> = ({ category, products, onClose, onDeleted, notify }) => {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const sections = category.children;
+  const empty = sections.length === 0 && products.length === 0;
+  const remove = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await deleteCategory(category.id);
+      notify('success', `“${category.name}” was deleted.`);
+      onDeleted();
+    } catch (cause) {
+      setError(errorText(cause, 'Unable to delete the category.'));
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal title={empty ? 'Delete this category?' : 'This category isn’t empty yet'} subtitle={category.trail} onClose={onClose}
+      footer={<>
+        {error && <FormError text={error} />}
+        <button type="button" className="admin-button is-secondary" onClick={onClose} disabled={busy}>{empty ? 'Cancel' : 'Close'}</button>
+        {empty && (
+          <button type="button" className="admin-button is-danger" onClick={() => void remove()} disabled={busy}>
+            {busy ? <><LoaderCircle size={16} className="is-spinning" /> Deleting…</> : <><Trash2 size={16} /> Delete for good</>}
+          </button>
+        )}
+      </>}>
+      <div className="admin-delete-note">
+        {empty ? <>
+          <p>This removes the category from your shop menu. It can't be undone.</p>
+          <p>No products are in it, so none are affected.</p>
+          {category.isActive && <p>To take it off the shop but keep it for later, use <strong>Hide</strong> instead.</p>}
+        </> : <>
+          {sections.length > 0 && <p>It has {sections.length === 1 ? 'a section' : `${sections.length} sections`} inside it: <strong>{sections.map((section) => section.name).join(', ')}</strong>. {sections.length === 1 ? 'Delete it first, or edit it to move it' : 'Delete those first, or edit them to move them'} under another category.</p>}
+          {products.length > 0 && <p>{products.length === 1 ? 'A product is' : `${products.length} products are`} in it: <strong>{products.map((product) => product.name).join(', ')}</strong>. Edit {products.length === 1 ? 'it' : 'each one'} in Products and untick this category first.</p>}
+          <p>To take it off the shop without emptying it, use <strong>Hide</strong> instead.</p>
+        </>}
+      </div>
+    </Modal>
+  );
+};
+
+const CategoryRow: React.FC<{ category: FlatCategory; onEdit: () => void; onDelete: () => void; onChanged: () => void; notify: Notify }> = ({ category, onEdit, onDelete, onChanged, notify }) => {
   const [busy, setBusy] = useState(false);
   const toggle = async () => {
     setBusy(true);
@@ -1618,6 +1668,7 @@ const CategoryRow: React.FC<{ category: FlatCategory; onEdit: () => void; onChan
         <button className="admin-button is-ghost is-small" disabled={busy} onClick={() => void toggle()}>
           {category.isActive ? <><EyeOff size={14} /> Hide</> : <><Eye size={14} /> Publish</>}
         </button>
+        <button className="admin-button is-ghost is-small is-danger" onClick={onDelete} disabled={busy}><Trash2 size={14} /> Delete</button>
       </td>
     </tr>
   );
