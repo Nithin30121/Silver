@@ -613,7 +613,8 @@ img {
 
 .gender-categories-header {
   max-width: 720px;
-  margin-bottom: 3rem;
+  margin: 0 auto 3rem;
+  text-align: center;
 }
 
 .gender-categories-intro {
@@ -623,10 +624,11 @@ img {
   color: var(--color-text-muted);
 }
 
+/* Men and Women, then the collections that are coming soon. */
 .gender-panels-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
 }
 
 .gender-panel {
@@ -658,7 +660,7 @@ img {
 .gender-panel-media {
   position: relative;
   width: 100%;
-  aspect-ratio: 4 / 4.7;
+  aspect-ratio: 4 / 5.8;
   overflow: hidden;
   background-color: #0a0a0b;
 }
@@ -667,7 +669,8 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 30%;
+  /* Keeps the ring, a little above the middle, in view when a wider phone card trims the photo. */
+  object-position: center 35%;
   display: block;
   transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -690,7 +693,7 @@ img {
 .gender-panel-overlay {
   position: absolute;
   inset: auto 0 0 0;
-  padding: 2.25rem 2.25rem 2rem;
+  padding: 2rem 1.75rem 1.85rem;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -762,6 +765,97 @@ img {
   transform: translateX(6px);
 }
 
+/* A coming-soon card is not a link, so it has no hover lift. */
+.gender-panel.is-coming-soon {
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.85rem 0 2rem;
+  text-align: center;
+  cursor: default;
+}
+
+.gender-panel.is-coming-soon:hover {
+  border-color: rgba(143, 146, 153, 0.25);
+  box-shadow: none;
+  transform: none;
+}
+
+.gender-soon-label {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  color: var(--color-accent-text);
+}
+
+.gender-soon-label::before,
+.gender-soon-label::after {
+  content: '';
+  width: 2.25rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(183, 213, 240, 0.55));
+}
+
+.gender-soon-label::after {
+  /* Matches the spacing after the last letter, so the label stays centred. */
+  margin-left: -0.26em;
+  background: linear-gradient(90deg, rgba(183, 213, 240, 0.55), transparent);
+}
+
+.gender-soon-media {
+  width: 100%;
+  margin: 1rem 0;
+}
+
+.gender-soon-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Fades the photo's top and bottom edges into the card. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 16%, #000 80%, transparent 100%);
+}
+
+.gender-soon-info {
+  padding: 0 1rem;
+}
+
+.gender-soon-title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(1.2rem, 1.5vw, 1.45rem);
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+
+.gender-soon-line {
+  margin-top: 0.85rem;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.gender-soon-line.is-quote {
+  color: var(--color-silver-highlight);
+}
+
+.gender-soon-line.is-note {
+  color: var(--color-accent-text);
+}
+
+@media (max-width: 1100px) {
+  .gender-panels-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 860px) {
   .gender-categories-section {
     padding: 3.75rem 0;
@@ -772,13 +866,16 @@ img {
   }
 
   .gender-panels-grid {
-    grid-template-columns: 1fr;
-    gap: 1.75rem;
+    gap: 1.25rem;
   }
 
   .gender-panel-media {
     aspect-ratio: 4 / 4.5;
     min-height: 420px;
+  }
+
+  .gender-panel.is-coming-soon {
+    padding: 1.6rem 0 1.85rem;
   }
 
   .gender-panel-overlay {
@@ -792,6 +889,13 @@ img {
 
   .gender-panel-subtitle {
     font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .gender-panels-grid {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
   }
 }
 
