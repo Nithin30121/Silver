@@ -19,6 +19,8 @@ interface CustomerOrderRepository extends JpaRepository<CustomerOrder, UUID>, Jp
 
     boolean existsByCustomerIdAndStatusIn(UUID customerId, Collection<OrderStatus> statuses);
 
+    long countByCustomerIdAndStatus(UUID customerId, OrderStatus status);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select customerOrder from CustomerOrder customerOrder where customerOrder.id = :id")
     Optional<CustomerOrder> findByIdForUpdate(@Param("id") UUID id);

@@ -166,7 +166,7 @@ export const CartDrawer: React.FC = () => {
         items: cart.map((item) => ({ productId: item.product.id, quantity: item.quantity })),
         paymentMethod: formData.paymentMethod.toUpperCase() as PaymentMethod,
         shippingFullName: formData.fullName,
-        shippingEmail: formData.email,
+        shippingEmail: user?.email ?? formData.email,
         shippingPhone: formData.phone,
         shippingAddress: formData.address,
         shippingCity: formData.city,
@@ -391,9 +391,10 @@ export const CartDrawer: React.FC = () => {
 
               <div className="checkout-field">
                 <label className="checkout-label" htmlFor="checkout-email">Email *</label>
-                <input id="checkout-email" className="checkout-input" type="email" required autoComplete="email"
-                  placeholder="name@domain.com" value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                {/* The server sends order emails to the account's address whatever is sent, so it is shown, not typed. */}
+                <input id="checkout-email" className="checkout-input" type="email" required readOnly aria-describedby="checkout-email-hint"
+                  value={user?.email ?? formData.email} />
+                <p id="checkout-email-hint" className="checkout-field-hint">Order updates go to the email you signed in with.</p>
               </div>
 
               {!usingSavedAddress && (
@@ -604,8 +605,8 @@ export const CartDrawer: React.FC = () => {
                     return;
                   }
                   setCheckoutError(null);
-                  // Order emails go to the account's address unless the customer types another.
-                  setFormData((current) => current.email ? current : { ...current, email: user.email ?? '' });
+                  // Order emails go to the account's address.
+                  setFormData((current) => ({ ...current, email: user.email ?? '' }));
                   setCheckoutStep('shipping');
                 }}
               >
