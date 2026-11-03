@@ -37,7 +37,7 @@ export interface Product {
   availableSizes?: string[];
   dimensions?: string;
   details: string[];
-  careGuide: string[];
+  careGuide: Array<{ title: string; text: string }>;
   shippingInfo: string;
 }
 
