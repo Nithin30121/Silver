@@ -16,6 +16,8 @@ interface OrderPaymentRepository extends JpaRepository<OrderPayment, UUID> {
 
     boolean existsByOrderIdAndStatus(UUID orderId, OrderPaymentStatus status);
 
+    boolean existsByOrderId(UUID orderId);
+
     /** Locks the attempt first and the order second everywhere, so a webhook and the browser take turns. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select payment from OrderPayment payment where payment.razorpayOrderId = :razorpayOrderId")

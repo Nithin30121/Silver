@@ -513,6 +513,60 @@ class OrderServiceTest {
     }
 
     @Test
+    void deletingAnOrderWaitingForPaymentPutsItsPiecesBack() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 2);
+        CustomerOrder order = orderFor(ring, 3, OrderStatus.PENDING_PAYMENT);
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+
+        service.deleteUnpaid(order.getId(), adminId);
+
+        assertEquals(5, ring.getStockQuantity());
+        verify(stock).record(eq(ring), eq(3), eq(StockMovementReason.CANCELLATION), eq(order.getId()), eq(adminId));
+        verify(orders).delete(order);
+        verifyNoInteractions(events);
+    }
+
+    @Test
+    void deletingACancelledOrderLeavesStockAlone() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 5);
+        CustomerOrder order = orderFor(ring, 3, OrderStatus.CANCELLED);
+
+        service.deleteUnpaid(order.getId(), adminId);
+
+        assertEquals(5, ring.getStockQuantity());
+        verifyNoInteractions(stock);
+        verify(orders).delete(order);
+    }
+
+    @Test
+    void anOrderThatIsUnderwayCannotBeDeleted() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 2);
+        for (OrderStatus status : List.of(OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.SHIPPED, OrderStatus.DELIVERED)) {
+            CustomerOrder order = orderFor(ring, 1, status);
+
+            ResponseStatusException refused = assertThrows(ResponseStatusException.class, () -> service.deleteUnpaid(order.getId(), adminId));
+
+            assertEquals(HttpStatus.CONFLICT, refused.getStatusCode());
+            verify(orders, never()).delete(order);
+        }
+        verifyNoInteractions(stock);
+    }
+
+    @Test
+    void anOrderThatTookMoneyIsKeptEvenWhenCancelled() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 2);
+        for (PaymentStatus payment : List.of(PaymentStatus.PAID, PaymentStatus.REFUNDED)) {
+            CustomerOrder order = orderFor(ring, 1, OrderStatus.CANCELLED);
+            order.setPaymentStatus(payment);
+
+            ResponseStatusException refused = assertThrows(ResponseStatusException.class, () -> service.deleteUnpaid(order.getId(), adminId));
+
+            assertEquals(HttpStatus.CONFLICT, refused.getStatusCode());
+            verify(orders, never()).delete(order);
+        }
+    }
+
+    @Test
     void refusesOverlongSearches() {
         assertThrows(ResponseStatusException.class, () -> OrderService.matching("a".repeat(OrderService.MAX_QUERY_LENGTH + 1), null, PlacedBetween.ANY));
     }

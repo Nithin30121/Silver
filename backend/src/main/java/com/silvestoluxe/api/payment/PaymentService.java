@@ -48,6 +48,9 @@ public class PaymentService {
 
     public PaymentOptions options() { return new PaymentOptions(razorpay.isEnabled()); }
 
+    /** Whether an online payment was ever started for the order. Razorpay can still settle it, so its record must stay. */
+    public boolean hasPaymentRecord(UUID orderId) { return payments.existsByOrderId(orderId); }
+
     /** Readies a payment for the customer's own unpaid order. */
     public StartedPayment start(String subject, UUID orderId) {
         requireEnabled();

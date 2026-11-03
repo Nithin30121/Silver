@@ -21,11 +21,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class OrderController {
     private final OrderService orders;
+    private final OrderDeletionService deletion;
     /** The shop's time zone, the same one the sales reports count days in. */
     private final ZoneId zone;
 
-    public OrderController(OrderService orders, @Value("${app.reports.time-zone:Asia/Kolkata}") String zone) {
+    public OrderController(OrderService orders, OrderDeletionService deletion, @Value("${app.reports.time-zone:Asia/Kolkata}") String zone) {
         this.orders = orders;
+        this.deletion = deletion;
         this.zone = ZoneId.of(zone);
     }
 
@@ -64,5 +66,12 @@ public class OrderController {
     @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
     public Response updateStatus(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id, @RequestBody @Valid StatusUpdate request) {
         return orders.updateStatus(id, request, CurrentActor.idOf(jwt));
+    }
+
+    @DeleteMapping("/admin/orders/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("@catalogAuthorization.isAdmin(authentication)")
+    public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        deletion.delete(id, CurrentActor.idOf(jwt));
     }
 }

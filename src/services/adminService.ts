@@ -341,6 +341,11 @@ export function updateOrderStatus(id: string, status: string, paymentStatus: str
   });
 }
 
+/** Only for orders that never took money and were never booked with Delhivery; the server says why otherwise. */
+export function deleteOrder(id: string) {
+  return adminRequest<void>(`/admin/orders/${id}`, { method: 'DELETE' });
+}
+
 /** One attempt to pay online. NEEDS_REFUND is money that arrived for an order that couldn't take it. */
 export type ShipmentState = 'BOOKED' | 'IN_TRANSIT' | 'DELIVERED' | 'RETURNING' | 'RETURNED' | 'LOST' | 'CANCELLED';
 

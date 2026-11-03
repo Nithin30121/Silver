@@ -13,7 +13,7 @@ import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../.
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import { formatINR } from '../../services/silverRateService';
 import {
-  AdminApiError, bookShipment, cancelShipment, closeReturnedShipment, createCategory, createProduct, deleteCategory, deleteProduct, downloadAdminCsv,
+  AdminApiError, bookShipment, cancelShipment, closeReturnedShipment, createCategory, createProduct, deleteCategory, deleteOrder, deleteProduct, downloadAdminCsv,
   getOrderShipments, refreshShipment, type OrderShipments, type ShipmentState, getAdminCategories, getAdminCustomers, getAdminIdentity,
   getAdminOrders, getAdminProducts, getCustomerGrowth, getCustomerOrders, getEmailStatus, getMessages, getOrderPayments, getRefundsToMake, getSalesByCategory, getSalesByPaymentMethod, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
   setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, type AdminCustomer,
@@ -335,7 +335,8 @@ export const AdminDashboard: React.FC = () => {
               <CategoryManager categories={flatCategories} products={products} loaded={loaded} onEdit={setEditingCategory} onChanged={() => void reload()} notify={notify} />
             )}
             {section === 'inventory' && <Inventory products={products} loaded={loaded} refreshedAt={loadedAt} onEdit={setEditingProduct} />}
-            {section === 'orders' && <OrderManager initialStatus={orderStatusFilter} refreshedAt={loadedAt} timeZone={summary?.timeZone} onView={setViewingOrder} notify={notify} />}
+            {section === 'orders' && <OrderManager initialStatus={orderStatusFilter} refreshedAt={loadedAt} timeZone={summary?.timeZone} onView={setViewingOrder}
+              onChanged={() => void reload()} notify={notify} />}
             {section === 'customers' && <CustomerManager refreshedAt={loadedAt} onViewOrder={setViewingOrder} notify={notify} />}
             {section === 'messages' && <MessageManager refreshedAt={loadedAt} emailEnabled={emailEnabled} notify={notify} onChanged={refreshNewMessages} />}
             {section === 'reports' && <ReportsPage refreshedAt={loadedAt} categories={flatCategories} timeZone={summary?.timeZone} />}
@@ -1865,8 +1866,9 @@ const placedText = (from: string, to: string) => {
   return 'Every order, newest first';
 };
 
-const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null; timeZone?: string; onView: (order: OrderResponse) => void; notify: Notify }> = ({ initialStatus = '', refreshedAt, timeZone, onView, notify }) => {
+const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null; timeZone?: string; onView: (order: OrderResponse) => void; onChanged: () => void; notify: Notify }> = ({ initialStatus = '', refreshedAt, timeZone, onView, onChanged, notify }) => {
   const [query, setQuery] = useState('');
+  const [deleting, setDeleting] = useState<OrderResponse | null>(null);
   const [filters, setFilters] = useState<OrderFilters>({ query: '', status: initialStatus, from: '', to: '', page: 0 });
   const shopToday = todayIn(timeZone);
   // Typed-in dates that match no quick choice leave none of them selected.
@@ -1949,7 +1951,12 @@ const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null;
                       <td data-label="Total" className="admin-num is-right">{money(order.totalAmount)}</td>
                       <td data-label="Payment"><Badge tone={PAYMENT_TONES[order.paymentStatus] ?? 'neutral'}>{humanize(order.paymentStatus)}</Badge></td>
                       <td data-label="Status"><Badge tone={ORDER_TONES[order.status] ?? 'neutral'}>{humanize(order.status)}</Badge></td>
-                      <td className="admin-row-actions"><button className="admin-button is-secondary is-small" onClick={() => onView(order)}>Manage</button></td>
+                      <td className="admin-row-actions">
+                        <button className="admin-button is-secondary is-small" onClick={() => onView(order)}>Manage</button>
+                        {canDeleteOrder(order) && (
+                          <button className="admin-button is-ghost is-small is-danger" onClick={() => setDeleting(order)}><Trash2 size={14} /> Delete</button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
@@ -1960,6 +1967,8 @@ const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null;
             onPage={(page) => setFilters((current) => ({ ...current, page }))} />
         </>
       )}
+      {deleting && <DeleteOrder order={deleting} notify={notify} onClose={() => setDeleting(null)}
+        onDeleted={() => { setDeleting(null); onChanged(); }} />}
     </section>
   );
 };
@@ -1971,6 +1980,46 @@ function useSearchAsYouType<T extends { query: string; page: number }>(query: st
     return () => window.clearTimeout(timer);
   }, [query, setFilters]);
 }
+
+/** The server has the last word: it also keeps an order an online payment was started for, or one booked with Delhivery. */
+const canDeleteOrder = (order: OrderResponse) => (order.status === 'PENDING_PAYMENT' || order.status === 'CANCELLED')
+  && order.paymentStatus !== 'PAID' && order.paymentStatus !== 'REFUNDED';
+
+const DeleteOrder: React.FC<{ order: OrderResponse; onClose: () => void; onDeleted: () => void; notify: Notify }> = ({ order, onClose, onDeleted, notify }) => {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const pieces = order.items?.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  const remove = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await deleteOrder(order.id);
+      notify('success', `Order ${order.orderNumber} was deleted.`);
+      onDeleted();
+    } catch (cause) {
+      setError(errorText(cause, 'Unable to delete the order.'));
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal title="Delete this order?" subtitle={`${order.orderNumber} · ${order.shippingFullName || 'No name'}`} onClose={onClose}
+      footer={<>
+        {error && <FormError text={error} />}
+        <button type="button" className="admin-button is-secondary" onClick={onClose} disabled={busy}>Cancel</button>
+        <button type="button" className="admin-button is-danger" onClick={() => void remove()} disabled={busy}>
+          {busy ? <><LoaderCircle size={16} className="is-spinning" /> Deleting…</> : <><Trash2 size={16} /> Delete for good</>}
+        </button>
+      </>}>
+      <div className="admin-delete-note">
+        <p>This removes the order and its history from your dashboard, your reports and the customer's account. It can't be undone.</p>
+        <p>{order.status === 'CANCELLED'
+          ? 'Its pieces went back into stock when it was cancelled.'
+          : `Its ${pieces === 1 ? 'piece goes' : `${pieces} pieces go`} back into stock.`}</p>
+        <p>Use this for test orders and mistakes. To keep a record of a real order, cancel it instead.</p>
+      </div>
+    </Modal>
+  );
+};
 
 const Pagination: React.FC<{ page: number; pageSize: number; shown: number; total: number; totalPages: number; note?: string; onPage: (page: number) => void }> = ({ page, pageSize, shown, total, totalPages, note, onPage }) => (
   <footer className="admin-pagination">

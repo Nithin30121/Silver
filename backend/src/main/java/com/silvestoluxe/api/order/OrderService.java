@@ -33,6 +33,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -299,6 +300,32 @@ public class OrderService {
         boolean notify = request.notifyCustomer() == null || request.notifyCustomer();
         if (notify && kind != null && previous != request.status()) events.publishEvent(email(order, kind));
         return response(order);
+    }
+
+    /** Holds the order's row until the caller's transaction ends, so nothing changes it while it is checked. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void lock(UUID orderId) {
+        orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+    }
+
+    /**
+     * Removes an order that never took money: one waiting for payment, whose pieces go back to stock, or
+     * one already cancelled, whose pieces went back then. Its items and history go with it; stock
+     * movements stay, no longer linked to it. Payment and courier records are checked by the caller.
+     */
+    @Transactional
+    public String deleteUnpaid(UUID orderId, UUID actorId) {
+        CustomerOrder order = orders.findByIdForUpdate(orderId).orElseThrow(this::notFound);
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT && order.getStatus() != OrderStatus.CANCELLED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Only orders waiting for payment or already cancelled can be deleted. Cancel this order first.");
+        }
+        if (order.getPaymentStatus() == PaymentStatus.PAID || order.getPaymentStatus() == PaymentStatus.REFUNDED) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Money was taken for this order, so it's kept for your records.");
+        }
+        if (order.getStatus() == OrderStatus.PENDING_PAYMENT) restoreStock(order, actorId);
+        orders.delete(order);
+        return order.getOrderNumber();
     }
 
     /**
