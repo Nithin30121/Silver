@@ -43,6 +43,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class OrderService {
     static final int MAX_QUERY_LENGTH = 100;
     static final int EXPORT_LIMIT = 10_000;
+    /**
+     * Orders one account may have waiting for payment or confirmation at once. Each holds its pieces out of
+     * stock until it is paid, confirmed or cancelled, so without a limit one account could empty the shop.
+     */
+    static final int MAX_OPEN_ORDERS = 3;
     /** A customer can cancel an order themselves until it leaves the shop. */
     static final Set<OrderStatus> CUSTOMER_CANCELLABLE = EnumSet.of(OrderStatus.PENDING_PAYMENT, OrderStatus.CONFIRMED, OrderStatus.PROCESSING);
     /** Orders that are still on their way, which keep a customer from deleting their account. */
@@ -84,7 +89,12 @@ public class OrderService {
 
     @Transactional
     public Response checkout(String subject, CheckoutRequest request) {
-        UUID customerId = profiles.currentUser(subject).id();
+        AccountProfileService.CurrentUser customer = profiles.currentUser(subject);
+        UUID customerId = customer.id();
+        if (orders.countByCustomerIdAndStatus(customerId, OrderStatus.PENDING_PAYMENT) >= MAX_OPEN_ORDERS) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "You already have " + MAX_OPEN_ORDERS
+                    + " orders waiting for payment or confirmation. Please pay for or cancel one, or contact us, before placing another.");
+        }
         checkPaymentMethod(request.paymentMethod());
         Map<UUID, Integer> requested = mergeQuantities(request.items());
         List<Product> lockedProducts = requested.keySet().stream()
@@ -104,8 +114,11 @@ public class OrderService {
             subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(quantity)));
         }
 
+        // Order emails go to the address the account signed up with, never one typed at checkout, so the
+        // shop can't be made to send its emails to strangers.
+        String email = customer.email() == null || customer.email().isBlank() ? clean(request.shippingEmail()) : customer.email().trim();
         CustomerOrder order = new CustomerOrder(customerId, request.paymentMethod(), subtotal,
-                clean(request.shippingFullName()), clean(request.shippingEmail()), clean(request.shippingPhone()),
+                clean(request.shippingFullName()), email, clean(request.shippingPhone()),
                 clean(request.shippingAddress()), clean(request.shippingCity()), clean(request.shippingState()),
                 clean(request.shippingPostalCode()));
         order.recordStatus(OrderStatus.PENDING_PAYMENT, "Order created; payment is pending.");

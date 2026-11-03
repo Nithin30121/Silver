@@ -53,6 +53,39 @@ class OrderServiceTest {
     private final UUID adminId = UUID.randomUUID();
 
     @Test
+    void aFourthOrderWaitingForPaymentOrConfirmationIsRefusedWithoutTouchingStock() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 5);
+        signedInCustomer();
+        when(orders.countByCustomerIdAndStatus(customerId, OrderStatus.PENDING_PAYMENT)).thenReturn((long) OrderService.MAX_OPEN_ORDERS);
+
+        ResponseStatusException refused = assertThrows(ResponseStatusException.class,
+                () -> service.checkout(customerId.toString(), checkout(PaymentMethod.COD, new CheckoutItem(ring.getId(), 1))));
+
+        assertEquals(HttpStatus.CONFLICT, refused.getStatusCode());
+        assertEquals(5, ring.getStockQuantity());
+        verify(orders, never()).saveAndFlush(any());
+        verifyNoInteractions(stock, events);
+    }
+
+    @Test
+    void orderEmailsGoToTheAccountEmailNotOneTypedAtCheckout() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 5);
+        signedInCustomer();
+        when(orders.countByCustomerIdAndStatus(customerId, OrderStatus.PENDING_PAYMENT)).thenReturn((long) OrderService.MAX_OPEN_ORDERS - 1);
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+        when(orders.saveAndFlush(any())).thenAnswer(call -> call.getArgument(0));
+        CheckoutRequest typedElsewhere = new CheckoutRequest(List.of(new CheckoutItem(ring.getId(), 1)), PaymentMethod.COD, "Asha Rao",
+                "stranger@example.net", "+91 90000 00001", "12 Sample Street", "Hyderabad", "Telangana", "500001");
+
+        Response order = service.checkout(customerId.toString(), typedElsewhere);
+
+        assertEquals("asha@example.com", order.shippingEmail());
+        ArgumentCaptor<OrderEmail> email = ArgumentCaptor.forClass(OrderEmail.class);
+        verify(events).publishEvent(email.capture());
+        assertEquals("asha@example.com", email.getValue().to());
+    }
+
+    @Test
     void checkoutTakesStockRecordsTheSaleAndEmailsTheCustomer() {
         Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 5);
         signedInCustomer();

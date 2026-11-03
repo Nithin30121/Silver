@@ -1,15 +1,20 @@
-# SILVORA: HTTP security headers (Netlify and Cloudflare Pages both read this file).
+# SILVORA: HTTP security headers for Netlify or Cloudflare Pages.
+#
+# The live shop is on Vercel, which ignores this file and reads the same headers from vercel.json.
+# Keep the two in step.
 #
 # Content-Security-Policy limits what the browser may load or contact, the main defence
 # against injected scripts stealing a signed-in customer's session. Allowed:
 #   - our own files, Google Fonts,
-#   - *.supabase.co (authentication and database; add your custom domain here if you use one),
-#   - api.gold-api.com (live silver rate when no server-side endpoint is deployed),
-#   - *.razorpay.com (Razorpay's payment window: its script, its frame and its own calls).
-# If you add a new third-party service, add its origin to the matching directive.
+#   - the shop's API on Render (change it here if the API moves),
+#   - *.supabase.co (sign-in, the silver rate, and product photos in Storage),
+#   - *.razorpay.com (Razorpay's payment window: its script, its frame and its own calls),
+#   - photos from any https address, since the admin can link a category image from anywhere.
+# Styles allow 'unsafe-inline' because Razorpay's window and the page's animations set styles in place;
+# scripts do not. If you add a new third-party service, add its origin to the matching directive.
 
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://checkout.razorpay.com; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://*.razorpay.com; connect-src 'self' https://*.supabase.co https://api.gold-api.com https://*.razorpay.com; frame-src https://api.razorpay.com https://checkout.razorpay.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://checkout.razorpay.com https://*.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://silver-1-x4wb.onrender.com https://*.supabase.co wss://*.supabase.co https://*.razorpay.com; frame-src https://*.razorpay.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
