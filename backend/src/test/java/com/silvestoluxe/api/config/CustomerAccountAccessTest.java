@@ -25,6 +25,7 @@ import com.silvestoluxe.api.account.AddressDtos.AddressResponse;
 import com.silvestoluxe.api.account.AddressService;
 import com.silvestoluxe.api.account.SupabaseAuthAdminClient;
 import com.silvestoluxe.api.order.OrderController;
+import com.silvestoluxe.api.order.OrderDeletionService;
 import com.silvestoluxe.api.order.OrderService;
 import com.silvestoluxe.api.order.PlacedBetween;
 import com.silvestoluxe.api.security.CatalogAuthorization;
@@ -64,6 +65,9 @@ class CustomerAccountAccessTest {
 
     @MockitoBean
     private OrderService orders;
+
+    @MockitoBean
+    private OrderDeletionService orderDeletion;
 
     @MockitoBean
     private SupabaseAuthAdminClient auth;

@@ -77,6 +77,9 @@ public class DeliveryService {
         this.clock = clock;
     }
 
+    /** Whether the order has a Delhivery booking that wasn't cancelled: a parcel that exists, or existed, at Delhivery. */
+    public boolean hasBooking(UUID orderId) { return shipments.existsByOrderIdAndStateNot(orderId, ShipmentState.CANCELLED); }
+
     public OrderShipments forOrder(UUID orderId) {
         Parcel parcel = orders.parcel(orderId);
         return new OrderShipments(delhivery.isEnabled(), suggestedWeight(parcel.items()),
