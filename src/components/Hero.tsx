@@ -223,7 +223,7 @@ export const Hero: React.FC = () => {
 
       <motion.div className="lux-hero-content" style={{ y: contentY, opacity: contentOpacity }}>
         <motion.p className="lux-hero-label" variants={rise} custom={0.9} initial={initial} animate={animate}>
-          925 STERLING SILVER
+          <span className="lux-hero-label-text">a brand by NADITHOKA</span>
         </motion.p>
 
         {/* The bracelet's place, where visitors drag to turn it. Without WebGL a drawn bracelet fills it instead. */}
