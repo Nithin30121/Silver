@@ -20,6 +20,8 @@ export interface ProductInput {
   sku: string;
   description: string;
   price: number;
+  /** The crossed-out price before a discount; the server keeps it only when it is higher than price. */
+  originalPrice: number | null;
   imageUrl: string;
   weightGrams: number | null;
   stockQuantity: number;

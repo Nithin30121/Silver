@@ -106,6 +106,9 @@ function mapProduct(apiProduct: ApiProduct, categoriesById: Map<string, Catalogu
     categoryIds: apiProduct.categoryIds,
     gender: roots.length === 1 ? roots[0].slug : 'collection',
     price: Number(apiProduct.price),
+    // Only a real reduction counts; the server already drops an original price that isn't higher.
+    originalPrice: apiProduct.originalPrice != null && Number(apiProduct.originalPrice) > Number(apiProduct.price)
+      ? Number(apiProduct.originalPrice) : undefined,
     inStock: apiProduct.stockQuantity > 0,
     isNew: false,
     isFeatured: true,

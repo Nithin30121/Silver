@@ -1,6 +1,7 @@
 package com.silvestoluxe.api.product;
 
 import static com.silvestoluxe.api.product.ProductDtos.*;
+import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -124,6 +125,7 @@ public class ProductService {
         product.setSku(blankToNull(request.sku()));
         product.setDescription(request.description() == null ? "" : request.description().trim());
         product.setPrice(request.price());
+        product.setOriginalPrice(discountedFrom(request.originalPrice(), request.price()));
         product.setImageUrl(blankToNull(request.imageUrl()));
         product.setWeightGrams(request.weightGrams());
         product.setStockQuantity(request.stockQuantity());
@@ -140,9 +142,15 @@ public class ProductService {
         return categories.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category does not exist."));
     }
     private String blankToNull(String value) { return value == null || value.isBlank() ? null : value.trim(); }
+
+    /** An original price only means a discount when it is above the price; anything else shows no discount. */
+    static BigDecimal discountedFrom(BigDecimal originalPrice, BigDecimal price) {
+        return originalPrice != null && price != null && originalPrice.compareTo(price) > 0 ? originalPrice : null;
+    }
+
     private Response response(Product product) {
         return new Response(product.getId(), product.getName(), product.getSlug(), product.getSku(), product.getDescription(),
-                product.getPrice(), product.getImageUrl(), product.getWeightGrams(), product.getStockQuantity(), product.isActive(),
+                product.getPrice(), product.getOriginalPrice(), product.getImageUrl(), product.getWeightGrams(), product.getStockQuantity(), product.isActive(),
                 product.getCategories().stream().map(Category::getId).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
                 product.getImages().stream().map(image -> new ImageResponse(image.getId(), image.getImageUrl(), image.getAltText(), image.getDisplayOrder())).toList());
     }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import type { Product } from '../types';
 import { AnimatedModal } from './AnimatedModal';
+import { PriceTag } from './PriceTag';
 import { X, ShoppingBag, Heart, ArrowRight } from 'lucide-react';
 
 export const QuickViewModal: React.FC = () => {
@@ -32,11 +33,6 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
 
   const wishlisted = isWishlisted(product.id);
 
-  const formattedPrice = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(product.price);
 
   return (
     <>
@@ -67,8 +63,8 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
             </button>
           </div>
 
-          <div style={{ fontSize: '1.35rem', fontWeight: 600, color: 'var(--color-silver-highlight)', marginBottom: '1rem' }}>
-            {formattedPrice}
+          <div style={{ marginBottom: '1rem' }}>
+            <PriceTag price={product.price} originalPrice={product.originalPrice} size="modal" />
           </div>
 
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: '1.65', marginBottom: '1.5rem' }}>

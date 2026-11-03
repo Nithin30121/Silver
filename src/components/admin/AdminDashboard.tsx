@@ -10,6 +10,7 @@ import type { CatalogueCategory } from '../../types';
 import type { ApiProduct } from '../../services/catalogService';
 import type { OrderResponse } from '../../services/orderService';
 import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../../lib/orderFormat';
+import { discountPercent } from '../../lib/pricing';
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import { formatINR } from '../../services/silverRateService';
 import {
@@ -87,8 +88,18 @@ const CATEGORY_TYPES: Record<CatalogueCategory['categoryType'], string> = {
   audience: 'Audience', collection: 'Collection', items: 'Items', landing_page: 'Landing page'
 };
 
+/** What the shop will show for this pair of prices, said as the owner types. */
+const originalPriceHint = (price: number | null, originalPrice: number | null) => {
+  if (originalPrice === null) return 'Leave empty for no discount. When it is higher than the price, it shows crossed out with the % off.';
+  if (price === null) return 'Enter the price too.';
+  const percent = discountPercent(price, originalPrice);
+  if (percent === null && originalPrice > price) return 'That is less than 1% off, so no discount shows.';
+  if (percent === null) return 'Must be higher than the price to show a discount. As it is, no discount shows.';
+  return `Shows ${money(originalPrice)} crossed out, ${percent}% off.`;
+};
+
 const emptyProduct = (): ProductDraft => ({
-  name: '', slug: '', sku: '', description: '', price: null, imageUrl: '', weightGrams: null,
+  name: '', slug: '', sku: '', description: '', price: null, originalPrice: null, imageUrl: '', weightGrams: null,
   stockQuantity: null, isActive: true, categoryIds: []
 });
 const emptyCategory = (): CategoryInput => ({
@@ -1444,7 +1455,10 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist
         </div>
       </td>
       <td data-label="SKU" className="admin-mono">{product.sku || '—'}</td>
-      <td data-label="Price" className="admin-num is-right">{money(product.price)}</td>
+      <td data-label="Price" className="admin-num is-right">
+        {money(product.price)}
+        {product.originalPrice != null && <small className="admin-was-price"><s>{money(product.originalPrice)}</s></small>}
+      </td>
       <td data-label="Stock"><StockLevel quantity={product.stockQuantity} /></td>
       <td data-label="Wishlisted" className="admin-num is-right">
         {wishlist ? <>{wishlist.allTime}<small>{wishlist.recent} in 30 days</small></> : '—'}
@@ -1463,7 +1477,7 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist
 
 const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueCategory[]; onClose: () => void; onSaved: () => void }> = ({ product, categories, onClose, onSaved }) => {
   const formId = useId();
-  const [form, setForm] = useState<ProductDraft>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds] }) : emptyProduct());
+  const [form, setForm] = useState<ProductDraft>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), originalPrice: product.originalPrice == null ? null : Number(product.originalPrice), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds] }) : emptyProduct());
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -1512,6 +1526,10 @@ const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueC
           <Field label="Price">
             <span className="admin-affix"><span>₹</span><NumberInput required min="0" step="0.01" inputMode="decimal" placeholder="e.g. 2500"
               value={form.price} onValueChange={(value) => update('price', value)} /></span>
+          </Field>
+          <Field label="Original price" hint={originalPriceHint(form.price, form.originalPrice)}>
+            <span className="admin-affix"><span>₹</span><NumberInput min="0" step="0.01" inputMode="decimal" placeholder="Optional, e.g. 3000"
+              value={form.originalPrice} onValueChange={(value) => update('originalPrice', value)} /></span>
           </Field>
           <Field label="Stock quantity" hint={`${LOW_STOCK} or fewer counts as low stock.`}>
             <NumberInput required min="0" step="1" inputMode="numeric" placeholder="e.g. 5"

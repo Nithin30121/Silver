@@ -20,6 +20,8 @@ public final class ProductDtos {
             String sku,
             String description,
             @NotNull @DecimalMin(value = "0.00") BigDecimal price,
+            /** The crossed-out price before a discount; kept only when higher than price. */
+            @DecimalMin(value = "0.00") BigDecimal originalPrice,
             String imageUrl,
             @DecimalMin(value = "0.000") BigDecimal weightGrams,
             @Min(0) int stockQuantity,
@@ -31,7 +33,7 @@ public final class ProductDtos {
     public record ImageResponse(UUID id, String imageUrl, String altText, int displayOrder) { }
 
     public record Response(UUID id, String name, String slug, String sku, String description,
-                           BigDecimal price, String imageUrl, BigDecimal weightGrams, int stockQuantity,
+                           BigDecimal price, BigDecimal originalPrice, String imageUrl, BigDecimal weightGrams, int stockQuantity,
                            boolean isActive, Set<UUID> categoryIds, List<ImageResponse> images) { }
 
     /** actorName is the admin who changed stock, or the customer whose checkout reserved it. */

@@ -23,6 +23,8 @@ public class Product {
     private String sku;
     @Column(nullable = false) private String description;
     @Column(nullable = false, precision = 12, scale = 2) private BigDecimal price;
+    /** The crossed-out price before a discount; null when there is none. Only ever higher than price. */
+    @Column(precision = 12, scale = 2) private BigDecimal originalPrice;
     private String imageUrl;
     @Column(precision = 10, scale = 3) private BigDecimal weightGrams;
     @Column(nullable = false) private int stockQuantity;
@@ -52,6 +54,8 @@ public class Product {
     public void setDescription(String description) { this.description = description; }
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+    public BigDecimal getOriginalPrice() { return originalPrice; }
+    public void setOriginalPrice(BigDecimal originalPrice) { this.originalPrice = originalPrice; }
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public BigDecimal getWeightGrams() { return weightGrams; }
