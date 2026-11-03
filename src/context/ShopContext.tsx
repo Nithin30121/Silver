@@ -63,6 +63,15 @@ interface ShopContextType {
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
 const FALLBACK_PRODUCT_IMAGE = '/images/hero_silver_ring.jpg';
 
+/** The short care guide shown on every product page; the full guide is the Jewellery Care Guide page. */
+const CARE_GUIDE: Product['careGuide'] = [
+  { title: 'Why Silver Tarnishes', text: 'Silver naturally reacts with sulphur compounds in the air, causing gradual darkening or dullness. This is normal and not necessarily a sign of poor quality.' },
+  { title: 'Genuine Silver', text: 'Tarnishing is a natural characteristic of silver, but its presence or absence alone cannot determine authenticity.' },
+  { title: 'Avoid Exposure', text: 'Keep jewellery away from water, perfumes, lotions, chemicals, sanitizers and excessive moisture.' },
+  { title: 'Proper Care & Storage', text: 'Store jewellery in airtight pouches or boxes and clean gently using a soft, dry silver polishing cloth.' },
+  { title: 'Protect Its Beauty', text: 'Remove jewellery during workouts, household chores and activities that may cause scratches or physical damage.' },
+];
+
 /** Follows category slugs down the tree, for example ["men", "rings"]. Null when a slug doesn't match. */
 function resolveCategoryPath(categories: CatalogueCategory[], slugs: string[]): { rootId: RootCategoryId; categoryId: ProductCategory | 'all' } | null {
   if (slugs.length === 0) return { rootId: 'all', categoryId: 'all' };
@@ -117,7 +126,7 @@ function mapProduct(apiProduct: ApiProduct, categoriesById: Map<string, Catalogu
     weightGrams: apiProduct.weightGrams == null ? undefined : Number(apiProduct.weightGrams),
     availableSizes: [],
     details: apiProduct.sku ? [`Reference: ${apiProduct.sku}`, `Availability: ${apiProduct.stockQuantity} in stock`] : [`Availability: ${apiProduct.stockQuantity} in stock`],
-    careGuide: ['Store in a dry pouch and polish gently with a soft silver cloth.'],
+    careGuide: CARE_GUIDE,
     shippingInfo: 'Complimentary insured delivery. Dispatch availability is confirmed at checkout.',
   };
 }

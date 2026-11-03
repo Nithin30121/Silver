@@ -387,11 +387,13 @@ export const ProductDetailPage: React.FC = () => {
                 </button>
                 {activeAccordion === 'care' && (
                   <div style={{ paddingBottom: '1.25rem', fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: '1.75' }}>
-                    <ul style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      {currentProduct.careGuide.map((item, idx) => (
-                        <li key={idx}>{item}</li>
+                    <ol style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                      {currentProduct.careGuide.map((item) => (
+                        <li key={item.title}><strong style={{ color: 'var(--color-text)', fontWeight: 600 }}>{item.title}:</strong> {item.text}</li>
                       ))}
-                    </ul>
+                    </ol>
+                    <a href="/care" style={{ display: 'inline-block', marginTop: '0.85rem', color: 'var(--color-accent)', textDecoration: 'underline', textUnderlineOffset: '3px' }}
+                      onClick={(event) => { event.preventDefault(); navigateTo('care'); }}>Read the full care guide</a>
                   </div>
                 )}
               </div>
