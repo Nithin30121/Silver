@@ -335,7 +335,7 @@ export const AdminDashboard: React.FC = () => {
               <CategoryManager categories={flatCategories} products={products} loaded={loaded} onEdit={setEditingCategory} onChanged={() => void reload()} notify={notify} />
             )}
             {section === 'inventory' && <Inventory products={products} loaded={loaded} refreshedAt={loadedAt} onEdit={setEditingProduct} />}
-            {section === 'orders' && <OrderManager initialStatus={orderStatusFilter} refreshedAt={loadedAt} onView={setViewingOrder} notify={notify} />}
+            {section === 'orders' && <OrderManager initialStatus={orderStatusFilter} refreshedAt={loadedAt} timeZone={summary?.timeZone} onView={setViewingOrder} notify={notify} />}
             {section === 'customers' && <CustomerManager refreshedAt={loadedAt} onViewOrder={setViewingOrder} notify={notify} />}
             {section === 'messages' && <MessageManager refreshedAt={loadedAt} emailEnabled={emailEnabled} notify={notify} onChanged={refreshNewMessages} />}
             {section === 'reports' && <ReportsPage refreshedAt={loadedAt} categories={flatCategories} timeZone={summary?.timeZone} />}
@@ -1843,9 +1843,40 @@ const unavailableText = (cause: unknown, fallback: string) => cause instanceof A
 /** from and to are ISO days, empty for no limit. */
 type OrderFilters = { query: string; status: string; from: string; to: string; page: number };
 
-const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null; onView: (order: OrderResponse) => void; notify: Notify }> = ({ initialStatus = '', refreshedAt, onView, notify }) => {
+type OrderPeriod = 'all' | 'today' | 'yesterday' | 'week' | 'month';
+const ORDER_PERIODS: Array<{ value: OrderPeriod; label: string }> = [
+  { value: 'all', label: 'All dates' }, { value: 'today', label: 'Today' }, { value: 'yesterday', label: 'Yesterday' },
+  { value: 'week', label: 'This week' }, { value: 'month', label: 'This month' },
+];
+
+/** The days a quick choice covers, up to today where the shop is. A week starts on Monday. */
+const periodDays = (period: OrderPeriod, today: string) => {
+  if (period === 'today') return { from: today, to: today };
+  if (period === 'yesterday') return { from: addDays(today, -1), to: addDays(today, -1) };
+  if (period === 'week') return { from: addDays(today, -((parseDay(today).getUTCDay() + 6) % 7)), to: today };
+  if (period === 'month') return { from: `${today.slice(0, 8)}01`, to: today };
+  return { from: '', to: '' };
+};
+
+const placedText = (from: string, to: string) => {
+  if (from && to) return `Placed ${spanText(from, to)}`;
+  if (from) return `Placed from ${DAY_MONTH_YEAR.format(parseDay(from))}`;
+  if (to) return `Placed up to ${DAY_MONTH_YEAR.format(parseDay(to))}`;
+  return 'Every order, newest first';
+};
+
+const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null; timeZone?: string; onView: (order: OrderResponse) => void; notify: Notify }> = ({ initialStatus = '', refreshedAt, timeZone, onView, notify }) => {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<OrderFilters>({ query: '', status: initialStatus, from: '', to: '', page: 0 });
+  const shopToday = todayIn(timeZone);
+  // Typed-in dates that match no quick choice leave none of them selected.
+  const period = ORDER_PERIODS.find(({ value }) => {
+    const days = periodDays(value, shopToday);
+    return days.from === filters.from && days.to === filters.to;
+  })?.value ?? '';
+  const choosePeriod = (value: OrderPeriod | '') => {
+    if (value) setFilters((current) => ({ ...current, ...periodDays(value, shopToday), page: 0 }));
+  };
   // Remembers which filters a result belongs to, so new filters show loading rows instead of stale orders.
   const [result, setResult] = useState<{ filters: OrderFilters; page?: AdminOrderPage; error?: string } | null>(null);
   useSearchAsYouType(query, setFilters);
@@ -1864,6 +1895,10 @@ const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null;
   return (
     <section className="admin-card">
       <div className="admin-card-toolbar">
+        <Segmented<OrderPeriod | ''> label="Orders placed" value={period} options={ORDER_PERIODS} onChange={choosePeriod} />
+        <span className="admin-hint">{placedText(filters.from, filters.to)}</span>
+      </div>
+      <div className="admin-card-toolbar">
         <SearchBox value={query} onChange={setQuery} placeholder="Search order number, name, email or phone"
           onSubmit={(value) => setFilters((current) => ({ ...current, query: value.trim(), page: 0 }))} />
         <div className="admin-toolbar-group">
@@ -1876,19 +1911,14 @@ const OrderManager: React.FC<{ initialStatus?: string; refreshedAt: Date | null;
           </label>
           <label className="admin-select-inline">
             <span>From</span>
-            <input type="date" value={filters.from} max={filters.to || today()}
+            <input type="date" value={filters.from} max={filters.to || shopToday}
               onChange={(e) => setFilters((current) => ({ ...current, from: e.target.value, page: 0 }))} />
           </label>
           <label className="admin-select-inline">
             <span>To</span>
-            <input type="date" value={filters.to} min={filters.from || undefined} max={today()}
+            <input type="date" value={filters.to} min={filters.from || undefined} max={shopToday}
               onChange={(e) => setFilters((current) => ({ ...current, to: e.target.value, page: 0 }))} />
           </label>
-          {(filters.from || filters.to) && (
-            <button type="button" className="admin-button is-ghost" onClick={() => setFilters((current) => ({ ...current, from: '', to: '', page: 0 }))}>
-              <X size={15} /> Clear dates
-            </button>
-          )}
           <DownloadButton notify={notify} title="Download the orders that match your search, status and dates as a spreadsheet"
             onDownload={() => downloadAdminCsv('orders', { query: filters.query, status: filters.status, from: filters.from, to: filters.to },
               `silvora-orders-${today()}.csv`)} />
