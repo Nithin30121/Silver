@@ -3067,6 +3067,19 @@ textarea.contact-input {
   }
 }
 
+/* Jewellery Care Guide: the six care steps */
+.care-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .care-steps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Our Story thank-you note, with the gift-box photo beside it */
 .story-thanks {
   display: grid;
