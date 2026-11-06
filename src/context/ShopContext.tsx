@@ -42,6 +42,11 @@ interface ShopContextType {
   removeFromCart: (productId: string, size?: string) => void;
   updateQuantity: (productId: string, size: string | undefined, delta: number) => void;
   clearCart: () => void;
+  /** The piece being bought on its own with Buy Now; checkout shows only this and leaves the bag alone. */
+  buyNowItem: CartItem | null;
+  /** Opens checkout for this one piece. Callers make sure the customer is signed in first (see useBuyNow). */
+  buyNow: (product: Product, size?: string, quantity?: number) => void;
+  endBuyNow: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   wishlist: string[];
@@ -155,6 +160,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [cart, setCart] = useState<CartItem[]>(() => { try { return JSON.parse(localStorage.getItem('silvesto_cart') ?? '[]') as CartItem[]; } catch { return []; } });
   const [wishlist, setWishlist] = useState<string[]>(() => { try { return JSON.parse(localStorage.getItem('silvesto_wishlist') ?? '[]') as string[]; } catch { return []; } });
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [buyNowItem, setBuyNowItem] = useState<CartItem | null>(null);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -292,6 +298,10 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     showToast(`Added "${product.name}" to your shopping bag.`);
     setIsCartOpen(true);
   };
+  const buyNow = (product: Product, size?: string, quantity = 1) => {
+    setBuyNowItem({ product, selectedSize: size || product.availableSizes?.[0] || 'Standard', quantity });
+    setIsCartOpen(true);
+  };
   const removeFromCart = (productId: string, size?: string) => { setCart((previous) => previous.filter((item) => !(item.product.id === productId && item.selectedSize === size))); showToast('Item removed from shopping bag.'); };
   const updateQuantity = (productId: string, size: string | undefined, delta: number) => setCart((previous) => previous.map((item) => item.product.id === productId && item.selectedSize === size ? { ...item, quantity: item.quantity + delta } : item).filter((item) => item.quantity > 0));
   const toggleWishlist = (productId: string) => {
@@ -305,7 +315,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentView, selectedProductId, selectedCategory: effectiveCategory, selectedRootCategoryId: effectiveRootId, selectedGender, navigateTo, returnView,
     accountTab, accountOrderNumber, contactOrderNumber,
     categories, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue, products, currentProduct,
-    cart, cartCount: cart.reduce((total, item) => total + item.quantity, 0), cartSubtotal: cart.reduce((total, item) => total + item.product.price * item.quantity, 0), addToCart, removeFromCart, updateQuantity, clearCart: () => setCart([]), isCartOpen, setIsCartOpen,
+    cart, cartCount: cart.reduce((total, item) => total + item.quantity, 0), cartSubtotal: cart.reduce((total, item) => total + item.product.price * item.quantity, 0), addToCart, removeFromCart, updateQuantity, clearCart: () => setCart([]),
+    buyNowItem, buyNow, endBuyNow: () => setBuyNowItem(null), isCartOpen, setIsCartOpen,
     wishlist, wishlistCount: wishlist.length, toggleWishlist, isWishlisted: (productId) => wishlist.includes(productId), isWishlistOpen, setIsWishlistOpen,
     searchQuery, setSearchQuery, isSearchOpen, setIsSearchOpen, quickViewProduct, setQuickViewProduct, toastMessage, showToast,
   }}>{children}</ShopContext.Provider>;

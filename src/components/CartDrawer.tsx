@@ -34,6 +34,8 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     removeFromCart,
     clearCart,
+    buyNowItem,
+    endBuyNow,
     navigateTo,
     showToast
   } = useShop();
@@ -44,6 +46,10 @@ export const CartDrawer: React.FC = () => {
   const [saveNewAddress, setSaveNewAddress] = useState(true);
 
   const [checkoutStep, setCheckoutStep] = useState<'cart' | 'shipping' | 'confirmation'>('cart');
+  // Buy Now checks out one piece without touching the bag, starting straight at the address step.
+  const items = buyNowItem ? [buyNowItem] : cart;
+  const step = buyNowItem && checkoutStep === 'cart' ? 'shipping' : checkoutStep;
+  const subtotal = buyNowItem ? buyNowItem.product.price * buyNowItem.quantity : cartSubtotal;
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -82,7 +88,7 @@ export const CartDrawer: React.FC = () => {
   };
 
   // Each time checkout opens, offer the customer's saved addresses, starting with their default.
-  const isAtShipping = checkoutStep === 'shipping' && status === 'authenticated';
+  const isAtShipping = step === 'shipping' && status === 'authenticated';
   useEffect(() => {
     if (!isAtShipping) return;
     let cancelled = false;
@@ -131,7 +137,7 @@ export const CartDrawer: React.FC = () => {
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0
-  }).format(cartSubtotal);
+  }).format(subtotal);
 
   const paymentChoices = onlinePayments ? ONLINE_PAYMENT_CHOICES : LATER_PAYMENT_CHOICES;
   const paysOnline = formData.paymentMethod === 'online';
@@ -163,7 +169,7 @@ export const CartDrawer: React.FC = () => {
     setCheckoutError(null);
     try {
       const order = await createOrder({
-        items: cart.map((item) => ({ productId: item.product.id, quantity: item.quantity })),
+        items: items.map((item) => ({ productId: item.product.id, quantity: item.quantity })),
         paymentMethod: formData.paymentMethod.toUpperCase() as PaymentMethod,
         shippingFullName: formData.fullName,
         shippingEmail: user?.email ?? formData.email,
@@ -178,7 +184,8 @@ export const CartDrawer: React.FC = () => {
       setPaymentStage('unpaid');
       setPaymentError(null);
       setCheckoutStep('confirmation');
-      clearCart();
+      if (buyNowItem) endBuyNow();
+      else clearCart();
       if (paysOnline) void payNow(order);
       if (!usingSavedAddress && saveNewAddress && canSaveAddress) {
         // The order is already placed, so a problem saving the address is only mentioned, never blocking.
@@ -196,7 +203,8 @@ export const CartDrawer: React.FC = () => {
 
   const closeDrawer = () => {
     setIsCartOpen(false);
-    setTimeout(() => setCheckoutStep('cart'), 400);
+    // Reset once the drawer has slid away, so it doesn't change while closing.
+    setTimeout(() => { setCheckoutStep('cart'); setCheckoutError(null); endBuyNow(); }, 400);
   };
 
   return (
@@ -210,9 +218,9 @@ export const CartDrawer: React.FC = () => {
         {/* Header */}
         <div className="drawer-header">
           <h2 className="drawer-title">
-            {checkoutStep === 'cart' && `Shopping Bag (${cartCount})`}
-            {checkoutStep === 'shipping' && 'Secure Checkout'}
-            {checkoutStep === 'confirmation' && (payingOrder ? 'Your Order' : 'Order Request Recorded')}
+            {step === 'cart' && `Shopping Bag (${cartCount})`}
+            {step === 'shipping' && 'Secure Checkout'}
+            {step === 'confirmation' && (payingOrder ? 'Your Order' : 'Order Request Recorded')}
           </h2>
           <button onClick={closeDrawer} aria-label="Close drawer" style={{ color: 'var(--color-text)' }}>
             <X size={20} />
@@ -221,7 +229,7 @@ export const CartDrawer: React.FC = () => {
 
         {/* Drawer Content */}
         <div className="drawer-body">
-          {checkoutStep === 'cart' && (
+          {step === 'cart' && (
             <>
               {cart.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '4rem 1rem' }}>
@@ -353,18 +361,37 @@ export const CartDrawer: React.FC = () => {
           )}
 
           {/* Shipping Details Form */}
-          {checkoutStep === 'shipping' && (
+          {step === 'shipping' && (
             <form id="checkout-form" onSubmit={handleCheckoutSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {buyNowItem && (
+                <div className="checkout-buy-now">
+                  <img src={buyNowItem.product.images[0]} alt="" />
+                  <div>
+                    <span className="checkout-buy-now-label">Buying now</span>
+                    <strong>{buyNowItem.product.name}</strong>
+                    <span className="checkout-buy-now-meta">
+                      Qty {buyNowItem.quantity}
+                      {buyNowItem.selectedSize && buyNowItem.selectedSize !== 'Standard' && ` · Size ${buyNowItem.selectedSize}`}
+                      {' · '}{formattedSubtotal}
+                    </span>
+                    {cart.length > 0 && (
+                      <span className="checkout-buy-now-meta">Your bag is saved for later.</span>
+                    )}
+                  </div>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <span className="eyebrow" style={{ margin: 0 }}>SHIPPING DESTINATION</span>
-                <button
-                  type="button"
-                  className="btn-text"
-                  style={{ fontSize: '0.7rem' }}
-                  onClick={() => setCheckoutStep('cart')}
-                >
-                  Back to Bag
-                </button>
+                {!buyNowItem && (
+                  <button
+                    type="button"
+                    className="btn-text"
+                    style={{ fontSize: '0.7rem' }}
+                    onClick={() => setCheckoutStep('cart')}
+                  >
+                    Back to Bag
+                  </button>
+                )}
               </div>
 
               {savedAddresses && savedAddresses.length > 0 && (
@@ -515,7 +542,7 @@ export const CartDrawer: React.FC = () => {
           )}
 
           {/* Confirmation Step */}
-          {checkoutStep === 'confirmation' && (
+          {step === 'confirmation' && (
             <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
               {payingOrder && paymentStage === 'unpaid'
                 ? <CreditCard size={48} style={{ display: 'block', color: 'var(--color-silver-accent)', margin: '0 auto 1.25rem' }} />
@@ -580,7 +607,7 @@ export const CartDrawer: React.FC = () => {
         </div>
 
         {/* Footer with Totals & CTAs */}
-        {cart.length > 0 && checkoutStep !== 'confirmation' && (
+        {items.length > 0 && step !== 'confirmation' && (
           <div className="drawer-footer">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
@@ -593,8 +620,12 @@ export const CartDrawer: React.FC = () => {
               Taxes calculated at checkout. Complimentary insured transit included.
             </p>
 
-            {checkoutStep === 'cart' ? (
+            {/* Separate keys give the two buttons separate elements. Reusing one element made it a submit
+                button while it was being clicked, so a single tap on Proceed placed the order at once. */}
+            {step === 'cart' ? (
               <button
+                key="proceed"
+                type="button"
                 className="btn-primary"
                 style={{ width: '100%' }}
                 onClick={() => {
@@ -615,6 +646,7 @@ export const CartDrawer: React.FC = () => {
               </button>
             ) : (
               <button
+                key="place-order"
                 type="submit"
                 form="checkout-form"
                 className="btn-primary"
