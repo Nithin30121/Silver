@@ -3,6 +3,7 @@ import { useShop } from '../context/ShopContext';
 import { ProductCard } from './FeaturedProducts';
 import { AnimatedModal } from './AnimatedModal';
 import { PriceTag } from './PriceTag';
+import { useBuyNow } from '../lib/useBuyNow';
 import {
   Heart, 
   ShoppingBag, 
@@ -13,11 +14,13 @@ import {
   Minus, 
   Plus, 
   HelpCircle,
-  X
+  X,
+  ArrowRight
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
   const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo, catalogueStatus, catalogueWaking } = useShop();
+  const buyNow = useBuyNow();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [selectedSize, setSelectedSize] = useState<string>('Standard');
@@ -227,8 +230,9 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Quantity Selector & Add to Bag */}
-            <div className="product-buy-row" style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.5rem' }}>
+            {/* Quantity, Add to Bag and Wishlist, with Buy Now underneath */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.5rem' }}>
+            <div className="product-buy-row" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               {/* Quantity */}
               <div
                 style={{
@@ -260,7 +264,7 @@ export const ProductDetailPage: React.FC = () => {
 
               {/* Add to Bag Primary CTA */}
               <button
-                className="btn-primary product-add-button"
+                className="btn-secondary product-add-button"
                 style={{ flex: 1, height: '52px' }}
                 onClick={() => addToCart(currentProduct, selectedSize, quantity)}
               >
@@ -292,6 +296,17 @@ export const ProductDetailPage: React.FC = () => {
                   }}
                 />
               </button>
+            </div>
+
+            {/* Buy Now: straight to checkout with just this piece; the bag is left as it is. */}
+            <button
+              className="btn-primary product-buy-now"
+              style={{ width: '100%', height: '56px' }}
+              onClick={() => buyNow(currentProduct, selectedSize, quantity)}
+            >
+              <span>Buy Now</span>
+              <ArrowRight size={16} />
+            </button>
             </div>
 
             {/* Value Guarantees */}

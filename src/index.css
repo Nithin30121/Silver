@@ -2989,6 +2989,51 @@ button.account-item-name:hover {
   color: #f2c48d;
 }
 
+/* The one piece being bought with Buy Now, shown above the address form */
+.checkout-buy-now {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.85rem;
+  margin-bottom: 0.5rem;
+  background-color: #121315;
+  border: 1px solid rgba(143, 146, 153, 0.25);
+}
+
+.checkout-buy-now img {
+  width: 64px;
+  height: 80px;
+  object-fit: cover;
+  background-color: var(--color-ink);
+}
+
+.checkout-buy-now strong {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--color-text);
+}
+
+.checkout-buy-now-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-silver-accent);
+}
+
+.checkout-buy-now-meta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
 /* Contact page */
 .contact-layout {
   display: grid;

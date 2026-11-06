@@ -3,6 +3,7 @@ import { useShop } from '../context/ShopContext';
 import type { Product } from '../types';
 import { AnimatedModal } from './AnimatedModal';
 import { PriceTag } from './PriceTag';
+import { useBuyNow } from '../lib/useBuyNow';
 import { X, ShoppingBag, Heart, ArrowRight } from 'lucide-react';
 
 export const QuickViewModal: React.FC = () => {
@@ -28,6 +29,7 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
     toggleWishlist,
     navigateTo
   } = useShop();
+  const buyNow = useBuyNow();
 
   const [selectedSize, setSelectedSize] = useState<string>(product.availableSizes?.[0] ?? 'Standard');
 
@@ -102,7 +104,7 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button
-              className="btn-primary"
+              className="btn-secondary"
               style={{ flex: 1, padding: '0.85rem' }}
               onClick={() => {
                 addToCart(product, selectedSize, 1);
@@ -129,6 +131,18 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
               <Heart size={16} style={{ fill: wishlisted ? 'var(--color-silver-accent)' : 'none' }} />
             </button>
           </div>
+
+          <button
+            className="btn-primary"
+            style={{ width: '100%', padding: '0.95rem' }}
+            onClick={() => {
+              setQuickViewProduct(null);
+              buyNow(product, selectedSize, 1);
+            }}
+          >
+            <span>Buy Now</span>
+            <ArrowRight size={14} />
+          </button>
 
           <button
             className="btn-text"
