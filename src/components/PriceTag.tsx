@@ -1,7 +1,5 @@
 import React from 'react';
-import { discountPercent } from '../lib/pricing';
-
-const rupees = (value: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
+import { discountPercent, formatRupees as rupees } from '../lib/pricing';
 
 /**
  * A product's price. With a discount, the original price sits crossed out above it with the % off.

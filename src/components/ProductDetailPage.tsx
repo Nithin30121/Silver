@@ -4,6 +4,8 @@ import { ProductCard } from './FeaturedProducts';
 import { AnimatedModal } from './AnimatedModal';
 import { PriceTag } from './PriceTag';
 import { useBuyNow } from '../lib/useBuyNow';
+import { productEnquiryLink } from '../lib/whatsapp';
+import { WhatsAppIcon } from './WhatsAppIcon';
 import {
   Heart, 
   ShoppingBag, 
@@ -63,6 +65,7 @@ export const ProductDetailPage: React.FC = () => {
 
 
   const wishlisted = isWishlisted(currentProduct.id);
+  const enquiryLink = productEnquiryLink(currentProduct);
 
 
   const relatedProducts = products
@@ -307,6 +310,20 @@ export const ProductDetailPage: React.FC = () => {
               <span>Buy Now</span>
               <ArrowRight size={16} />
             </button>
+
+            {/* Opens a WhatsApp chat with the shop, the piece's details already typed in. Hidden until a number is set. */}
+            {enquiryLink && (
+              <a
+                className="btn-secondary product-whatsapp"
+                style={{ width: '100%', height: '52px' }}
+                href={enquiryLink}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <WhatsAppIcon size={16} />
+                <span>Enquire on WhatsApp</span>
+              </a>
+            )}
             </div>
 
             {/* Value Guarantees */}

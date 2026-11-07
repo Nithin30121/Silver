@@ -8,6 +8,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
   /** Legacy alternative to the publishable key (the JWT-style "anon" key). */
   readonly VITE_SUPABASE_ANON_KEY?: string;
+  /** The shop's WhatsApp Business number with country code, e.g. 919876543210. Public. */
+  readonly VITE_WHATSAPP_NUMBER?: string;
 }
 
 interface ImportMeta {
