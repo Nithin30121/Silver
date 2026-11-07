@@ -330,6 +330,7 @@ img {
 @media (max-width: 480px) {
   .product-buy-row { gap: 0.6rem !important; }
   .product-add-button { min-width: 0; padding: 0 0.75rem; gap: 0.5rem; letter-spacing: 0.12em; white-space: nowrap; }
+  .product-whatsapp { padding: 0 0.75rem; gap: 0.5rem; letter-spacing: 0.12em; white-space: nowrap; }
 }
 /* On the narrowest phones the bag button takes its own full-width row under the quantity and wishlist. */
 @media (max-width: 374px) {

@@ -1,3 +1,7 @@
+/** A price in rupees as the shop shows it, for example ₹2,499. */
+export const formatRupees = (value: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
+
 /**
  * The whole-number percentage a product is reduced by, or null when there is no discount. Rounded down,
  * so the shop never claims more off than the customer actually saves.
