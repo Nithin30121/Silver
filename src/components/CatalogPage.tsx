@@ -74,7 +74,7 @@ export const CatalogPage: React.FC = () => {
   return (
     <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
       {/* Editorial Header */}
-      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5rem 0 3.5rem' }}>
+      <div style={{ backgroundColor: 'var(--color-band)', borderBottom: '1px solid rgba(var(--rgb-line), 0.22)', padding: '5rem 0 3.5rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">SILVORA ATELIER</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
@@ -96,10 +96,10 @@ export const CatalogPage: React.FC = () => {
                   letterSpacing: '0.14em',
                   textTransform: 'uppercase',
                   fontWeight: 500,
-                  border: activeCategory === sub.id ? '1px solid var(--color-silver-deep)' : '1px solid rgba(143, 146, 153, 0.25)',
-                  backgroundColor: activeCategory === sub.id ? 'rgba(26, 27, 30, 0.95)' : 'rgba(14, 15, 17, 0.6)',
+                  border: activeCategory === sub.id ? '1px solid var(--color-silver-deep)' : '1px solid rgba(var(--rgb-line), 0.25)',
+                  backgroundColor: activeCategory === sub.id ? 'rgba(var(--rgb-panel), 0.95)' : 'rgba(var(--rgb-ink), 0.6)',
                   color: activeCategory === sub.id ? 'var(--color-silver-highlight)' : 'var(--color-text-muted)',
-                  boxShadow: activeCategory === sub.id ? '0 0 15px rgba(143, 146, 153, 0.2)' : 'none',
+                  boxShadow: activeCategory === sub.id ? '0 0 15px rgba(var(--rgb-line), 0.2)' : 'none',
                   transition: 'var(--transition-fast)'
                 }}
               >
@@ -120,7 +120,7 @@ export const CatalogPage: React.FC = () => {
             flexWrap: 'wrap',
             gap: '1.25rem',
             paddingBottom: '1.5rem',
-            borderBottom: '1px solid rgba(143, 146, 153, 0.2)'
+            borderBottom: '1px solid rgba(var(--rgb-line), 0.2)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
@@ -148,8 +148,8 @@ export const CatalogPage: React.FC = () => {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               style={{
-                backgroundColor: '#0E0F11',
-                border: '1px solid rgba(143, 146, 153, 0.3)',
+                backgroundColor: 'var(--color-ink)',
+                border: '1px solid rgba(var(--rgb-line), 0.3)',
                 padding: '0.55rem 1.25rem',
                 fontSize: '0.8125rem',
                 color: 'var(--color-text)',
@@ -169,8 +169,8 @@ export const CatalogPage: React.FC = () => {
           <div
             style={{
               padding: '1.75rem',
-              backgroundColor: '#0E0F11',
-              border: '1px solid rgba(143, 146, 153, 0.25)',
+              backgroundColor: 'var(--color-ink)',
+              border: '1px solid rgba(var(--rgb-line), 0.25)',
               borderTop: 'none',
               display: 'flex',
               flexWrap: 'wrap',

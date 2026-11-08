@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { toAccountError } from '../services/authService';
@@ -20,6 +20,13 @@ export const Header: React.FC = () => {
   const signOutCustomer = useCustomerSignOut();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  // Once the page scrolls, the navbar turns deep ruby so it stays distinct from the light content beneath.
+  const [scrolled, setScrolled] = useState(() => window.scrollY > 24);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   const rootCategories = useMemo(() => {
     const audiences = categories.filter((category) => category.categoryType === 'audience');
     return audiences.length > 0 ? audiences : categories;
@@ -44,7 +51,7 @@ export const Header: React.FC = () => {
       </div>
     </div>
 
-    <header className="header-wrapper">
+    <header className={`header-wrapper${scrolled ? ' is-scrolled' : ''}`}>
       <div className="container header-container">
         <button className="mobile-menu-trigger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle navigation menu">
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -97,7 +104,7 @@ export const Header: React.FC = () => {
     </header>
 
     <div className={`drawer-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)}>
-      <motion.div className="drawer-panel" onClick={(event) => event.stopPropagation()}
+      <motion.div className="drawer-panel mobile-nav-drawer" onClick={(event) => event.stopPropagation()}
         style={{ left: 0, right: 'auto' }} {...drawerSlide(mobileMenuOpen, 'left')}>
         <div className="drawer-header"><span className="brand-logo" style={{ fontSize: '1.25rem' }}>SILVORA</span><button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu"><X size={20} /></button></div>
         <div className="drawer-body" style={{ padding: '1.5rem' }}>

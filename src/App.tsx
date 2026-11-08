@@ -46,10 +46,10 @@ const MainContent: React.FC = () => {
             <CollectionGrid />
 
             {/* Editorial Brand Assurance Banner */}
-            <section style={{ backgroundColor: '#0b0b0d', borderTop: '1px solid rgba(143, 146, 153, 0.2)', borderBottom: '1px solid rgba(143, 146, 153, 0.15)', padding: '5rem 0' }}>
+            <section style={{ backgroundColor: 'var(--color-graphite)', borderTop: '1px solid rgba(var(--rgb-line), 0.2)', borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', padding: '5rem 0' }}>
               <div className="container">
                 <div className="assurance-grid">
-                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(14, 15, 17, 0.6)', border: '1px solid rgba(143, 146, 153, 0.15)' }} {...revealOnScroll()}>
+                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(var(--rgb-ink), 0.6)', border: '1px solid rgba(var(--rgb-line), 0.15)' }} {...revealOnScroll()}>
                     <ShieldCheck size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
                     <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
                       Certified 925 Hallmark
@@ -59,7 +59,7 @@ const MainContent: React.FC = () => {
                     </p>
                   </motion.div>
 
-                  <motion.a href="/care" className="assurance-link" style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(14, 15, 17, 0.6)', border: '1px solid rgba(143, 146, 153, 0.15)' }} {...revealOnScroll(0.1)}
+                  <motion.a href="/care" className="assurance-link" style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(var(--rgb-ink), 0.6)', border: '1px solid rgba(var(--rgb-line), 0.15)' }} {...revealOnScroll(0.1)}
                     onClick={(event) => { event.preventDefault(); navigateTo('care'); }}>
                     <Sparkles size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
                     <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
@@ -71,7 +71,7 @@ const MainContent: React.FC = () => {
                     <span className="assurance-link-cue">Read the guide <ArrowRight size={12} aria-hidden="true" /></span>
                   </motion.a>
 
-                  <motion.a href="/return-policy" className="assurance-link" style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(14, 15, 17, 0.6)', border: '1px solid rgba(143, 146, 153, 0.15)' }} {...revealOnScroll(0.2)}
+                  <motion.a href="/return-policy" className="assurance-link" style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(var(--rgb-ink), 0.6)', border: '1px solid rgba(var(--rgb-line), 0.15)' }} {...revealOnScroll(0.2)}
                     onClick={(event) => { event.preventDefault(); navigateTo('returns'); }}>
                     <RotateCcw size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
                     <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>

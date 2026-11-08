@@ -113,10 +113,10 @@ export const ProductDetailPage: React.FC = () => {
                 width: '100%',
                 aspectRatio: '3 / 4',
                 backgroundColor: 'var(--color-ink)',
-                border: '1px solid rgba(143, 146, 153, 0.28)',
+                border: '1px solid rgba(var(--rgb-line), 0.28)',
                 overflow: 'hidden',
                 position: 'relative',
-                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.7)'
+                boxShadow: '0 16px 40px rgba(var(--rgb-shadow), calc(0.7 * var(--shadow-k)))'
               }}
             >
               <img
@@ -141,10 +141,10 @@ export const ProductDetailPage: React.FC = () => {
                       width: '84px',
                       height: '105px',
                       overflow: 'hidden',
-                      border: activeImageIndex === idx ? '2px solid var(--color-silver-deep)' : '1px solid rgba(143, 146, 153, 0.25)',
+                      border: activeImageIndex === idx ? '2px solid var(--color-silver-deep)' : '1px solid rgba(var(--rgb-line), 0.25)',
                       backgroundColor: 'var(--color-ink)',
                       opacity: activeImageIndex === idx ? 1 : 0.6,
-                      boxShadow: activeImageIndex === idx ? '0 0 15px rgba(143, 146, 153, 0.25)' : 'none',
+                      boxShadow: activeImageIndex === idx ? '0 0 15px rgba(var(--rgb-line), 0.25)' : 'none',
                       transition: 'var(--transition-fast)'
                     }}
                     aria-label={`View image ${idx + 1}`}
@@ -169,7 +169,7 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Price Row */}
-            <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.5rem 1rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.5rem 1rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(var(--rgb-line), 0.2)' }}>
               <PriceTag price={currentProduct.price} originalPrice={currentProduct.originalPrice} size="page" />
               <span style={{ fontSize: '0.75rem', color: 'var(--color-silver-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', paddingBottom: '0.35rem' }}>
                 Includes GST & Insured Transit
@@ -182,7 +182,7 @@ export const ProductDetailPage: React.FC = () => {
             </p>
 
             {/* Verified Specifications Snippet */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', padding: '1.25rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.22)', fontSize: '0.8125rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', padding: '1.25rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.22)', fontSize: '0.8125rem' }}>
               <div>
                 <span style={{ color: 'var(--color-silver-accent)', display: 'block', fontSize: '0.6875rem', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: '0.2rem' }}>Material</span>
                 <strong style={{ color: 'var(--color-text)' }}>{currentProduct.material}</strong>
@@ -219,10 +219,10 @@ export const ProductDetailPage: React.FC = () => {
                         padding: '0.65rem 1.25rem',
                         fontSize: '0.8125rem',
                         letterSpacing: '0.08em',
-                        border: selectedSize === sz ? '1px solid var(--color-silver-deep)' : '1px solid rgba(143, 146, 153, 0.25)',
-                        backgroundColor: selectedSize === sz ? 'rgba(26, 27, 30, 0.95)' : 'rgba(14, 15, 17, 0.6)',
+                        border: selectedSize === sz ? '1px solid var(--color-silver-deep)' : '1px solid rgba(var(--rgb-line), 0.25)',
+                        backgroundColor: selectedSize === sz ? 'rgba(var(--rgb-panel), 0.95)' : 'rgba(var(--rgb-ink), 0.6)',
                         color: selectedSize === sz ? 'var(--color-silver-highlight)' : 'var(--color-text-muted)',
-                        boxShadow: selectedSize === sz ? '0 0 12px rgba(143, 146, 153, 0.2)' : 'none',
+                        boxShadow: selectedSize === sz ? '0 0 12px rgba(var(--rgb-line), 0.2)' : 'none',
                         transition: 'var(--transition-fast)'
                       }}
                     >
@@ -241,8 +241,8 @@ export const ProductDetailPage: React.FC = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  border: '1px solid rgba(143, 146, 153, 0.3)',
-                  backgroundColor: '#0E0F11',
+                  border: '1px solid rgba(var(--rgb-line), 0.3)',
+                  backgroundColor: 'var(--color-ink)',
                   height: '52px'
                 }}
               >
@@ -280,11 +280,11 @@ export const ProductDetailPage: React.FC = () => {
                 style={{
                   width: '52px',
                   height: '52px',
-                  border: '1px solid rgba(143, 146, 153, 0.3)',
+                  border: '1px solid rgba(var(--rgb-line), 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: wishlisted ? '#1b1c1f' : '#0E0F11',
+                  backgroundColor: wishlisted ? 'var(--color-graphite)' : 'var(--color-ink)',
                   color: wishlisted ? 'var(--color-silver-accent)' : 'var(--color-text)',
                   transition: 'var(--transition-fast)'
                 }}
@@ -327,7 +327,7 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Value Guarantees */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(143, 146, 153, 0.2)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', paddingTop: '1.25rem', borderTop: '1px solid rgba(var(--rgb-line), 0.2)' }}>
               <div style={{ textAlign: 'center' }}>
                 <ShieldCheck size={18} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.35rem' }} />
                 <span style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text)' }}>
@@ -354,9 +354,9 @@ export const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Accordion Tabs */}
-            <div style={{ borderTop: '1px solid rgba(143, 146, 153, 0.2)', marginTop: '0.5rem' }}>
+            <div style={{ borderTop: '1px solid rgba(var(--rgb-line), 0.2)', marginTop: '0.5rem' }}>
               {/* Details & Purity */}
-              <div style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }}>
+              <div style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.2)' }}>
                 <button
                   style={{
                     width: '100%',
@@ -387,7 +387,7 @@ export const ProductDetailPage: React.FC = () => {
               </div>
 
               {/* Craftsmanship & Care */}
-              <div style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }}>
+              <div style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.2)' }}>
                 <button
                   style={{
                     width: '100%',
@@ -420,7 +420,7 @@ export const ProductDetailPage: React.FC = () => {
               </div>
 
               {/* Shipping & Delivery */}
-              <div style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }}>
+              <div style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.2)' }}>
                 <button
                   style={{
                     width: '100%',
@@ -456,7 +456,7 @@ export const ProductDetailPage: React.FC = () => {
 
         {/* Related Products Section */}
         {relatedProducts.length > 0 && (
-          <div style={{ marginTop: '7rem', paddingTop: '4rem', borderTop: '1px solid rgba(143, 146, 153, 0.2)' }}>
+          <div style={{ marginTop: '7rem', paddingTop: '4rem', borderTop: '1px solid rgba(var(--rgb-line), 0.2)' }}>
             <span className="eyebrow">COMPLEMENTARY DESIGNS</span>
             <h2 className="headline-editorial" style={{ fontSize: '2.25rem', marginBottom: '2.5rem' }}>
               You May Also <em>Admire.</em>
@@ -472,7 +472,7 @@ export const ProductDetailPage: React.FC = () => {
 
       {/* Size Guide Modal */}
       <AnimatedModal open={sizeModalOpen} onClose={() => setSizeModalOpen(false)} panelStyle={{ padding: '2.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(143, 146, 153, 0.25)', paddingBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(var(--rgb-line), 0.25)', paddingBottom: '1rem' }}>
           <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', color: 'var(--color-text)' }}>Silver Jewellery Sizing Chart</h3>
           <button onClick={() => setSizeModalOpen(false)} aria-label="Close size guide" style={{ color: 'var(--color-text)' }}>
             <X size={20} />
@@ -483,19 +483,19 @@ export const ProductDetailPage: React.FC = () => {
         </p>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem', textAlign: 'left' }}>
           <thead>
-            <tr style={{ borderBottom: '2px solid var(--color-silver-deep)', backgroundColor: '#0E0F11', color: 'var(--color-text)' }}>
+            <tr style={{ borderBottom: '2px solid var(--color-silver-deep)', backgroundColor: 'var(--color-ink)', color: 'var(--color-text)' }}>
               <th style={{ padding: '0.75rem' }}>US Size</th>
               <th style={{ padding: '0.75rem' }}>Inner Diameter (mm)</th>
               <th style={{ padding: '0.75rem' }}>Circumference (mm)</th>
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 6</td><td style={{ padding: '0.65rem' }}>16.5 mm</td><td style={{ padding: '0.65rem' }}>51.8 mm</td></tr>
-            <tr style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 7</td><td style={{ padding: '0.65rem' }}>17.3 mm</td><td style={{ padding: '0.65rem' }}>54.4 mm</td></tr>
-            <tr style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 8</td><td style={{ padding: '0.65rem' }}>18.1 mm</td><td style={{ padding: '0.65rem' }}>57.0 mm</td></tr>
-            <tr style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 9</td><td style={{ padding: '0.65rem' }}>19.0 mm</td><td style={{ padding: '0.65rem' }}>59.5 mm</td></tr>
-            <tr style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 10</td><td style={{ padding: '0.65rem' }}>19.8 mm</td><td style={{ padding: '0.65rem' }}>62.1 mm</td></tr>
-            <tr style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 11</td><td style={{ padding: '0.65rem' }}>20.6 mm</td><td style={{ padding: '0.65rem' }}>64.6 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 6</td><td style={{ padding: '0.65rem' }}>16.5 mm</td><td style={{ padding: '0.65rem' }}>51.8 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 7</td><td style={{ padding: '0.65rem' }}>17.3 mm</td><td style={{ padding: '0.65rem' }}>54.4 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 8</td><td style={{ padding: '0.65rem' }}>18.1 mm</td><td style={{ padding: '0.65rem' }}>57.0 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 9</td><td style={{ padding: '0.65rem' }}>19.0 mm</td><td style={{ padding: '0.65rem' }}>59.5 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 10</td><td style={{ padding: '0.65rem' }}>19.8 mm</td><td style={{ padding: '0.65rem' }}>62.1 mm</td></tr>
+            <tr style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', color: 'var(--color-text-muted)' }}><td style={{ padding: '0.65rem' }}>US 11</td><td style={{ padding: '0.65rem' }}>20.6 mm</td><td style={{ padding: '0.65rem' }}>64.6 mm</td></tr>
           </tbody>
         </table>
         <button

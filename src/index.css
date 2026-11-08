@@ -1,57 +1,98 @@
 /* ==========================================================================
    SILVORA | Master Editorial Luxury Dark Design System
-   Cool obsidian and polished silver, the same palette as the 3D hero
+   Ruby & Blush: bright blush pages, ruby accents, deep ruby navbar, hero and footer, rose gold lines
    ========================================================================== */
 
 :root {
-  /* The four steps of polished silver, brightest first. The hero reads these too. */
-  --silver-1: #f4f5f7;
-  --silver-2: #c9ccd2;
-  --silver-3: #8f9299;
-  --silver-4: #5b5e64;
+  /* The brand palette: Ruby & Blush. Every storefront colour comes from these, apart from the red,
+     green and amber that mark errors, success and warnings. To retheme, change them here. */
+  --brand-blush: #FFF8F6;
+  --brand-rose: #F8E8E5;
+  --brand-ink: #2B1A1D;
+  --brand-ruby: #9B1B30;
+  --brand-ruby-deep: #7A1325;
+  --brand-ruby-night: #4A0E18;
+  --brand-rose-gold: #E8B4A8;
 
-  /* Every storefront colour comes from here, apart from the red, green and amber that mark
-     errors, success and warnings. Text contrast on the page background: main 18:1, muted 7:1. */
-  --color-black: #070708;
+  /* Three steps of rose gold, brightest first: the hero lettering and its sheen. */
+  --gold-1: #FBE3DC;
+  --gold-2: var(--brand-rose-gold);
+  --gold-3: #C98F84;
+
+  /* Bright blush pages. Text contrast on blush: main 15.8:1, muted 6.1:1, ruby labels 7.7:1. */
+  --color-deep: var(--brand-rose);
+  --color-black: var(--brand-blush);
   /* Page background */
-  --color-ink: #0e0f11;
+  --color-band: #FBEFEC;
+  /* Image wells and drawer ends */
+  --color-ink: #FFFFFF;
   /* Card and section background */
-  --color-graphite: #1a1b1e;
-  /* Raised panels */
-  --color-text: #eef0f3;
+  --color-graphite: var(--brand-rose);
+  /* Sections, raised panels and inputs */
+  --color-strip: var(--brand-ruby);
+  /* The thin ruby strip above the navbar */
+  --color-text: var(--brand-ink);
   /* Main text */
-  --color-text-muted: #9a9ea6;
+  --color-text-muted: #6E5A5D;
   /* Secondary text */
-  --color-silver-deep: var(--silver-3);
-  /* Borders and quiet accents */
-  --color-silver-accent: var(--silver-2);
-  /* Labels, prices, links and active states */
-  --color-silver-highlight: #e6e8ec;
-  /* Hover highlights */
-  --color-polished-silver: #d5d6d8;
-  --color-border: rgba(143, 146, 153, 0.22);
-  --color-border-subtle: rgba(201, 204, 210, 0.14);
+  --color-scrim: rgba(43, 26, 29, 0.45);
+  /* Dims the page behind the bag and pop-ups */
 
-  /* Ice-blue accent for small labels, prices, highlights and the main buttons. On the page
-     background it reads about 11:1; button text on the light blue reads about 10:1. */
-  --color-accent: #9ec5e8;
-  --color-accent-deep: #7fa6c9;
-  --color-accent-text: #b7d5f0;
-  --color-accent-bright: #d3e6f7;
-  --color-accent-ice: #e3f0fb;
-  --color-on-accent: #08111a;
-  --color-accent-glow: rgba(158, 197, 232, 0.22);
-  --color-accent-border: rgba(158, 197, 232, 0.55);
+  /* The older "silver" names now hold the brand colours, so every part of the shop follows them. */
+  --color-silver-deep: #7E5048;
+  /* Deep rose gold: borders and quiet accents */
+  --color-silver-accent: var(--brand-ruby);
+  /* Labels, links and active states */
+  --color-silver-highlight: var(--brand-ink);
+  /* Hover highlights and prices */
+  --color-polished-silver: var(--brand-ink);
+
+  /* The same colours as R, G, B, for see-through versions, e.g. rgba(var(--rgb-line), 0.2). */
+  --rgb-line: 217, 169, 159;
+  /* Rose gold: hairlines and borders */
+  --rgb-sheen: 155, 27, 48;
+  /* Ruby: glows, focus rings and highlights */
+  --rgb-text: 43, 26, 29;
+  --rgb-muted: 110, 90, 93;
+  --rgb-base: 255, 248, 246;
+  --rgb-ink: 255, 255, 255;
+  --rgb-panel: 248, 232, 229;
+  --rgb-accent: 155, 27, 48;
+  --rgb-shadow: 43, 26, 29;
+  --shadow-k: 0.16;
+  /* Shadows are soft, at 16% of their dark-band strength */
+
+  /* Errors, success and warnings, dark enough to read on blush (about 6:1). */
+  --color-error: #B3261E;
+  --rgb-error: 179, 38, 30;
+  --color-success: #2F6B3B;
+  --rgb-success: 47, 107, 59;
+  --color-warning: #8A5300;
+  --rgb-warning: 138, 83, 0;
+
+  --color-border: rgba(var(--rgb-line), 0.45);
+  --color-border-subtle: rgba(var(--rgb-sheen), 0.12);
+
+  /* Ruby main buttons, tags and labels; blush text on ruby reads 7.7:1. */
+  --color-accent: var(--brand-ruby);
+  --color-accent-deep: var(--brand-ruby-deep);
+  --color-accent-text: var(--brand-ruby);
+  --color-accent-bright: var(--brand-ruby-deep);
+  --color-accent-ice: #AE2A40;
+  --color-accent-sheen: #C04459;
+  --color-on-accent: var(--brand-blush);
+  --color-accent-glow: rgba(var(--rgb-accent), 0.18);
+  --color-accent-border: rgba(var(--rgb-accent), 0.45);
 
   /* Typography */
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
   /* Shadows & Elevations */
-  --shadow-subtle: 0 4px 24px rgba(0, 0, 0, 0.5);
-  --shadow-drawer: -12px 0 48px rgba(0, 0, 0, 0.85);
-  --shadow-modal: 0 24px 60px rgba(0, 0, 0, 0.9);
-  --shadow-glow: 0 0 25px rgba(143, 146, 153, 0.18);
+  --shadow-subtle: 0 4px 24px rgba(var(--rgb-shadow), calc(0.5 * var(--shadow-k)));
+  --shadow-drawer: -12px 0 48px rgba(var(--rgb-shadow), calc(0.85 * var(--shadow-k)));
+  --shadow-modal: 0 24px 60px rgba(var(--rgb-shadow), calc(0.9 * var(--shadow-k)));
+  --shadow-glow: 0 0 25px rgba(var(--rgb-line), 0.18);
 
   /* Transitions */
   --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -60,6 +101,91 @@
   /* Spacing */
   --container-max: 1360px;
   --header-height: 74px;
+}
+
+/* The dark bands on the bright page: the deep ruby footer, the navbar once scrolled, and the ruby strip. Inside them the same names hold blush text and rose gold. */
+.header-wrapper.is-scrolled,
+.top-utility-bar,
+.announcement-bar,
+.site-footer {
+  color-scheme: dark;
+  --color-deep: #2E0810;
+  --color-black: var(--brand-ruby-night);
+  --color-band: #3E0B14;
+  --color-ink: #5A1420;
+  --color-graphite: #651826;
+  --color-text: var(--brand-blush);
+  --color-text-muted: #E9C9CE;
+  --color-silver-deep: var(--gold-3);
+  --color-silver-accent: var(--brand-rose-gold);
+  --color-silver-highlight: var(--gold-1);
+  --color-polished-silver: var(--brand-blush);
+  --rgb-line: 232, 180, 168;
+  --rgb-sheen: 255, 248, 246;
+  --rgb-text: 255, 248, 246;
+  --rgb-muted: 233, 201, 206;
+  --rgb-base: 74, 14, 24;
+  --rgb-ink: 90, 20, 32;
+  --rgb-panel: 101, 24, 38;
+  --rgb-accent: 232, 180, 168;
+  --rgb-shadow: 0, 0, 0;
+  --shadow-k: 1;
+  --color-error: #F4A2A2;
+  --rgb-error: 232, 165, 152;
+  --color-success: #A9D3B0;
+  --rgb-success: 169, 211, 176;
+  --color-warning: #F2C48D;
+  --rgb-warning: 231, 201, 143;
+  --color-accent: var(--brand-rose-gold);
+  --color-accent-deep: #C98F84;
+  --color-accent-text: #F7D2C9;
+  --color-accent-bright: var(--gold-1);
+  --color-accent-ice: #F2CBC2;
+  --color-accent-sheen: #FFF1EC;
+  --color-on-accent: var(--brand-ruby-night);
+  --color-accent-glow: rgba(var(--rgb-accent), 0.22);
+  --color-accent-border: rgba(var(--rgb-accent), 0.55);
+}
+
+.mobile-nav-drawer.drawer-panel {
+  background-color: var(--color-black);
+}
+
+/* The navbar (and its phone menu) is a soft brand rose, so it stands apart from the white hero
+   while staying bright. A rose-gold line and a light shadow underneath, and the SILVORA logo in ruby. */
+.header-wrapper,
+.mobile-nav-drawer {
+  --color-black: var(--brand-rose);
+  --rgb-base: 248, 232, 229;
+}
+
+.header-wrapper {
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.9);
+  box-shadow: 0 6px 18px rgba(var(--rgb-shadow), 0.08);
+}
+
+.header-wrapper .brand-logo,
+.mobile-nav-drawer .brand-logo {
+  color: var(--brand-ruby);
+}
+
+/* Scrolled down, the navbar is deep ruby with a blush logo, so it never blends into the page. */
+.header-wrapper.is-scrolled {
+  border-bottom-color: rgba(var(--rgb-line), 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.header-wrapper.is-scrolled .brand-logo {
+  color: var(--brand-blush);
+}
+
+/* The ruby strip above the navbar: blush and pale rose text (5.3:1 and up). */
+.top-utility-bar,
+.announcement-bar {
+  --color-text: var(--brand-blush);
+  --color-text-muted: #F1DCDF;
+  --color-silver-accent: #F7D2C9;
+  --rgb-line: 255, 248, 246;
 }
 
 *,
@@ -73,7 +199,7 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
-  color-scheme: dark;
+  color-scheme: light;
   background-color: var(--color-black);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
@@ -217,7 +343,7 @@ img {
   font-style: italic;
   font-weight: 400;
   color: var(--color-accent-text);
-  background: linear-gradient(100deg, var(--color-accent-deep) 0%, var(--color-accent) 30%, var(--color-accent-ice) 46%, #FFFFFF 50%,
+  background: linear-gradient(100deg, var(--color-accent-deep) 0%, var(--color-accent) 30%, var(--color-accent-ice) 46%, var(--color-accent-sheen) 50%,
     var(--color-accent-ice) 54%, var(--color-accent) 70%, var(--color-accent-deep) 100%);
   background-size: 220% 100%;
   background-position: 100% 0;
@@ -252,7 +378,7 @@ img {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  background: linear-gradient(120deg, var(--color-accent) 0%, var(--color-accent-ice) 42%, #FFFFFF 50%,
+  background: linear-gradient(120deg, var(--color-accent) 0%, var(--color-accent-ice) 42%, var(--color-accent-sheen) 50%,
     var(--color-accent-ice) 58%, var(--color-accent) 100%);
   background-size: 200% 100%;
   background-position: 100% 0;
@@ -274,7 +400,7 @@ img {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(201, 204, 210, 0.15) 0%, transparent 60%);
+  background: linear-gradient(135deg, rgba(var(--rgb-sheen), 0.15) 0%, transparent 60%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -282,7 +408,7 @@ img {
 .btn-primary:hover {
   background-position: 0% 0;
   color: var(--color-on-accent);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 14px 36px rgba(158, 197, 232, 0.32);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 14px 36px rgba(var(--rgb-accent), 0.32);
   transform: translateY(-1px);
 }
 
@@ -315,7 +441,7 @@ img {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   padding: 0.95rem 2rem;
-  border: 1px solid rgba(143, 146, 153, 0.4);
+  border: 1px solid rgba(var(--rgb-line), 0.4);
   transition: var(--transition-smooth);
 }
 
@@ -366,14 +492,14 @@ img {
 
 /* Luxury Announcement Bar */
 .announcement-bar {
-  background-color: #0b0b0d;
+  background-color: var(--color-strip);
   color: var(--color-text-muted);
   font-size: 0.72rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   padding: 0.55rem 1rem;
   text-align: center;
-  border-bottom: 1px solid rgba(143, 146, 153, 0.16);
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.16);
   font-weight: 500;
 }
 
@@ -387,8 +513,8 @@ img {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(7, 7, 8, 0.88);
-  border-bottom: 1px solid rgba(143, 146, 153, 0.22);
+  background-color: rgba(var(--rgb-base), 0.96);
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.22);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   transition: var(--transition-fast);
@@ -490,8 +616,8 @@ img {
   left: 50%;
   transform: translateX(-50%) translateY(8px);
   background-color: var(--color-ink);
-  border: 1px solid rgba(143, 146, 153, 0.3);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
+  box-shadow: 0 16px 40px rgba(var(--rgb-shadow), calc(0.75 * var(--shadow-k)));
   min-width: 240px;
   padding: 1.25rem 0;
   opacity: 0;
@@ -522,14 +648,14 @@ img {
 }
 
 .dropdown-link:hover {
-  background-color: #16171a;
+  background-color: var(--color-graphite);
   color: var(--color-silver-highlight);
   padding-left: 2.1rem;
 }
 
 .dropdown-divider {
   height: 1px;
-  background-color: rgba(143, 146, 153, 0.18);
+  background-color: rgba(var(--rgb-line), 0.18);
   margin: 0.5rem 1.25rem;
 }
 
@@ -612,7 +738,7 @@ img {
   min-height: calc(100vh - var(--header-height));
   min-height: calc(100svh - var(--header-height));
   background-color: var(--color-black);
-  border-bottom: 1px solid rgba(143, 146, 153, 0.2);
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.2);
   padding: clamp(4rem, 6vw, 7rem) 0;
   position: relative;
 }
@@ -656,7 +782,7 @@ img {
   flex-direction: column;
   overflow: hidden;
   background-color: var(--color-ink);
-  border: 1px solid rgba(143, 146, 153, 0.25);
+  border: 1px solid rgba(var(--rgb-line), 0.25);
   border-radius: 0;
   cursor: pointer;
   outline: none;
@@ -666,8 +792,8 @@ img {
 }
 
 .gender-panel:hover {
-  border-color: rgba(201, 204, 210, 0.65);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.85), 0 0 35px rgba(143, 146, 153, 0.12);
+  border-color: rgba(var(--rgb-sheen), 0.65);
+  box-shadow: 0 20px 48px rgba(var(--rgb-shadow), calc(0.85 * var(--shadow-k))), 0 0 35px rgba(var(--rgb-line), 0.12);
   transform: translateY(-2px);
 }
 
@@ -681,7 +807,7 @@ img {
   width: 100%;
   aspect-ratio: 4 / 5.8;
   overflow: hidden;
-  background-color: #0a0a0b;
+  background-color: var(--color-band);
 }
 
 .gender-panel-media img {
@@ -702,9 +828,9 @@ img {
   position: absolute;
   inset: 0;
   background: linear-gradient(to top,
-      rgba(7, 7, 8, 0.94) 0%,
-      rgba(7, 7, 8, 0.72) 34%,
-      rgba(7, 7, 8, 0.22) 62%,
+      rgba(var(--rgb-base), 0.94) 0%,
+      rgba(var(--rgb-base), 0.72) 34%,
+      rgba(var(--rgb-base), 0.22) 62%,
       transparent 85%);
   pointer-events: none;
 }
@@ -747,7 +873,7 @@ img {
   font-family: var(--font-sans);
   font-size: clamp(0.9375rem, 0.95vw, 1.0625rem);
   font-weight: 400;
-  color: #D5D6D8;
+  color: var(--color-polished-silver);
   letter-spacing: 0.02em;
   line-height: 1.5;
   margin-top: 0.4rem;
@@ -764,7 +890,7 @@ img {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   width: fit-content;
-  border-bottom: 1px solid rgba(158, 197, 232, 0.6);
+  border-bottom: 1px solid rgba(var(--rgb-accent), 0.6);
   padding-bottom: 0.35rem;
   transition: color 0.3s ease, border-color 0.3s ease;
 }
@@ -794,7 +920,7 @@ img {
 }
 
 .gender-panel.is-coming-soon:hover {
-  border-color: rgba(143, 146, 153, 0.25);
+  border-color: rgba(var(--rgb-line), 0.25);
   box-shadow: none;
   transform: none;
 }
@@ -815,13 +941,13 @@ img {
   content: '';
   width: 2.25rem;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(183, 213, 240, 0.55));
+  background: linear-gradient(90deg, transparent, rgba(var(--rgb-accent), 0.55));
 }
 
 .gender-soon-label::after {
   /* Matches the spacing after the last letter, so the label stays centred. */
   margin-left: -0.26em;
-  background: linear-gradient(90deg, rgba(183, 213, 240, 0.55), transparent);
+  background: linear-gradient(90deg, rgba(var(--rgb-accent), 0.55), transparent);
 }
 
 .gender-soon-media {
@@ -921,7 +1047,7 @@ img {
 /* Category Grid (Section Two) */
 .collection-section {
   background-color: var(--color-black);
-  border-bottom: 1px solid rgba(143, 146, 153, 0.2);
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.2);
 }
 
 .category-grid {
@@ -936,15 +1062,15 @@ img {
   display: block;
   overflow: hidden;
   background-color: var(--color-ink);
-  border: 1px solid rgba(143, 146, 153, 0.22);
+  border: 1px solid rgba(var(--rgb-line), 0.22);
   text-decoration: none;
   cursor: pointer;
   transition: var(--transition-smooth);
 }
 
 .category-card:hover {
-  border-color: rgba(143, 146, 153, 0.55);
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+  border-color: rgba(var(--rgb-line), 0.55);
+  box-shadow: 0 12px 32px rgba(var(--rgb-shadow), calc(0.7 * var(--shadow-k)));
   transform: translateY(-2px);
 }
 
@@ -953,7 +1079,7 @@ img {
   aspect-ratio: 3 / 4;
   overflow: hidden;
   position: relative;
-  background-color: #0c0c0e;
+  background-color: var(--color-band);
 }
 
 .category-img-box img {
@@ -973,7 +1099,7 @@ img {
   align-items: center;
   justify-content: space-between;
   background-color: var(--color-ink);
-  border-top: 1px solid rgba(143, 146, 153, 0.15);
+  border-top: 1px solid rgba(var(--rgb-line), 0.15);
 }
 
 .category-title {
@@ -1030,7 +1156,7 @@ img {
   display: flex;
   flex-direction: column;
   background-color: var(--color-ink);
-  border: 1px solid rgba(143, 146, 153, 0.18);
+  border: 1px solid rgba(var(--rgb-line), 0.18);
   padding-bottom: 1.25rem;
   transition: border-color 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1041,14 +1167,14 @@ img {
 }
 
 .product-card:hover .product-title {
-  color: #FFFFFF;
+  color: var(--color-silver-highlight);
 }
 
 .product-img-wrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
-  background-color: #0d0d0f;
+  background-color: var(--color-band);
   overflow: hidden;
 }
 
@@ -1083,8 +1209,8 @@ img {
   position: absolute;
   top: 0.85rem;
   left: 0.85rem;
-  background-color: rgba(7, 7, 8, 0.85);
-  border: 1px solid rgba(143, 146, 153, 0.35);
+  background-color: rgba(var(--rgb-base), 0.85);
+  border: 1px solid rgba(var(--rgb-line), 0.35);
   backdrop-filter: blur(6px);
   font-size: 0.625rem;
   letter-spacing: 0.16em;
@@ -1099,8 +1225,8 @@ img {
   position: absolute;
   top: 0.85rem;
   right: 0.85rem;
-  background-color: rgba(7, 7, 8, 0.85);
-  border: 1px solid rgba(143, 146, 153, 0.3);
+  background-color: rgba(var(--rgb-base), 0.85);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
   backdrop-filter: blur(6px);
   width: 34px;
   height: 34px;
@@ -1117,7 +1243,7 @@ img {
 .product-wishlist-btn.active {
   color: var(--color-silver-accent);
   border-color: var(--color-silver-accent);
-  background-color: #16171a;
+  background-color: var(--color-graphite);
 }
 
 .product-quick-add {
@@ -1125,9 +1251,9 @@ img {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: rgba(14, 15, 17, 0.94);
+  background-color: rgba(var(--rgb-ink), 0.94);
   backdrop-filter: blur(8px);
-  border-top: 1px solid rgba(143, 146, 153, 0.25);
+  border-top: 1px solid rgba(var(--rgb-line), 0.25);
   color: var(--color-text);
   padding: 0.75rem;
   text-align: center;
@@ -1216,7 +1342,7 @@ img {
 .drawer-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.78);
+  background-color: var(--color-scrim);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: 999;
@@ -1239,7 +1365,7 @@ img {
   width: 100%;
   max-width: 440px;
   background-color: var(--color-ink);
-  border-left: 1px solid rgba(143, 146, 153, 0.25);
+  border-left: 1px solid rgba(var(--rgb-line), 0.25);
   box-shadow: var(--shadow-drawer);
   z-index: 1000;
   display: flex;
@@ -1251,8 +1377,8 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid rgba(143, 146, 153, 0.2);
-  background-color: #0c0c0e;
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.2);
+  background-color: var(--color-band);
 }
 
 .drawer-title {
@@ -1270,15 +1396,15 @@ img {
 
 .drawer-footer {
   padding: 1.5rem 1.75rem;
-  border-top: 1px solid rgba(143, 146, 153, 0.2);
-  background-color: #0c0c0e;
+  border-top: 1px solid rgba(var(--rgb-line), 0.2);
+  background-color: var(--color-band);
 }
 
 /* Modals (AnimatedModal fades and lifts them in and out) */
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.82);
+  background-color: var(--color-scrim);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   z-index: 1100;
@@ -1290,7 +1416,7 @@ img {
 
 .modal-panel {
   background-color: var(--color-ink);
-  border: 1px solid rgba(143, 146, 153, 0.3);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
   max-width: 680px;
   width: 100%;
   max-height: 90vh;
@@ -1304,11 +1430,11 @@ img {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  background-color: #141518;
+  background-color: var(--color-graphite);
   border: 1px solid var(--color-silver-deep);
   color: var(--color-text);
   padding: 1rem 1.75rem;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 12px 36px rgba(var(--rgb-shadow), calc(0.8 * var(--shadow-k)));
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -1336,8 +1462,8 @@ img {
 
 .assurance-link:hover,
 .assurance-link:focus-visible {
-  border-color: rgba(201, 204, 210, 0.4) !important;
-  background-color: rgba(20, 21, 24, 0.8) !important;
+  border-color: rgba(var(--rgb-sheen), 0.4) !important;
+  background-color: rgba(var(--rgb-panel), 0.8) !important;
 }
 
 .assurance-link-cue {
@@ -1361,8 +1487,8 @@ img {
 
 /* Footer */
 .site-footer {
-  background-color: #0a0a0b;
-  border-top: 1px solid rgba(143, 146, 153, 0.22);
+  background-color: var(--color-black);
+  border-top: 1px solid rgba(var(--rgb-line), 0.22);
   padding-top: 5rem;
   padding-bottom: 3rem;
   margin-top: auto;
@@ -1422,7 +1548,7 @@ img {
   align-items: center;
   justify-content: space-between;
   padding-top: 2rem;
-  border-top: 1px solid rgba(143, 146, 153, 0.16);
+  border-top: 1px solid rgba(var(--rgb-line), 0.16);
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }
@@ -1462,8 +1588,8 @@ img {
    Top Utility Bar & Live Silver Rate Indicator
    ========================================================================== */
 .top-utility-bar {
-  background-color: #0b0b0d;
-  border-bottom: 1px solid rgba(143, 146, 153, 0.18);
+  background-color: var(--color-strip);
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.18);
   padding: 0.4rem 0;
   position: relative;
   z-index: 102;
@@ -1529,8 +1655,8 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  background-color: rgba(14, 15, 17, 0.75);
-  border: 1px solid rgba(143, 146, 153, 0.28);
+  background-color: rgba(var(--rgb-ink), 0.75);
+  border: 1px solid rgba(var(--rgb-line), 0.28);
   border-radius: 999px;
   padding: 0.25rem 0.75rem 0.25rem 0.55rem;
   color: var(--color-text);
@@ -1544,14 +1670,14 @@ img {
 
 .silver-rate-pill:hover,
 .silver-rate-pill[aria-expanded="true"] {
-  background-color: rgba(26, 27, 30, 0.95);
+  background-color: rgba(var(--rgb-panel), 0.95);
   border-color: var(--color-silver-accent);
-  box-shadow: 0 2px 12px rgba(143, 146, 153, 0.2);
+  box-shadow: 0 2px 12px rgba(var(--rgb-line), 0.2);
 }
 
 .silver-rate-pill.is-stale {
-  border-color: rgba(143, 146, 153, 0.4);
-  background-color: rgba(22, 23, 26, 0.85);
+  border-color: rgba(var(--rgb-line), 0.4);
+  background-color: rgba(var(--rgb-panel), 0.85);
 }
 
 .silver-rate-pill-unavailable {
@@ -1590,7 +1716,7 @@ img {
 
 .silver-rate-live-dot.is-live {
   background-color: var(--color-silver-accent);
-  box-shadow: 0 0 6px rgba(201, 204, 210, 0.9);
+  box-shadow: 0 0 6px rgba(var(--rgb-sheen), 0.9);
   animation: ratePulse 2.4s infinite ease-in-out;
 }
 
@@ -1609,7 +1735,7 @@ img {
   50% {
     transform: scale(1.3);
     opacity: 1;
-    box-shadow: 0 0 8px rgba(201, 204, 210, 1);
+    box-shadow: 0 0 8px rgba(var(--rgb-sheen), 1);
   }
 }
 
@@ -1632,7 +1758,7 @@ img {
 }
 
 .silver-rate-separator {
-  color: rgba(143, 146, 153, 0.35);
+  color: rgba(var(--rgb-line), 0.35);
   font-weight: 300;
 }
 
@@ -1669,15 +1795,15 @@ img {
 }
 
 .silver-rate-trend.trend-up {
-  color: #F4F5F7;
-  background-color: rgba(143, 146, 153, 0.22);
-  border: 1px solid rgba(201, 204, 210, 0.3);
+  color: var(--color-text);
+  background-color: rgba(var(--rgb-line), 0.22);
+  border: 1px solid rgba(var(--rgb-sheen), 0.3);
 }
 
 .silver-rate-trend.trend-down {
   color: var(--color-polished-silver);
-  background-color: rgba(113, 116, 122, 0.18);
-  border: 1px solid rgba(158, 162, 170, 0.25);
+  background-color: rgba(var(--rgb-line), 0.18);
+  border: 1px solid rgba(var(--rgb-line), 0.25);
 }
 
 .silver-rate-time {
@@ -1686,7 +1812,7 @@ img {
   letter-spacing: 0.05em;
   margin-left: 0.2rem;
   padding-left: 0.45rem;
-  border-left: 1px solid rgba(143, 146, 153, 0.25);
+  border-left: 1px solid rgba(var(--rgb-line), 0.25);
 }
 
 /* Mobile Rate Presentation */
@@ -1722,7 +1848,7 @@ img {
 .mobile-stale-tag {
   font-size: 0.6rem;
   padding: 0 0.25rem;
-  background: rgba(143, 146, 153, 0.3);
+  background: rgba(var(--rgb-line), 0.3);
   color: var(--color-silver-accent);
   border-radius: 2px;
 }
@@ -1733,9 +1859,9 @@ img {
   top: calc(100% + 8px);
   left: 0;
   width: 320px;
-  background: #0E0F11;
+  background: var(--color-ink);
   border: 1px solid var(--color-silver-deep);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.85), 0 0 20px rgba(143, 146, 153, 0.12);
+  box-shadow: 0 16px 40px rgba(var(--rgb-shadow), calc(0.85 * var(--shadow-k))), 0 0 20px rgba(var(--rgb-line), 0.12);
   border-radius: 4px;
   padding: 1.25rem;
   z-index: 1000;
@@ -1761,7 +1887,7 @@ img {
   align-items: flex-start;
   justify-content: space-between;
   padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(143, 146, 153, 0.2);
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.2);
   margin-bottom: 0.85rem;
 }
 
@@ -1785,8 +1911,8 @@ img {
 
 .popover-refresh-btn {
   color: var(--color-text-muted);
-  background: rgba(26, 27, 30, 0.8);
-  border: 1px solid rgba(143, 146, 153, 0.25);
+  background: rgba(var(--rgb-panel), 0.8);
+  border: 1px solid rgba(var(--rgb-line), 0.25);
   border-radius: 4px;
   padding: 0.35rem;
   cursor: pointer;
@@ -1817,8 +1943,8 @@ img {
 }
 
 .popover-rate-hero {
-  background: rgba(7, 7, 8, 0.6);
-  border: 1px solid rgba(143, 146, 153, 0.15);
+  background: rgba(var(--rgb-base), 0.6);
+  border: 1px solid rgba(var(--rgb-line), 0.15);
   border-radius: 3px;
   padding: 0.85rem;
   text-align: center;
@@ -1868,7 +1994,7 @@ img {
   align-items: center;
   font-size: 0.72rem;
   padding: 0.25rem 0;
-  border-bottom: 1px solid rgba(143, 146, 153, 0.1);
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.1);
 }
 
 .popover-row .row-key {
@@ -1885,8 +2011,8 @@ img {
   display: flex;
   align-items: flex-start;
   gap: 0.45rem;
-  background: rgba(143, 146, 153, 0.15);
-  border: 1px solid rgba(143, 146, 153, 0.3);
+  background: rgba(var(--rgb-line), 0.15);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
   padding: 0.5rem 0.65rem;
   border-radius: 3px;
   font-size: 0.68rem;
@@ -1897,7 +2023,7 @@ img {
 
 .popover-footer {
   padding-top: 0.65rem;
-  border-top: 1px solid rgba(143, 146, 153, 0.15);
+  border-top: 1px solid rgba(var(--rgb-line), 0.15);
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
@@ -1928,7 +2054,7 @@ img {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background-color: #070708;
+  background-color: var(--color-black);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1950,7 +2076,7 @@ img {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 50% 50%, rgba(7, 7, 8, 0.75) 0%, rgba(7, 7, 8, 0.98) 75%),
+    radial-gradient(ellipse at 50% 50%, rgba(var(--rgb-base), 0.75) 0%, rgba(var(--rgb-base), 0.98) 75%),
     url('/images/brand_intro_bg.jpg') center center / cover no-repeat;
   filter: blur(14px);
   transform: scale(1.08);
@@ -1966,8 +2092,8 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: rgba(14, 15, 17, 0.85);
-  border: 1px solid rgba(143, 146, 153, 0.4);
+  background: rgba(var(--rgb-ink), 0.85);
+  border: 1px solid rgba(var(--rgb-line), 0.4);
   color: var(--color-silver-highlight);
   font-size: 0.72rem;
   letter-spacing: 0.18em;
@@ -1982,13 +2108,13 @@ img {
 .brand-intro-skip-btn:hover {
   background: var(--color-ink);
   border-color: var(--color-silver-accent);
-  color: #FFFFFF;
+  color: var(--color-silver-highlight);
 }
 
 .skip-key-hint {
   font-size: 0.6rem;
   padding: 0.1rem 0.3rem;
-  background: rgba(143, 146, 153, 0.25);
+  background: rgba(var(--rgb-line), 0.25);
   border-radius: 3px;
   color: var(--color-text);
 }
@@ -2024,10 +2150,10 @@ img {
   aspect-ratio: 16 / 10;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.95), 0 0 40px rgba(143, 146, 153, 0.25);
-  border: 1px solid rgba(143, 146, 153, 0.4);
+  box-shadow: 0 24px 70px rgba(var(--rgb-shadow), calc(0.95 * var(--shadow-k))), 0 0 40px rgba(var(--rgb-line), 0.25);
+  border: 1px solid rgba(var(--rgb-line), 0.4);
   margin-bottom: 1.5rem;
-  background-color: #070708;
+  background-color: var(--color-black);
 }
 
 .brand-intro-artwork-img {
@@ -2058,7 +2184,7 @@ img {
   height: 5px;
   background-color: var(--color-silver-accent);
   transform: rotate(45deg);
-  box-shadow: 0 0 8px rgba(201, 204, 210, 0.8);
+  box-shadow: 0 0 8px rgba(var(--rgb-sheen), 0.8);
 }
 
 .brand-intro-tagline {
@@ -2078,7 +2204,7 @@ img {
   font-size: 0.68rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(154, 158, 166, 0.6);
+  color: rgba(var(--rgb-muted), 0.6);
   pointer-events: none;
 }
 
@@ -2140,8 +2266,8 @@ img {
    Customer Accounts: sign in, create account, password reset, account page
    ========================================================================== */
 .auth-page {
-  --auth-error: #E8A598;
-  --auth-input-bg: #121315;
+  --auth-error: var(--color-error);
+  --auth-input-bg: var(--color-graphite);
   display: flex;
   justify-content: center;
   padding: 5rem 1.25rem 6rem;
@@ -2203,22 +2329,22 @@ img {
   font-size: 0.9375rem;
   color: var(--color-text);
   background-color: var(--auth-input-bg);
-  border: 1px solid rgba(143, 146, 153, 0.3);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
   border-radius: 0;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .auth-input::placeholder {
-  color: rgba(154, 158, 166, 0.7);
+  color: rgba(var(--rgb-muted), 0.7);
 }
 
 .auth-input:hover {
-  border-color: rgba(201, 204, 210, 0.5);
+  border-color: rgba(var(--rgb-sheen), 0.5);
 }
 
 .auth-input:focus-visible {
   border-color: var(--color-silver-accent);
-  box-shadow: 0 0 0 3px rgba(201, 204, 210, 0.22);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-sheen), 0.22);
 }
 
 .auth-input[aria-invalid='true'] {
@@ -2226,7 +2352,7 @@ img {
 }
 
 .auth-input[aria-invalid='true']:focus-visible {
-  box-shadow: 0 0 0 3px rgba(232, 165, 152, 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-error), 0.2);
 }
 
 .auth-input:disabled {
@@ -2299,7 +2425,7 @@ img {
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--color-silver-highlight);
-  border-bottom: 1px solid rgba(230, 232, 236, 0.4);
+  border-bottom: 1px solid rgba(var(--rgb-text), 0.4);
 }
 
 .auth-link:hover {
@@ -2342,20 +2468,20 @@ img {
 
 .auth-alert--error {
   color: var(--auth-error);
-  border-color: rgba(232, 165, 152, 0.55);
-  background-color: rgba(232, 165, 152, 0.07);
+  border-color: rgba(var(--rgb-error), 0.55);
+  background-color: rgba(var(--rgb-error), 0.07);
 }
 
 .auth-alert--success {
   color: var(--color-silver-highlight);
-  border-color: rgba(201, 204, 210, 0.5);
-  background-color: rgba(201, 204, 210, 0.07);
+  border-color: rgba(var(--rgb-sheen), 0.5);
+  background-color: rgba(var(--rgb-sheen), 0.07);
 }
 
 .auth-alert--info {
   color: var(--color-text);
   border-color: var(--color-border);
-  background-color: rgba(238, 240, 243, 0.03);
+  background-color: rgba(var(--rgb-text), 0.03);
 }
 
 .auth-alert strong {
@@ -2400,7 +2526,7 @@ img {
   flex-shrink: 0;
   width: 0.95rem;
   height: 0.95rem;
-  border: 1.5px solid rgba(238, 240, 243, 0.25);
+  border: 1.5px solid rgba(var(--rgb-text), 0.25);
   border-top-color: var(--color-text);
   border-radius: 50%;
   animation: auth-spin 0.8s linear infinite;
@@ -2461,7 +2587,7 @@ img {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--color-silver-highlight);
-  border: 1px solid rgba(201, 204, 210, 0.45);
+  border: 1px solid rgba(var(--rgb-sheen), 0.45);
 }
 
 .account-badge--muted {
@@ -2616,7 +2742,7 @@ img {
 }
 
 .account-order:hover {
-  background-color: rgba(201, 204, 210, 0.04);
+  background-color: rgba(var(--rgb-sheen), 0.04);
 }
 
 .account-order-main {
@@ -2647,18 +2773,18 @@ img {
 }
 
 .account-status--waiting {
-  color: #E7C98F;
-  border-color: rgba(231, 201, 143, 0.45);
+  color: var(--color-warning);
+  border-color: rgba(var(--rgb-warning), 0.45);
 }
 
 .account-status--active {
   color: var(--color-silver-highlight);
-  border-color: rgba(201, 204, 210, 0.5);
+  border-color: rgba(var(--rgb-sheen), 0.5);
 }
 
 .account-status--done {
-  color: #A9D3B0;
-  border-color: rgba(169, 211, 176, 0.45);
+  color: var(--color-success);
+  border-color: rgba(var(--rgb-success), 0.45);
 }
 
 .account-status--stopped {
@@ -2756,8 +2882,8 @@ img {
   padding: 1rem 1.15rem;
   font-size: 0.875rem;
   line-height: 1.7;
-  border: 1px solid rgba(201, 204, 210, 0.35);
-  background-color: rgba(201, 204, 210, 0.05);
+  border: 1px solid rgba(var(--rgb-sheen), 0.35);
+  background-color: rgba(var(--rgb-sheen), 0.05);
 }
 
 .account-tracking .account-detail-label {
@@ -2871,8 +2997,8 @@ button.account-item-name:hover {
   padding: 1.1rem 1.15rem;
   font-size: 0.875rem;
   line-height: 1.7;
-  border: 1px solid rgba(232, 165, 152, 0.45);
-  background-color: rgba(232, 165, 152, 0.05);
+  border: 1px solid rgba(var(--rgb-error), 0.45);
+  background-color: rgba(var(--rgb-error), 0.05);
 }
 
 .account-confirm > p {
@@ -2895,7 +3021,7 @@ button.account-item-name:hover {
 .account-danger-outline {
   margin-top: 1rem;
   color: var(--auth-error);
-  border-color: rgba(232, 165, 152, 0.55);
+  border-color: rgba(var(--rgb-error), 0.55);
 }
 
 /* Address book */
@@ -2987,7 +3113,7 @@ button.account-item-name:hover {
 
 .checkout-delivery.is-warning,
 .checkout-delivery.is-warning svg {
-  color: #f2c48d;
+  color: var(--color-warning);
 }
 
 /* The one piece being bought with Buy Now, shown above the address form */
@@ -2998,8 +3124,8 @@ button.account-item-name:hover {
   align-items: center;
   padding: 0.85rem;
   margin-bottom: 0.5rem;
-  background-color: #121315;
-  border: 1px solid rgba(143, 146, 153, 0.25);
+  background-color: var(--color-graphite);
+  border: 1px solid rgba(var(--rgb-line), 0.25);
 }
 
 .checkout-buy-now img {
@@ -3082,8 +3208,8 @@ button.account-item-name:hover {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   color: var(--color-text);
-  background-color: #121315;
-  border: 1px solid rgba(143, 146, 153, 0.3);
+  background-color: var(--color-graphite);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
 }
 
 textarea.contact-input {
@@ -3093,11 +3219,11 @@ textarea.contact-input {
 .contact-input:focus-visible {
   border-color: var(--color-silver-accent);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(201, 204, 210, 0.22);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-sheen), 0.22);
 }
 
 .contact-input[aria-invalid='true'] {
-  border-color: #E8A598;
+  border-color: var(--color-error);
 }
 
 .contact-error,
@@ -3105,21 +3231,21 @@ textarea.contact-input {
   margin-top: 0.35rem;
   font-size: 0.75rem;
   line-height: 1.5;
-  color: #E8A598;
+  color: var(--color-error);
 }
 
 .contact-form-error {
   margin: 0;
   padding: 0.8rem 1rem;
-  border: 1px solid rgba(232, 165, 152, 0.55);
-  background-color: rgba(232, 165, 152, 0.07);
+  border: 1px solid rgba(var(--rgb-error), 0.55);
+  background-color: rgba(var(--rgb-error), 0.07);
 }
 
 .contact-sent {
   padding: 2.5rem;
   text-align: center;
-  background-color: #0E0F11;
-  border: 1px solid rgba(143, 146, 153, 0.3);
+  background-color: var(--color-ink);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
 }
 
 /* The spam trap sits off screen rather than display: none, which some bots skip. */
@@ -3191,13 +3317,13 @@ textarea.contact-input {
   font-size: 0.75rem;
   line-height: 1.55;
   color: var(--color-text);
-  border: 1px solid rgba(143, 146, 153, 0.2);
+  border: 1px solid rgba(var(--rgb-line), 0.2);
   cursor: pointer;
 }
 
 .checkout-address.is-selected {
   border-color: var(--color-silver-deep);
-  background-color: rgba(26, 27, 30, 0.9);
+  background-color: rgba(var(--rgb-panel), 0.9);
 }
 
 .checkout-address input {
@@ -3235,19 +3361,19 @@ textarea.contact-input {
   padding: 0.65rem 0.85rem;
   font-size: 0.8125rem;
   color: var(--color-text);
-  background-color: #121315;
-  border: 1px solid rgba(143, 146, 153, 0.3);
+  background-color: var(--color-graphite);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
 }
 
 .checkout-input:focus-visible {
   border-color: var(--color-silver-accent);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(201, 204, 210, 0.22);
+  box-shadow: 0 0 0 3px rgba(var(--rgb-sheen), 0.22);
 }
 
 .checkout-input[readonly] {
   color: var(--color-text-muted);
-  background-color: #0e0f11;
+  background-color: var(--color-ink);
   cursor: default;
 }
 
@@ -3310,7 +3436,7 @@ textarea.contact-input {
 @media (prefers-reduced-motion: reduce) {
   .auth-spinner {
     animation: none;
-    border-top-color: rgba(238, 240, 243, 0.25);
+    border-top-color: rgba(var(--rgb-text), 0.25);
   }
 
   .auth-input,

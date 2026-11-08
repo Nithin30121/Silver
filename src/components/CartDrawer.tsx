@@ -253,7 +253,7 @@ export const CartDrawer: React.FC = () => {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   {/* Complimentary Shipping Progress */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.85rem', backgroundColor: '#121315', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(143, 146, 153, 0.25)', color: 'var(--color-silver-highlight)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.85rem', backgroundColor: 'var(--color-graphite)', fontSize: '0.75rem', textAlign: 'center', border: '1px solid rgba(var(--rgb-line), 0.25)', color: 'var(--color-silver-highlight)' }}>
                     <Sparkles size={14} aria-hidden="true" style={{ flexShrink: 0 }} />
                     <span>Complimentary Insured Express Delivery unlocked!</span>
                   </div>
@@ -274,7 +274,7 @@ export const CartDrawer: React.FC = () => {
                           gridTemplateColumns: '80px 1fr auto',
                           gap: '1rem',
                           paddingBottom: '1.25rem',
-                          borderBottom: '1px solid rgba(143, 146, 153, 0.2)'
+                          borderBottom: '1px solid rgba(var(--rgb-line), 0.2)'
                         }}
                       >
                         {/* Thumbnail */}
@@ -282,8 +282,8 @@ export const CartDrawer: React.FC = () => {
                           style={{
                             width: '80px',
                             height: '100px',
-                            backgroundColor: '#0E0F11',
-                            border: '1px solid rgba(143, 146, 153, 0.2)',
+                            backgroundColor: 'var(--color-ink)',
+                            border: '1px solid rgba(var(--rgb-line), 0.2)',
                             overflow: 'hidden',
                             cursor: 'pointer'
                           }}
@@ -318,7 +318,7 @@ export const CartDrawer: React.FC = () => {
 
                           {/* Quantity Adjuster */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginTop: '0.5rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(143, 146, 153, 0.3)', backgroundColor: '#0E0F11' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid rgba(var(--rgb-line), 0.3)', backgroundColor: 'var(--color-ink)' }}>
                               <button
                                 style={{ padding: '4px 8px', color: 'var(--color-text)' }}
                                 onClick={() => updateQuantity(item.product.id, item.selectedSize, -1)}
@@ -496,7 +496,7 @@ export const CartDrawer: React.FC = () => {
               )}
 
               {checkoutError && (
-                <p role="alert" style={{ margin: 0, color: '#f4a2a2', fontSize: '0.75rem', lineHeight: 1.5 }}>
+                <p role="alert" style={{ margin: 0, color: 'var(--color-error)', fontSize: '0.75rem', lineHeight: 1.5 }}>
                   {checkoutError}
                 </p>
               )}
@@ -513,8 +513,8 @@ export const CartDrawer: React.FC = () => {
                         alignItems: 'center',
                         gap: '0.6rem',
                         padding: '0.65rem 0.85rem',
-                        border: formData.paymentMethod === method.id ? '1px solid var(--color-silver-deep)' : '1px solid rgba(143, 146, 153, 0.2)',
-                        backgroundColor: formData.paymentMethod === method.id ? 'rgba(26, 27, 30, 0.9)' : 'transparent',
+                        border: formData.paymentMethod === method.id ? '1px solid var(--color-silver-deep)' : '1px solid rgba(var(--rgb-line), 0.2)',
+                        backgroundColor: formData.paymentMethod === method.id ? 'rgba(var(--rgb-panel), 0.9)' : 'transparent',
                         color: 'var(--color-text)',
                         fontSize: '0.75rem',
                         cursor: 'pointer'
@@ -557,7 +557,7 @@ export const CartDrawer: React.FC = () => {
               <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
                 Reference Order Number: <strong style={{ color: 'var(--color-silver-accent)' }}>{orderId}</strong>
               </p>
-              <div style={{ padding: '1.25rem', backgroundColor: '#121315', fontSize: '0.8125rem', textAlign: 'left', marginBottom: '2rem', border: '1px solid rgba(143, 146, 153, 0.25)', color: 'var(--color-text)' }}>
+              <div style={{ padding: '1.25rem', backgroundColor: 'var(--color-graphite)', fontSize: '0.8125rem', textAlign: 'left', marginBottom: '2rem', border: '1px solid rgba(var(--rgb-line), 0.25)', color: 'var(--color-text)' }}>
                 <p><strong>Customer:</strong> {formData.fullName || 'Valued Client'}</p>
                 <p><strong>Destination:</strong> {formData.city || 'India'}, {formData.pincode}</p>
                 <p><strong>Method:</strong> {PAYMENT_METHODS[formData.paymentMethod.toUpperCase()] ?? formData.paymentMethod.toUpperCase()}</p>
@@ -569,7 +569,7 @@ export const CartDrawer: React.FC = () => {
                 </p>
               </div>
               {paymentError && (
-                <p role="alert" style={{ margin: '0 0 1rem', color: '#f4a2a2', fontSize: '0.75rem', lineHeight: 1.5 }}>{paymentError}</p>
+                <p role="alert" style={{ margin: '0 0 1rem', color: 'var(--color-error)', fontSize: '0.75rem', lineHeight: 1.5 }}>{paymentError}</p>
               )}
               {payingOrder && paymentStage === 'unpaid' && (
                 <button

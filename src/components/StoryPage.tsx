@@ -8,7 +8,7 @@ export const StoryPage: React.FC = () => {
   return (
     <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
       {/* Editorial Story Header */}
-      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
+      <div style={{ backgroundColor: 'var(--color-band)', borderBottom: '1px solid rgba(var(--rgb-line), 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '820px', textAlign: 'center' }}>
           <span className="eyebrow">OUR PHILOSOPHY</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4.25rem)', marginBottom: '1.5rem', color: 'var(--color-text)' }}>
@@ -36,7 +36,7 @@ export const StoryPage: React.FC = () => {
             </p>
           </div>
 
-          <div style={{ aspectRatio: '4/3', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(143, 146, 153, 0.25)', overflow: 'hidden' }}>
+          <div style={{ aspectRatio: '4/3', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.25)', overflow: 'hidden' }}>
             <img
               src="/images/category_rings.jpg"
               alt="Sculptural sterling silver ring on dark slate stone"
@@ -47,7 +47,7 @@ export const StoryPage: React.FC = () => {
 
         {/* Story Section 2: Proportions & Restraint */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3.5rem', alignItems: 'center', marginBottom: '5rem' }}>
-          <div style={{ aspectRatio: '4/3', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(143, 146, 153, 0.25)', overflow: 'hidden' }}>
+          <div style={{ aspectRatio: '4/3', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.25)', overflow: 'hidden' }}>
             <img
               src="/images/hero_silver_ring.jpg"
               alt="Intricate silver filigree details on obsidian"
@@ -84,7 +84,7 @@ export const StoryPage: React.FC = () => {
             </p>
           </div>
 
-          <div style={{ aspectRatio: '4/3', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(143, 146, 153, 0.25)', overflow: 'hidden' }}>
+          <div style={{ aspectRatio: '4/3', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.25)', overflow: 'hidden' }}>
             {/* Framed to keep the ring and the SILVORA name on the box in view. */}
             <img
               src="/images/story_gift_box.webp"
@@ -96,7 +96,7 @@ export const StoryPage: React.FC = () => {
         </section>
 
         {/* Pillars */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', padding: '3rem 2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.22)', textAlign: 'center', marginBottom: '5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', padding: '3rem 2rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.22)', textAlign: 'center', marginBottom: '5rem' }}>
           <div>
             <Sparkles size={24} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.75rem' }} />
             <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>Honest Craft</h3>

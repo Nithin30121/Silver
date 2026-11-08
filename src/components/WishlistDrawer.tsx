@@ -69,7 +69,7 @@ export const WishlistDrawer: React.FC = () => {
                       gridTemplateColumns: '80px 1fr auto',
                       gap: '1rem',
                       paddingBottom: '1.25rem',
-                      borderBottom: '1px solid rgba(143, 146, 153, 0.2)'
+                      borderBottom: '1px solid rgba(var(--rgb-line), 0.2)'
                     }}
                   >
                     {/* Thumbnail */}
@@ -77,8 +77,8 @@ export const WishlistDrawer: React.FC = () => {
                       style={{
                         width: '80px',
                         height: '100px',
-                        backgroundColor: '#0E0F11',
-                        border: '1px solid rgba(143, 146, 153, 0.2)',
+                        backgroundColor: 'var(--color-ink)',
+                        border: '1px solid rgba(var(--rgb-line), 0.2)',
                         overflow: 'hidden',
                         cursor: 'pointer'
                       }}

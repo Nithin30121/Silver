@@ -13,7 +13,7 @@ export const QuickViewModal: React.FC = () => {
     <AnimatedModal
       open={quickViewProduct !== null}
       onClose={() => setQuickViewProduct(null)}
-      panelStyle={{ maxWidth: '780px', padding: '0', display: 'grid', gridTemplateColumns: '1fr 1fr', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.35)' }}
+      panelStyle={{ maxWidth: '780px', padding: '0', display: 'grid', gridTemplateColumns: '1fr 1fr', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.35)' }}
     >
       {quickViewProduct && <QuickViewDetails key={quickViewProduct.id} product={quickViewProduct} />}
     </AnimatedModal>
@@ -39,7 +39,7 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
   return (
     <>
       {/* Left: Product Image */}
-      <div style={{ backgroundColor: '#0b0b0d', height: '100%', minHeight: '380px', position: 'relative' }}>
+      <div style={{ backgroundColor: 'var(--color-band)', height: '100%', minHeight: '380px', position: 'relative' }}>
         <img
           src={product.images[0]}
           alt={product.name}
@@ -51,7 +51,7 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
       </div>
 
       {/* Right: Quick Controls */}
-      <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#0E0F11' }}>
+      <div style={{ padding: '2.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: 'var(--color-ink)' }}>
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
             <div>
@@ -87,8 +87,8 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
                     style={{
                       padding: '0.45rem 0.85rem',
                       fontSize: '0.75rem',
-                      border: selectedSize === sz ? '1px solid var(--color-silver-deep)' : '1px solid rgba(143, 146, 153, 0.25)',
-                      backgroundColor: selectedSize === sz ? 'rgba(26, 27, 30, 0.95)' : '#121315',
+                      border: selectedSize === sz ? '1px solid var(--color-silver-deep)' : '1px solid rgba(var(--rgb-line), 0.25)',
+                      backgroundColor: selectedSize === sz ? 'rgba(var(--rgb-panel), 0.95)' : 'var(--color-graphite)',
                       color: selectedSize === sz ? 'var(--color-silver-highlight)' : 'var(--color-text)',
                       transition: 'var(--transition-fast)'
                     }}
@@ -118,11 +118,11 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
             <button
               style={{
                 width: '46px',
-                border: '1px solid rgba(143, 146, 153, 0.3)',
+                border: '1px solid rgba(var(--rgb-line), 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: wishlisted ? '#17181b' : '#121315',
+                backgroundColor: wishlisted ? 'var(--color-graphite)' : 'var(--color-graphite)',
                 color: wishlisted ? 'var(--color-silver-accent)' : 'var(--color-text)'
               }}
               onClick={() => toggleWishlist(product.id)}
