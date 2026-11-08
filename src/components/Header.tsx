@@ -1,11 +1,10 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { toAccountError } from '../services/authService';
 import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown, LayoutDashboard } from 'lucide-react';
 import { motion } from 'motion/react';
 import { drawerSlide, useBumpOnIncrease } from '../lib/motion';
-import { LiveSilverRate } from './LiveSilverRate';
 import { useCustomerSignOut } from './auth/authHelpers';
 
 /** The bag or wishlist count beside its icon, which bumps when the number goes up. */
@@ -20,13 +19,6 @@ export const Header: React.FC = () => {
   const signOutCustomer = useCustomerSignOut();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
-  // Once the page scrolls, the navbar turns deep ruby so it stays distinct from the light content beneath.
-  const [scrolled, setScrolled] = useState(() => window.scrollY > 24);
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
   const rootCategories = useMemo(() => {
     const audiences = categories.filter((category) => category.categoryType === 'audience');
     return audiences.length > 0 ? audiences : categories;
@@ -43,15 +35,8 @@ export const Header: React.FC = () => {
   };
 
   return <>
-    <div className="top-utility-bar" role="complementary" aria-label="Atelier market updates and services">
-      <div className="container top-utility-container">
-        <div className="top-utility-left"><LiveSilverRate /></div>
-        <div className="top-utility-center"><span className="announcement-highlight">Signature Service:</span> Complimentary Insured Express Delivery &amp; Bespoke Velvet Box</div>
-        <div className="top-utility-right"><span className="top-utility-assurance">Certified 925 Hallmark</span></div>
-      </div>
-    </div>
 
-    <header className={`header-wrapper${scrolled ? ' is-scrolled' : ''}`}>
+    <header className="header-wrapper">
       <div className="container header-container">
         <button className="mobile-menu-trigger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle navigation menu">
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
