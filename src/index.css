@@ -103,8 +103,10 @@
   --header-height: 74px;
 }
 
-/* The dark bands on the bright page: the deep ruby footer, the navbar once scrolled, and the ruby strip. Inside them the same names hold blush text and rose gold. */
-.header-wrapper.is-scrolled,
+/* The dark bands on the bright page: the deep ruby navbar (and its phone menu) and footer, and the ruby
+   strip. Inside them the same names hold blush text and rose gold. */
+.header-wrapper,
+.mobile-nav-drawer,
 .top-utility-bar,
 .announcement-bar,
 .site-footer {
@@ -151,32 +153,10 @@
   background-color: var(--color-black);
 }
 
-/* The navbar (and its phone menu) is a soft brand rose, so it stands apart from the white hero
-   while staying bright. A rose-gold line and a light shadow underneath, and the SILVORA logo in ruby. */
-.header-wrapper,
-.mobile-nav-drawer {
-  --color-black: var(--brand-rose);
-  --rgb-base: 248, 232, 229;
-}
-
+/* The navbar is always deep ruby, with a soft shadow so it sits above the page. */
 .header-wrapper {
-  border-bottom: 1px solid rgba(var(--rgb-line), 0.9);
-  box-shadow: 0 6px 18px rgba(var(--rgb-shadow), 0.08);
-}
-
-.header-wrapper .brand-logo,
-.mobile-nav-drawer .brand-logo {
-  color: var(--brand-ruby);
-}
-
-/* Scrolled down, the navbar is deep ruby with a blush logo, so it never blends into the page. */
-.header-wrapper.is-scrolled {
   border-bottom-color: rgba(var(--rgb-line), 0.35);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-}
-
-.header-wrapper.is-scrolled .brand-logo {
-  color: var(--brand-blush);
 }
 
 /* The ruby strip above the navbar: blush and pale rose text (5.3:1 and up). */
