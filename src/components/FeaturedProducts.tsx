@@ -79,7 +79,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
                 {...pressable}
                 style={{
                   flex: 1,
-                  background: 'rgba(26, 27, 30, 0.95)',
+                  background: 'rgba(var(--rgb-panel), 0.95)',
                   border: '1px solid var(--color-silver-deep)',
                   color: 'var(--color-text)',
                   padding: '0.65rem 0.5rem',
@@ -96,7 +96,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
                 {...pressable}
                 style={{
                   background: 'rgba(255, 255, 255, 0.08)',
-                  border: '1px solid rgba(143, 146, 153, 0.3)',
+                  border: '1px solid rgba(var(--rgb-line), 0.3)',
                   color: 'var(--color-text)',
                   padding: '0.65rem 0.75rem',
                   display: 'flex',
@@ -139,8 +139,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
                     fontSize: '0.625rem',
                     letterSpacing: '0.04em',
                     color: 'var(--color-text-muted)',
-                    border: '1px solid rgba(143, 146, 153, 0.22)',
-                    backgroundColor: 'rgba(7, 7, 8, 0.5)',
+                    border: '1px solid rgba(var(--rgb-line), 0.22)',
+                    backgroundColor: 'rgba(var(--rgb-base), 0.5)',
                     padding: '2px 6px'
                   }}
                 >
@@ -165,7 +165,7 @@ export const FeaturedProducts: React.FC = () => {
   const featured = products.filter((p) => p.isFeatured).slice(0, 4);
 
   return (
-    <section className="section-padding" style={{ backgroundColor: 'var(--color-ink)', borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }} aria-labelledby="selection-heading">
+    <section className="section-padding" style={{ backgroundColor: 'var(--color-ink)', borderBottom: '1px solid rgba(var(--rgb-line), 0.2)' }} aria-labelledby="selection-heading">
       <div className="container">
         {/* Section Header */}
         <motion.div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }} {...revealOnScroll()}>

@@ -13,14 +13,14 @@ const CARE_STEPS = [
 
 const sectionTitle: React.CSSProperties = { fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-text)' };
 const bodyText: React.CSSProperties = { fontSize: '0.9375rem', lineHeight: '1.8', color: 'var(--color-text-muted)' };
-const panel: React.CSSProperties = { padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)' };
+const panel: React.CSSProperties = { padding: '2rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.2)' };
 
 export const CarePage: React.FC = () => {
   const { navigateTo } = useShop();
 
   return (
     <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
-      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
+      <div style={{ backgroundColor: 'var(--color-band)', borderBottom: '1px solid rgba(var(--rgb-line), 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">JEWELLERY CARE GUIDE</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>

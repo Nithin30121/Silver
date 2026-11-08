@@ -27,7 +27,7 @@ export const ShippingPage: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
-      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
+      <div style={{ backgroundColor: 'var(--color-band)', borderBottom: '1px solid rgba(var(--rgb-line), 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">TRANSIT & RETURNS</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
@@ -41,7 +41,7 @@ export const ShippingPage: React.FC = () => {
 
       <div className="container" style={{ maxWidth: '840px', marginTop: '4rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-          <section style={{ padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)' }}>
+          <section style={{ padding: '2rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.2)' }}>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-text)' }}>
               Domestic Shipping (India)
             </h2>
@@ -50,7 +50,7 @@ export const ShippingPage: React.FC = () => {
             </p>
           </section>
 
-          <section style={{ padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)' }}>
+          <section style={{ padding: '2rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.2)' }}>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-text)' }}>
               International Delivery
             </h2>
@@ -59,7 +59,7 @@ export const ShippingPage: React.FC = () => {
             </p>
           </section>
 
-          <section style={{ padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)' }}>
+          <section style={{ padding: '2rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.2)' }}>
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1rem', color: 'var(--color-text)' }}>
               Returns
             </h2>
@@ -80,7 +80,7 @@ export const ShippingPage: React.FC = () => {
 export const ReturnPolicyPage: React.FC = () => {
   return (
     <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
-      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
+      <div style={{ backgroundColor: 'var(--color-band)', borderBottom: '1px solid rgba(var(--rgb-line), 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">RETURN POLICY</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
@@ -93,7 +93,7 @@ export const ReturnPolicyPage: React.FC = () => {
       </div>
 
       <div className="container" style={{ maxWidth: '840px', marginTop: '4rem' }}>
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '2rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.2)', fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: '1.8' }}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '2rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.2)', fontSize: '0.9375rem', color: 'var(--color-text-muted)', lineHeight: '1.8' }}>
           <p>
             To protect the authenticity of our genuine 925 sterling silver products, all return requests are personally reviewed.
           </p>
@@ -173,7 +173,7 @@ export const ContactPage: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
-      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
+      <div style={{ backgroundColor: 'var(--color-band)', borderBottom: '1px solid rgba(var(--rgb-line), 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">CLIENT CONCIERGE</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
@@ -316,7 +316,7 @@ export const FAQPage: React.FC = () => {
 
   return (
     <div style={{ backgroundColor: 'var(--color-black)', minHeight: '80vh', paddingBottom: '6rem' }}>
-      <div style={{ backgroundColor: '#0c0c0e', borderBottom: '1px solid rgba(143, 146, 153, 0.22)', padding: '5.5rem 0 4rem' }}>
+      <div style={{ backgroundColor: 'var(--color-band)', borderBottom: '1px solid rgba(var(--rgb-line), 0.22)', padding: '5.5rem 0 4rem' }}>
         <div className="container" style={{ maxWidth: '800px', textAlign: 'center' }}>
           <span className="eyebrow">COMMON INQUIRIES</span>
           <h1 className="headline-editorial" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', marginBottom: '1.25rem', color: 'var(--color-text)' }}>
@@ -329,9 +329,9 @@ export const FAQPage: React.FC = () => {
       </div>
 
       <div className="container" style={{ maxWidth: '800px', marginTop: '4rem' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid rgba(143, 146, 153, 0.2)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid rgba(var(--rgb-line), 0.2)' }}>
           {faqs.map((faq, idx) => (
-            <div key={idx} style={{ borderBottom: '1px solid rgba(143, 146, 153, 0.2)' }}>
+            <div key={idx} style={{ borderBottom: '1px solid rgba(var(--rgb-line), 0.2)' }}>
               <button
                 style={{
                   width: '100%',

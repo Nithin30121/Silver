@@ -40,7 +40,7 @@ export const SearchModal: React.FC = () => {
     <AnimatedModal
       open={isSearchOpen}
       onClose={() => setIsSearchOpen(false)}
-      panelStyle={{ maxWidth: '640px', padding: '2.25rem', backgroundColor: '#0E0F11', border: '1px solid rgba(143, 146, 153, 0.35)', boxShadow: '0 24px 60px rgba(0, 0, 0, 0.9)' }}
+      panelStyle={{ maxWidth: '640px', padding: '2.25rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.35)', boxShadow: '0 24px 60px rgba(var(--rgb-shadow), calc(0.9 * var(--shadow-k)))' }}
     >
       {/* Search Input Bar */}
       <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-silver-deep)', paddingBottom: '0.85rem', gap: '0.85rem' }}>
@@ -82,8 +82,8 @@ export const SearchModal: React.FC = () => {
                   onClick={() => setQuery(term)}
                   style={{
                     padding: '0.5rem 0.95rem',
-                    backgroundColor: '#121315',
-                    border: '1px solid rgba(143, 146, 153, 0.25)',
+                    backgroundColor: 'var(--color-graphite)',
+                    border: '1px solid rgba(var(--rgb-line), 0.25)',
                     fontSize: '0.75rem',
                     letterSpacing: '0.06em',
                     color: 'var(--color-text)',
@@ -113,8 +113,8 @@ export const SearchModal: React.FC = () => {
                     alignItems: 'center',
                     gap: '1rem',
                     padding: '0.75rem 1rem',
-                    backgroundColor: '#121315',
-                    border: '1px solid rgba(143, 146, 153, 0.18)',
+                    backgroundColor: 'var(--color-graphite)',
+                    border: '1px solid rgba(var(--rgb-line), 0.18)',
                     cursor: 'pointer',
                     transition: 'var(--transition-fast)'
                   }}
