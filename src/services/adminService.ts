@@ -435,13 +435,28 @@ export function deleteProduct(id: string) {
   return adminRequest<void>(`/admin/products/${id}`, { method: 'DELETE' });
 }
 
-export async function uploadProductImages(productId: string, files: File[]): Promise<void> {
-  for (let index = 0; index < files.length; index += 1) {
+/** The most photos one product can have. The server refuses more, so remove one to add another. */
+export const MAX_PRODUCT_PHOTOS = 4;
+
+/** A product photo as the server returns it. */
+export type ProductPhoto = ApiProduct['images'][number];
+
+/**
+ * Uploads the photos one at a time, each after the product's existing photos. onUploaded runs after each one, so a
+ * retry after a failure sends only the photos that didn't arrive.
+ */
+export async function uploadProductImages(productId: string, files: File[], onUploaded?: (file: File, photo: ProductPhoto) => void): Promise<void> {
+  for (const file of files) {
     const form = new FormData();
-    form.append('file', files[index]);
-    form.append('displayOrder', String(index));
-    await adminRequest(`/admin/products/${productId}/images`, { method: 'POST', body: form });
+    form.append('file', file);
+    const photo = await adminRequest<ProductPhoto>(`/admin/products/${productId}/images`, { method: 'POST', body: form });
+    onUploaded?.(file, photo);
   }
+}
+
+/** Removes one photo from the product and deletes its file from storage. */
+export function deleteProductImage(productId: string, imageId: string) {
+  return adminRequest<void>(`/admin/products/${productId}/images/${imageId}`, { method: 'DELETE' });
 }
 
 export function createCategory(input: CategoryInput) {
