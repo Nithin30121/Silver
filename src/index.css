@@ -109,7 +109,8 @@
 .mobile-nav-drawer,
 .top-utility-bar,
 .announcement-bar,
-.site-footer {
+.site-footer,
+.custom-cta {
   color-scheme: dark;
   --color-deep: #2E0810;
   --color-black: var(--brand-ruby-night);
@@ -3300,6 +3301,90 @@ textarea.contact-input {
   .story-thanks {
     grid-template-columns: minmax(0, 1fr);
     gap: 2.5rem;
+  }
+}
+
+/* Custom Design: a photo beside each text panel, stacked on phones with the photo first */
+.custom-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 2.5rem;
+  align-items: stretch;
+}
+
+.custom-split--photo-right {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+
+.custom-split--photo-right .custom-photo {
+  order: 1;
+}
+
+/* The photo fills its side at the text's height, so it never stretches the row. */
+.custom-photo {
+  position: relative;
+  min-height: 320px;
+  margin: 0;
+  overflow: hidden;
+  background-color: var(--color-ink);
+  border: 1px solid rgba(var(--rgb-line), 0.25);
+}
+
+.custom-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The WhatsApp call to action: the workbench photo beside a deep ruby panel. */
+.custom-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  background-color: var(--color-black);
+  border: 1px solid rgba(var(--rgb-line), 0.3);
+  box-shadow: 0 18px 48px rgba(43, 26, 29, 0.18);
+  overflow: hidden;
+}
+
+.custom-cta .custom-photo {
+  min-height: 420px;
+  border: 0;
+}
+
+.custom-cta-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.25rem 2.5rem;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .custom-split,
+  .custom-split--photo-right,
+  .custom-cta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .custom-split {
+    gap: 1.25rem;
+  }
+
+  .custom-split--photo-right .custom-photo {
+    order: 0;
+  }
+
+  .custom-photo,
+  .custom-cta .custom-photo {
+    min-height: 0;
+    aspect-ratio: 16 / 10;
+  }
+
+  .custom-cta-body {
+    padding: 2.5rem 1.5rem;
   }
 }
 
