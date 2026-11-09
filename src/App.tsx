@@ -9,6 +9,7 @@ import { CatalogPage } from './components/CatalogPage';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { StoryPage } from './components/StoryPage';
 import { CarePage } from './components/CarePage';
+import { CustomDesignPage } from './components/CustomDesignPage';
 import { ShippingPage, ReturnPolicyPage, ContactPage, FAQPage } from './components/SupportingPages';
 import { CartDrawer } from './components/CartDrawer';
 import { WishlistDrawer } from './components/WishlistDrawer';
@@ -94,6 +95,7 @@ const MainContent: React.FC = () => {
         {currentView === 'product' && <ProductDetailPage />}
         {currentView === 'story' && <StoryPage />}
         {currentView === 'care' && <CarePage />}
+        {currentView === 'custom' && <CustomDesignPage />}
         {currentView === 'shipping' && <ShippingPage />}
         {currentView === 'returns' && <ReturnPolicyPage />}
         {currentView === 'contact' && <ContactPage />}

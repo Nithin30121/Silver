@@ -9,9 +9,14 @@ import { routePath } from './routes';
  */
 const WHATSAPP_NUMBER = (import.meta.env.VITE_WHATSAPP_NUMBER ?? '').replace(/\D/g, '');
 
+/** A wa.me link that opens a chat with the shop with this message already typed in. Null when no number is set. */
+export function whatsappLink(message: string): string | null {
+  if (WHATSAPP_NUMBER.length < 10) return null;
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
 /** A wa.me link that opens a chat with the shop, with the piece's details already typed in. Null when no number is set. */
 export function productEnquiryLink(product: Product): string | null {
-  if (WHATSAPP_NUMBER.length < 10) return null;
   const pageUrl = `${window.location.origin}${routePath({ view: 'product', productKey: product.slug || product.id })}`;
   const lines = [
     "Hello SILVORA, I'd like to enquire about this piece:",
@@ -22,5 +27,5 @@ export function productEnquiryLink(product: Product): string | null {
     product.weightGrams ? `Weight: ${product.weightGrams}g` : null,
     `Link: ${pageUrl}`,
   ].filter((line): line is string => line !== null);
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join('\n'))}`;
+  return whatsappLink(lines.join('\n'));
 }
