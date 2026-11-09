@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight, Boxes, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, ExternalLink, Eye, EyeOff, FolderTree, History, ImagePlus,
   IndianRupee, Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
@@ -17,7 +17,7 @@ import {
   AdminApiError, bookShipment, cancelShipment, closeReturnedShipment, createCategory, createProduct, deleteCategory, deleteOrder, deleteProduct, downloadAdminCsv,
   getOrderShipments, refreshShipment, type OrderShipments, type ShipmentState, getAdminCategories, getAdminCustomers, getAdminIdentity,
   getAdminOrders, getAdminProducts, getCustomerGrowth, getCustomerOrders, getEmailStatus, getMessages, getOrderPayments, getRefundsToMake, getSalesByCategory, getSalesByPaymentMethod, getSalesSeries, getSalesSummary, getSilverRateSettings, getStockMovements, getWishlistCounts,
-  setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, type AdminCustomer,
+  setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, deleteProductImage, MAX_PRODUCT_PHOTOS, type ProductPhoto, type AdminCustomer,
   type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
   type CategoryBreakdown, type CustomerGrowth, type MessageStatus, type OrderPaymentRow, type PaymentBreakdown, type ProductInput, type RefundToMake, type SalesInterval, type SalesSeries, type SalesSummary, type StockMovement, type WishlistCount,
   type StockReason
@@ -1475,10 +1475,23 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist
   );
 };
 
+/** A photo picked in the product form, with a preview, waiting to upload on save. */
+type PickedPhoto = { file: File; url: string };
+
 const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueCategory[]; onClose: () => void; onSaved: () => void }> = ({ product, categories, onClose, onSaved }) => {
   const formId = useId();
   const [form, setForm] = useState<ProductDraft>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), originalPrice: product.originalPrice == null ? null : Number(product.originalPrice), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds] }) : emptyProduct());
-  const [files, setFiles] = useState<File[]>([]);
+  // Photos already on the product, and new ones picked here that upload when the product is saved.
+  const [photos, setPhotos] = useState<ProductPhoto[]>(() => product?.images.filter((image) => image.imageUrl) ?? []);
+  const [picked, setPicked] = useState<PickedPhoto[]>([]);
+  const [photoNote, setPhotoNote] = useState('');
+  const [confirmingPhotoId, setConfirmingPhotoId] = useState<string | null>(null);
+  const [removingPhotoId, setRemovingPhotoId] = useState<string | null>(null);
+  const pickedRef = useRef<PickedPhoto[]>([]);
+  useEffect(() => { pickedRef.current = picked; }, [picked]);
+  // The previews of picked photos live in memory until they upload or the form closes.
+  useEffect(() => () => pickedRef.current.forEach((photo) => URL.revokeObjectURL(photo.url)), []);
+  const freeSlots = MAX_PRODUCT_PHOTOS - photos.length - picked.length;
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   // Once the product exists, saving again updates it, so retrying a failed photo upload never creates a duplicate.
@@ -1496,11 +1509,46 @@ const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueC
     let id = savedId;
     try { id = (id ? await updateProduct(id, input) : await createProduct(input)).id; setSavedId(id); setChanged(true); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to save product.'); setSaving(false); return; }
-    try { if (files.length) await uploadProductImages(id, files); onSaved(); }
-    catch (cause) { setError(`The product was saved, but its photos were not. ${cause instanceof Error ? cause.message : ''} Fix the photo and click Save product to try again; the product will not be duplicated.`); }
+    try {
+      // Each photo that arrives moves across to the product's photos, so a retry sends only the rest.
+      if (picked.length) await uploadProductImages(id, picked.map((photo) => photo.file), (file, photo) => {
+        const done = pickedRef.current.find((item) => item.file === file);
+        if (done) URL.revokeObjectURL(done.url);
+        setPicked((current) => current.filter((item) => item.file !== file));
+        setPhotos((current) => [...current, photo]);
+      });
+      onSaved();
+    }
+    catch (cause) { setError(`The product was saved, but not all of its photos were. ${cause instanceof Error ? cause.message : ''} Click Save product to upload the rest; nothing will be duplicated.`); }
     finally { setSaving(false); }
   };
-  const existingPhotos = product?.images.filter((image) => image.imageUrl) ?? [];
+  const pickPhotos = (list: FileList | null) => {
+    const chosen = Array.from(list || []);
+    const room = Math.max(0, freeSlots);
+    setPhotoNote(chosen.length <= room ? '' : room === 1
+      ? `Only 1 more photo fits, so only the first one you picked was added.`
+      : `Only ${room} more photos fit, so only the first ${room} you picked were added.`);
+    setPicked((current) => [...current, ...chosen.slice(0, room).map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+  };
+  const unpickPhoto = (photo: PickedPhoto) => {
+    URL.revokeObjectURL(photo.url);
+    setPicked((current) => current.filter((item) => item !== photo));
+    setPhotoNote('');
+  };
+  const removePhoto = async (photo: ProductPhoto) => {
+    if (!savedId) return;
+    setRemovingPhotoId(photo.id); setError('');
+    try {
+      await deleteProductImage(savedId, photo.id);
+      const remaining = photos.filter((item) => item.id !== photo.id);
+      setPhotos(remaining);
+      // The server moves the main photo to the next one; keep the saved link in step so Save doesn't bring the old one back.
+      if (form.imageUrl && form.imageUrl === photo.imageUrl) update('imageUrl', remaining[0]?.imageUrl ?? '');
+      setChanged(true);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to remove the photo.'); }
+    finally { setRemovingPhotoId(null); setConfirmingPhotoId(null); }
+  };
+  const photoCount = photos.length + picked.length;
 
   return (
     <Modal title={savedId ? 'Edit product' : 'Add product'} subtitle={savedId ? form.name : 'Fill in the details, then save to add it to your catalogue.'} onClose={close} size="large"
@@ -1542,18 +1590,50 @@ const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueC
           </Field>
         </FormSection>
 
-        <FormSection title="Photos" description="JPEG, PNG or WebP, up to 5 MB each. They upload securely when you save.">
-          {existingPhotos.length > 0 && (
-            <div className="admin-photo-strip is-wide">
-              {existingPhotos.map((image) => <img key={image.id} src={image.imageUrl ?? ''} alt={image.altText || ''} />)}
-            </div>
-          )}
-          <label className="admin-dropzone is-wide">
-            <ImagePlus size={22} aria-hidden="true" />
-            <strong>{files.length ? `${files.length} photo${files.length === 1 ? '' : 's'} ready to upload` : existingPhotos.length ? 'Add more photos' : 'Choose photos to upload'}</strong>
-            <small>{files.length ? files.map((file) => file.name).join(', ') : 'You can pick several at once.'}</small>
-            <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={(e) => setFiles(Array.from(e.target.files || []))} />
-          </label>
+        <FormSection title="Photos" description={`Up to ${MAX_PRODUCT_PHOTOS} photos: JPEG, PNG or WebP, 5 MB each. The first is the main photo. New photos upload when you save.`}>
+          <div className="admin-photo-slots is-wide">
+            {photos.map((photo, index) => (
+              <div key={photo.id} className="admin-photo-slot">
+                <img src={photo.imageUrl ?? ''} alt={photo.altText || `Photo ${index + 1}`} />
+                {index === 0 && <span className="admin-photo-tag">Main</span>}
+                {confirmingPhotoId === photo.id ? (
+                  <div className="admin-photo-confirm" role="group" aria-label={`Remove photo ${index + 1}?`}>
+                    <span>Remove this photo?</span>
+                    <button type="button" className="admin-button is-danger is-small" onClick={() => removePhoto(photo)} disabled={removingPhotoId !== null}>
+                      {removingPhotoId === photo.id ? <><LoaderCircle size={14} className="is-spinning" /> Removing…</> : 'Remove'}
+                    </button>
+                    <button type="button" className="admin-button is-secondary is-small" onClick={() => setConfirmingPhotoId(null)} disabled={removingPhotoId !== null}>Keep</button>
+                  </div>
+                ) : (
+                  <button type="button" className="admin-photo-remove" aria-label={`Remove photo ${index + 1}`} title="Remove photo"
+                    onClick={() => setConfirmingPhotoId(photo.id)} disabled={saving || removingPhotoId !== null}><X size={15} /></button>
+                )}
+              </div>
+            ))}
+            {picked.map((photo, index) => (
+              <div key={photo.url} className="admin-photo-slot is-new">
+                <img src={photo.url} alt={`New photo: ${photo.file.name}`} />
+                <span className="admin-photo-tag">{photos.length === 0 && index === 0 ? 'Main · New' : 'New'}</span>
+                <button type="button" className="admin-photo-remove" aria-label={`Don't upload ${photo.file.name}`} title="Don't upload"
+                  onClick={() => unpickPhoto(photo)} disabled={saving}><X size={15} /></button>
+              </div>
+            ))}
+            {freeSlots > 0 && (
+              <label className="admin-photo-slot is-add">
+                <ImagePlus size={22} aria-hidden="true" />
+                <strong>{freeSlots > 1 ? 'Add photos' : 'Add a photo'}</strong>
+                <small>{freeSlots} of {MAX_PRODUCT_PHOTOS} left</small>
+                <input type="file" multiple={freeSlots > 1} accept="image/jpeg,image/png,image/webp" disabled={saving}
+                  onChange={(e) => { pickPhotos(e.target.files); e.target.value = ''; }} />
+              </label>
+            )}
+          </div>
+          <p className="admin-field-hint is-wide" aria-live="polite">
+            {photoCount > MAX_PRODUCT_PHOTOS
+              ? `This product has ${photoCount} photos, more than the ${MAX_PRODUCT_PHOTOS} now allowed. Remove some to add new ones.`
+              : `${photoCount} of ${MAX_PRODUCT_PHOTOS} photos${freeSlots <= 0 ? '. Remove one to add another.' : '.'}`}
+            {photoNote && <> {photoNote}</>}
+          </p>
           <Field label="Image link" hint="Optional. Shown only when the product has no uploaded photo." wide>
             <input type="url" value={form.imageUrl} onChange={(e) => update('imageUrl', e.target.value)} placeholder="https://" />
           </Field>

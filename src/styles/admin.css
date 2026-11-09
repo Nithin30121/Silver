@@ -431,14 +431,26 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #363940 transpa
 .admin-affix input { min-width: 0; border: 0; border-radius: 0; }
 .admin-affix input:focus { box-shadow: none; }
 
-.admin-dropzone { position: relative; display: grid; justify-items: center; gap: 0.3rem; padding: 1.4rem 1rem; border: 1.5px dashed var(--a-border-strong); border-radius: var(--a-radius); background: var(--a-surface-2); color: var(--a-text-3); text-align: center; cursor: pointer; transition: border-color 0.15s, background-color 0.15s; }
-.admin-dropzone:hover, .admin-dropzone:focus-within { border-color: var(--a-accent); background: var(--a-accent-soft); }
-.admin-dropzone svg { color: var(--a-accent-text); }
-.admin-dropzone strong { color: var(--a-text); font-weight: 600; }
-.admin-dropzone small { max-width: 100%; font-size: 0.75rem; overflow-wrap: anywhere; }
-.admin-dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-.admin-photo-strip { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.admin-page .admin-photo-strip img { width: 4.5rem; height: 4.5rem; border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); object-fit: cover; }
+/* Product photos: up to four square slots, the saved photos first, then new ones, then an add tile */
+.admin-photo-slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+.admin-photo-slot { position: relative; aspect-ratio: 1; overflow: hidden; border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); background: var(--a-surface-2); }
+.admin-page .admin-photo-slot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.admin-photo-slot.is-new { border: 1.5px dashed var(--a-accent); }
+.admin-photo-slot.is-add { display: grid; place-content: center; justify-items: center; gap: 0.3rem; padding: 0.75rem; border: 1.5px dashed var(--a-border-strong); color: var(--a-text-3); text-align: center; cursor: pointer; transition: border-color 0.15s, background-color 0.15s; }
+.admin-photo-slot.is-add:hover, .admin-photo-slot.is-add:focus-within { border-color: var(--a-accent); background: var(--a-accent-soft); }
+.admin-photo-slot.is-add svg { color: var(--a-accent-text); }
+.admin-photo-slot.is-add strong { color: var(--a-text); font-size: 0.8125rem; font-weight: 600; }
+.admin-photo-slot.is-add small { font-size: 0.75rem; }
+.admin-photo-slot.is-add input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.admin-photo-slot.is-add:has(input:disabled) { opacity: 0.6; cursor: not-allowed; }
+.admin-photo-tag { position: absolute; top: 0.45rem; left: 0.45rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: rgba(16, 18, 22, 0.72); color: #fff; font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.01em; }
+.admin-photo-remove { position: absolute; top: 0.4rem; right: 0.4rem; display: grid; place-items: center; width: 2rem; height: 2rem; border: 0; border-radius: 999px; background: rgba(16, 18, 22, 0.72); color: #fff; cursor: pointer; transition: background-color 0.15s; }
+.admin-photo-remove:hover:not(:disabled) { background: var(--a-danger); }
+.admin-photo-remove:focus-visible { outline: 2px solid var(--a-accent); outline-offset: 2px; }
+.admin-photo-remove:disabled { opacity: 0.5; cursor: not-allowed; }
+.admin-photo-confirm { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 0.4rem; padding: 0.5rem; background: rgba(16, 18, 22, 0.8); color: #fff; font-size: 0.75rem; font-weight: 600; text-align: center; }
+.admin-photo-confirm .admin-button { min-width: 6rem; }
+@media (max-width: 560px) { .admin-photo-slots { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .admin-category-picker { display: grid; gap: 0.75rem; }
 .admin-category-group { min-width: 0; margin: 0; padding: 0.7rem 0.9rem 0.9rem; border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); }

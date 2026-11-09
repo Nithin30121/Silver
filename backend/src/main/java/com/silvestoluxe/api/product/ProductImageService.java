@@ -20,6 +20,10 @@ import org.springframework.web.server.ResponseStatusException;
 public class ProductImageService {
     private static final Logger log = LoggerFactory.getLogger(ProductImageService.class);
     private static final int MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+    /** The most photos one product can have; the admin removes one to add another. */
+    static final int MAX_IMAGES_PER_PRODUCT = 4;
+    private static final String TOO_MANY_IMAGES =
+            "A product can have up to " + MAX_IMAGES_PER_PRODUCT + " photos. Remove one to add another.";
     private final ProductRepository products;
     private final ProductImageRepository images;
     private final SupabaseStorageClient storage;
@@ -41,10 +45,8 @@ public class ProductImageService {
         if (requestedOrder != null && requestedOrder < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image display order cannot be negative.");
         }
+        requireRoomForAnotherImage(productId);
         ImageData image = validate(file);
-        int displayOrder = requestedOrder == null
-                ? images.findFirstByProductIdOrderByDisplayOrderDesc(productId).map(existing -> existing.getDisplayOrder() + 1).orElse(0)
-                : requestedOrder;
         String path = productId + "/" + UUID.randomUUID() + image.extension();
         String url;
         try {
@@ -55,6 +57,12 @@ public class ProductImageService {
         }
 
         try {
+            // Locked and counted again, so two uploads at once can't both take the last free place.
+            products.findByIdForStockUpdate(productId);
+            requireRoomForAnotherImage(productId);
+            int displayOrder = requestedOrder == null
+                    ? images.findFirstByProductIdOrderByDisplayOrderDesc(productId).map(existing -> existing.getDisplayOrder() + 1).orElse(0)
+                    : requestedOrder;
             ProductImage productImage = images.saveAndFlush(new ProductImage(product, path, url, cleanAltText(altText), displayOrder));
             if (product.getImageUrl() == null) product.setImageUrl(url);
             return response(productImage);
@@ -96,6 +104,12 @@ public class ProductImageService {
             } catch (SupabaseStorageException exception) {
                 log.warn("Could not remove a deleted product's photo from storage; the file is left unused.");
             }
+        }
+    }
+
+    private void requireRoomForAnotherImage(UUID productId) {
+        if (images.countByProductId(productId) >= MAX_IMAGES_PER_PRODUCT) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, TOO_MANY_IMAGES);
         }
     }
 
