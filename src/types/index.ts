@@ -54,6 +54,7 @@ export type ViewType =
   | 'women' 
   | 'product' 
   | 'story' 
+  | 'custom'
   | 'care' 
   | 'shipping'
   | 'returns'
