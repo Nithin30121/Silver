@@ -6,6 +6,7 @@ import { PriceTag } from './PriceTag';
 import { useBuyNow } from '../lib/useBuyNow';
 import { productEnquiryLink } from '../lib/whatsapp';
 import { WhatsAppIcon } from './WhatsAppIcon';
+import { ProductReviews } from './ProductReviews';
 import {
   Heart, 
   ShoppingBag, 
@@ -453,6 +454,9 @@ export const ProductDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Customer reviews, right below the product; keyed so a different product starts with fresh reviews. */}
+        <ProductReviews key={currentProduct.id} productId={currentProduct.id} productName={currentProduct.name} />
 
         {/* Related Products Section */}
         {relatedProducts.length > 0 && (

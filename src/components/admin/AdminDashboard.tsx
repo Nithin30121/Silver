@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 
 import {
   ArrowRight, Boxes, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, ExternalLink, Eye, EyeOff, FolderTree, History, ImagePlus,
   IndianRupee, Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
-  Table2, Trash2, TrendingDown, TrendingUp, TriangleAlert, Users, X
+  Star, Table2, Trash2, TrendingDown, TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toAccountError } from '../../services/authService';
@@ -20,11 +20,11 @@ import {
   setCategoryActive, setMessageStatus, setProductActive, updateCategory, updateOrderStatus, updateProduct, updateSilverRateSettings, uploadProductImages, deleteProductImage, MAX_PRODUCT_PHOTOS, type ProductPhoto, type AdminCustomer,
   type AdminOrderPage, type CategoryInput, type ContactMessage, type CustomerPage, type CustomerRole, type MessagePage,
   type CategoryBreakdown, type CustomerGrowth, type MessageStatus, type OrderPaymentRow, type PaymentBreakdown, type ProductInput, type RefundToMake, type SalesInterval, type SalesSeries, type SalesSummary, type StockMovement, type WishlistCount,
-  type StockReason
+  type StockReason, getAdminReviews, setReviewStatus, deleteReview, type AdminReview, type ReviewPage, type ReviewStatus
 } from '../../services/adminService';
 import '../../styles/admin.css';
 
-type Section = 'overview' | 'products' | 'categories' | 'inventory' | 'orders' | 'customers' | 'messages' | 'reports';
+type Section = 'overview' | 'products' | 'categories' | 'inventory' | 'orders' | 'customers' | 'messages' | 'reviews' | 'reports';
 type Theme = 'light' | 'dark';
 type Tone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 type Notify = (kind: 'success' | 'error', text: string) => void;
@@ -46,12 +46,13 @@ const SECTIONS: Record<Section, { title: string; description: string; icon: Reac
   orders: { title: 'Orders', description: 'Review customer orders and move them along.', icon: <ShoppingBag size={18} /> },
   customers: { title: 'Customers', description: 'See who shops with you.', icon: <Users size={18} /> },
   messages: { title: 'Messages', description: 'Questions people send through the contact form.', icon: <Inbox size={18} /> },
+  reviews: { title: 'Reviews', description: 'Approve what customers write before it shows on product pages.', icon: <Star size={18} /> },
   reports: { title: 'Reports', description: 'Sales by category and payment method, and how your customers grow.', icon: <ChartColumn size={18} /> },
 };
 const NAV_GROUPS: Array<{ label: string; items: Section[] }> = [
   { label: '', items: ['overview'] },
   { label: 'Catalogue', items: ['products', 'categories', 'inventory'] },
-  { label: 'Sales', items: ['orders', 'customers', 'messages', 'reports'] },
+  { label: 'Sales', items: ['orders', 'customers', 'messages', 'reviews', 'reports'] },
 ];
 
 const ORDER_STATUSES = ['PENDING_PAYMENT', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
@@ -151,6 +152,7 @@ export const AdminDashboard: React.FC = () => {
   const [recentMovements, setRecentMovements] = useState<StockMovement[] | null | undefined>(undefined);
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
   const [newMessages, setNewMessages] = useState<number | null>(null);
+  const [pendingReviews, setPendingReviews] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [loadedAt, setLoadedAt] = useState<Date | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -180,6 +182,9 @@ export const AdminDashboard: React.FC = () => {
   const refreshNewMessages = () => {
     getMessages({ status: 'NEW', size: 1 }).then((page) => setNewMessages(page.total)).catch(() => setNewMessages(null));
   };
+  const refreshPendingReviews = () => {
+    getAdminReviews({ status: 'PENDING', size: 1 }).then((page) => setPendingReviews(page.total)).catch(() => setPendingReviews(null));
+  };
 
   const reload = async () => {
     setIsLoading(true);
@@ -192,6 +197,7 @@ export const AdminDashboard: React.FC = () => {
     getStockMovements(undefined, 6).then((result) => setRecentMovements(result.movements)).catch(() => setRecentMovements(null));
     getEmailStatus().then((result) => setEmailEnabled(result.enabled)).catch(() => setEmailEnabled(null));
     refreshNewMessages();
+    refreshPendingReviews();
     try {
       const [productResult, categoryResult, orderResult] = await Promise.all([
         getAdminProducts(), getAdminCategories(), getAdminOrders({ size: 5 })
@@ -257,6 +263,7 @@ export const AdminDashboard: React.FC = () => {
     ...(orderTotal !== null && { orders: { value: orderTotal } }),
     ...(customerTotal !== null && { customers: { value: customerTotal } }),
     ...(newMessages ? { messages: { value: newMessages, tone: 'info' as const } } : {}),
+    ...(pendingReviews ? { reviews: { value: pendingReviews, tone: 'info' as const } } : {}),
   };
   const displayName = identity?.fullName || identity?.email || 'Administrator';
   const initials = initialsOf(displayName);
@@ -350,6 +357,7 @@ export const AdminDashboard: React.FC = () => {
               onChanged={() => void reload()} notify={notify} />}
             {section === 'customers' && <CustomerManager refreshedAt={loadedAt} onViewOrder={setViewingOrder} notify={notify} />}
             {section === 'messages' && <MessageManager refreshedAt={loadedAt} emailEnabled={emailEnabled} notify={notify} onChanged={refreshNewMessages} />}
+            {section === 'reviews' && <ReviewManager refreshedAt={loadedAt} notify={notify} onChanged={refreshPendingReviews} />}
             {section === 'reports' && <ReportsPage refreshedAt={loadedAt} categories={flatCategories} timeZone={summary?.timeZone} />}
           </main>
         </div>
@@ -2572,6 +2580,153 @@ const MessageDetails: React.FC<{ message: ContactMessage; onClose: () => void; o
       </div>
       <h3 className="admin-subheading">Message</h3>
       <p className="admin-message-body">{message.message}</p>
+    </Modal>
+  );
+};
+
+/* ---------- Reviews ---------- */
+
+type ReviewFilter = ReviewStatus | 'all';
+type ReviewFilters = { status: ReviewFilter; page: number };
+const REVIEW_PAGE_SIZE = 25;
+const REVIEW_FILTERS: Array<{ value: ReviewFilter; label: string }> = [
+  { value: 'PENDING', label: 'Waiting' }, { value: 'APPROVED', label: 'Published' }, { value: 'HIDDEN', label: 'Hidden' }, { value: 'all', label: 'All' }
+];
+const REVIEW_STATUS: Record<ReviewStatus, { label: string; tone: Tone }> = {
+  PENDING: { label: 'Waiting', tone: 'warning' }, APPROVED: { label: 'Published', tone: 'success' }, HIDDEN: { label: 'Hidden', tone: 'neutral' }
+};
+
+const ReviewStars: React.FC<{ rating: number }> = ({ rating }) => (
+  <span className="admin-stars" role="img" aria-label={`${rating} out of 5 stars`}>
+    {[1, 2, 3, 4, 5].map((star) => <Star key={star} size={14} fill={star <= rating ? 'currentColor' : 'none'} className={star <= rating ? 'is-on' : ''} aria-hidden="true" />)}
+  </span>
+);
+
+const ReviewManager: React.FC<{ refreshedAt: Date | null; notify: Notify; onChanged: () => void }> = ({ refreshedAt, notify, onChanged }) => {
+  const [filters, setFilters] = useState<ReviewFilters>({ status: 'PENDING', page: 0 });
+  const [result, setResult] = useState<{ filters: ReviewFilters; page?: ReviewPage; error?: string } | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<AdminReview | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAdminReviews({ status: filters.status === 'all' ? undefined : filters.status, page: filters.page, size: REVIEW_PAGE_SIZE })
+      .then((page) => { if (!cancelled) setResult({ filters, page }); })
+      .catch((cause: unknown) => { if (!cancelled) setResult({ filters, error: unavailableText(cause, 'Unable to load reviews.') }); });
+    return () => { cancelled = true; };
+  }, [filters, refreshedAt, reloadKey]);
+
+  const refresh = () => { setReloadKey((key) => key + 1); onChanged(); };
+  const decide = async (review: AdminReview, status: ReviewStatus) => {
+    setBusyId(review.id);
+    try {
+      await setReviewStatus(review.id, status);
+      notify('success', status === 'APPROVED' ? `${review.reviewerName}'s review is now on “${review.productName}”.` : `${review.reviewerName}'s review is hidden from the shop.`);
+      refresh();
+    } catch (cause) {
+      notify('error', errorText(cause, 'Unable to update this review.'));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const isLoading = result?.filters !== filters;
+  const data = result?.page;
+  return (
+    <section className="admin-card">
+      <div className="admin-card-toolbar">
+        <Segmented label="Show reviews" value={filters.status} options={REVIEW_FILTERS}
+          onChange={(status) => setFilters({ status, page: 0 })} />
+      </div>
+      {isLoading ? <LoadingRows /> : result?.error ? (
+        <div className="admin-card-message"><div className="admin-alert" role="alert"><CircleAlert size={18} /><span>{result.error}</span></div></div>
+      ) : !data || data.reviews.length === 0 ? (
+        <EmptyState icon={<Star size={20} />} title={filters.status === 'PENDING' ? 'No reviews waiting' : 'No reviews here'}
+          text={filters.status === 'PENDING' ? "You're all caught up. New and edited reviews wait here until you publish them." : 'Reviews customers write on product pages appear here.'} />
+      ) : (
+        <>
+          <div className="admin-table-scroll">
+            <table className="admin-table">
+              <thead><tr><th>Review</th><th>Product</th><th>Customer</th><th>Written</th><th>Status</th><th><span className="admin-sr-only">Actions</span></th></tr></thead>
+              <tbody>
+                {data.reviews.map((review) => {
+                  const busy = busyId === review.id;
+                  return (
+                    <tr key={review.id}>
+                      <td data-label="Review" className="admin-review-cell">
+                        <ReviewStars rating={review.rating} />
+                        <p className="admin-review-text">{review.comment}</p>
+                      </td>
+                      <td data-label="Product">
+                        {review.productSlug
+                          ? <a className="admin-link" href={`/product/${review.productSlug}#reviews`} target="_blank" rel="noopener noreferrer">{review.productName} <ExternalLink size={12} aria-hidden="true" /></a>
+                          : review.productName}
+                      </td>
+                      <td data-label="Customer">
+                        <span className="admin-person-name">{review.reviewerName}</span>
+                        {review.verifiedPurchase && <><br /><Badge tone="success">Verified purchase</Badge></>}
+                      </td>
+                      <td data-label="Written">
+                        {formatDateTime(review.editedAt ?? review.createdAt)}
+                        {review.editedAt && <><br /><small className="admin-muted">Edited</small></>}
+                      </td>
+                      <td data-label="Status"><Badge tone={REVIEW_STATUS[review.status].tone}>{REVIEW_STATUS[review.status].label}</Badge></td>
+                      <td className="admin-row-actions">
+                        {review.status !== 'APPROVED' && (
+                          <button className="admin-button is-primary is-small" onClick={() => void decide(review, 'APPROVED')} disabled={busy}>
+                            {busy ? <LoaderCircle size={14} className="is-spinning" /> : <CircleCheck size={14} />} Publish
+                          </button>
+                        )}
+                        {review.status !== 'HIDDEN' && (
+                          <button className="admin-button is-ghost is-small" onClick={() => void decide(review, 'HIDDEN')} disabled={busy}><EyeOff size={14} /> Hide</button>
+                        )}
+                        <button className="admin-button is-ghost is-small is-danger" onClick={() => setRemoving(review)} disabled={busy}><Trash2 size={14} /> Remove</button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={filters.page} pageSize={REVIEW_PAGE_SIZE} shown={data.reviews.length} total={data.total}
+            totalPages={data.totalPages} onPage={(page) => setFilters((current) => ({ ...current, page }))} />
+        </>
+      )}
+      {removing && <RemoveReviewDialog review={removing} onClose={() => setRemoving(undefined)} notify={notify}
+        onRemoved={() => { setRemoving(undefined); refresh(); }} />}
+    </section>
+  );
+};
+
+const RemoveReviewDialog: React.FC<{ review: AdminReview; onClose: () => void; onRemoved: () => void; notify: Notify }> = ({ review, onClose, onRemoved, notify }) => {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const remove = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await deleteReview(review.id);
+      notify('success', `${review.reviewerName}'s review was removed.`);
+      onRemoved();
+    } catch (cause) {
+      setError(errorText(cause, 'Unable to remove the review.'));
+      setBusy(false);
+    }
+  };
+  return (
+    <Modal title="Remove this review?" subtitle={`${review.reviewerName} on ${review.productName}`} onClose={onClose}
+      footer={<>
+        {error && <FormError text={error} />}
+        <button type="button" className="admin-button is-secondary" onClick={onClose} disabled={busy}>Cancel</button>
+        <button type="button" className="admin-button is-danger" onClick={() => void remove()} disabled={busy}>
+          {busy ? <><LoaderCircle size={16} className="is-spinning" /> Removing…</> : <><Trash2 size={16} /> Remove for good</>}
+        </button>
+      </>}>
+      <div className="admin-delete-note">
+        <p>The review is deleted and can't be brought back. The customer can then write a new one.</p>
+        {review.status !== 'HIDDEN' && <p>To take it off the product page but keep it, use <strong>Hide</strong> instead.</p>}
+      </div>
     </Modal>
   );
 };
