@@ -340,6 +340,11 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #4C2A32 transpa
 .admin-row-title:hover { color: var(--a-accent-text); text-decoration: underline; text-underline-offset: 3px; }
 .admin-row-actions { width: 1%; white-space: nowrap; }
 .admin-row-actions .admin-button + .admin-button { margin-left: 0.25rem; }
+/* Reviews: the stars and a few lines of what the customer wrote. */
+.admin-stars { display: inline-flex; gap: 1px; color: var(--a-border-strong); }
+.admin-stars .is-on { color: var(--a-accent); }
+.admin-review-cell { min-width: 16rem; max-width: 30rem; }
+.admin-page .admin-review-text { margin-top: 0.3rem; color: var(--a-text); white-space: pre-line; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .admin-product-cell { display: flex; align-items: center; gap: 0.75rem; min-width: 14rem; }
 .admin-product-cell > span { min-width: 0; display: grid; }
 .admin-person { display: flex; align-items: center; gap: 0.75rem; min-width: 14rem; }

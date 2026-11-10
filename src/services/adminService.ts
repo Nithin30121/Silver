@@ -321,6 +321,52 @@ export function setMessageStatus(id: string, status: MessageStatus) {
   return adminRequest<ContactMessage>(`/admin/messages/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
 }
 
+export type ReviewStatus = 'PENDING' | 'APPROVED' | 'HIDDEN';
+
+/** A customer's product review. verifiedPurchase: the server found a delivered order of the product for them. */
+export interface AdminReview {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string | null;
+  rating: number;
+  comment: string;
+  reviewerName: string;
+  status: ReviewStatus;
+  verifiedPurchase: boolean;
+  createdAt: string;
+  editedAt: string | null;
+  moderatedAt: string | null;
+}
+
+export interface ReviewPage {
+  reviews: AdminReview[];
+  total: number;
+  totalPages: number;
+}
+
+/** Newest first; without a status every review is listed. */
+export async function getAdminReviews(options: { status?: ReviewStatus; page?: number; size?: number } = {}): Promise<ReviewPage> {
+  const search = new URLSearchParams({ page: String(options.page ?? 0), size: String(options.size ?? 25) });
+  if (options.status) search.set('status', options.status);
+  const page = await adminRequest<ApiPage<AdminReview>>(`/admin/reviews?${search}`);
+  return {
+    reviews: page.content,
+    total: page.totalElements ?? page.page?.totalElements ?? page.content.length,
+    totalPages: page.totalPages ?? page.page?.totalPages ?? 1
+  };
+}
+
+/** APPROVED shows the review on its product page; HIDDEN takes it off without deleting it. */
+export function setReviewStatus(id: string, status: ReviewStatus) {
+  return adminRequest<AdminReview>(`/admin/reviews/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+}
+
+/** Deletes the review for good. */
+export function deleteReview(id: string) {
+  return adminRequest<void>(`/admin/reviews/${id}`, { method: 'DELETE' });
+}
+
 export async function getCustomerOrders(customerId: string): Promise<{ orders: OrderResponse[]; total: number }> {
   const page = await adminRequest<ApiPage<OrderResponse>>(`/admin/customers/${customerId}/orders?page=0&size=50`);
   return { orders: page.content, total: page.totalElements ?? page.page?.totalElements ?? page.content.length };
