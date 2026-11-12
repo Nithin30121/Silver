@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import {
-  ArrowRight, Boxes, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleX, Download, ExternalLink, Eye, EyeOff, FolderTree, History, ImagePlus,
+  ArrowRight, Boxes, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, CircleCheck, CircleSlash, CircleX, Download, ExternalLink, Eye, EyeOff, FolderTree, History, ImagePlus,
   IndianRupee, Inbox, LayoutDashboard, LoaderCircle, LogOut, Mail, Menu, Moon, Package, Pencil, Plus, Printer, RefreshCw, Search, ShoppingBag, Store, Sun,
   Star, Table2, Trash2, TrendingDown, TrendingUp, TriangleAlert, Users, X
 } from 'lucide-react';
@@ -33,6 +33,9 @@ type FlatCategory = CatalogueCategory & { depth: number; path: string; trail: st
 type ProductDraft = Omit<ProductInput, 'price' | 'stockQuantity'> & { price: number | null; stockQuantity: number | null };
 
 const LOW_STOCK = 3;
+type InventoryFilter = 'all' | 'low' | 'out';
+/** A live piece the shop shows as Out of stock. Hidden pieces aren't in the shop, so they don't count. */
+const isSoldOut = (product: ApiProduct) => product.isActive && product.stockQuantity <= 0;
 const CUSTOMER_PAGE_SIZE = 25;
 const ORDER_PAGE_SIZE = 25;
 const MESSAGE_PAGE_SIZE = 25;
@@ -140,6 +143,8 @@ export const AdminDashboard: React.FC = () => {
   const [section, setSection] = useState<Section>('overview');
   // Set when an Overview card opens Orders already filtered to one status.
   const [orderStatusFilter, setOrderStatusFilter] = useState('');
+  // Set when the sold-out alert opens Inventory already showing only out-of-stock pieces.
+  const [inventoryFilter, setInventoryFilter] = useState<InventoryFilter>('all');
   const [menuOpen, setMenuOpen] = useState(false);
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [productTotal, setProductTotal] = useState<number | null>(null);
@@ -186,6 +191,23 @@ export const AdminDashboard: React.FC = () => {
     getAdminReviews({ status: 'PENDING', size: 1 }).then((page) => setPendingReviews(page.total)).catch(() => setPendingReviews(null));
   };
 
+  // Remembers which live pieces were out of stock last time, so one that sells out while the dashboard is open
+  // pops up a notice. The first load only takes note.
+  const soldOutIds = useRef<Set<string> | null>(null);
+  const applyProducts = (next: ApiProduct[], total: number) => {
+    const soldOutNow = next.filter(isSoldOut);
+    const before = soldOutIds.current;
+    const fresh = before ? soldOutNow.filter((product) => !before.has(product.id)) : [];
+    if (fresh.length > 0) {
+      setNotice({ kind: 'error', text: fresh.length === 1
+        ? `“${fresh[0].name}” has just sold out. It shows Out of stock in the shop.`
+        : `${fresh.length} pieces have just sold out. They show Out of stock in the shop.` });
+    }
+    soldOutIds.current = new Set(soldOutNow.map((product) => product.id));
+    setProducts(next);
+    setProductTotal(total);
+  };
+
   const reload = async () => {
     setIsLoading(true);
     setLoadError('');
@@ -202,8 +224,7 @@ export const AdminDashboard: React.FC = () => {
       const [productResult, categoryResult, orderResult] = await Promise.all([
         getAdminProducts(), getAdminCategories(), getAdminOrders({ size: 5 })
       ]);
-      setProducts(productResult.products);
-      setProductTotal(productResult.total);
+      applyProducts(productResult.products, productResult.total);
       setCategories(categoryResult);
       setRecentOrders(orderResult.orders);
       setOrderTotal(orderResult.total);
@@ -217,6 +238,17 @@ export const AdminDashboard: React.FC = () => {
 
   useEffect(() => { if (accessState === 'allowed') void reload(); }, [accessState]);
 
+  // Stock is checked again every minute while the dashboard is open and in view, so sales show up without
+  // pressing Refresh. Only products are fetched; a failed check is ignored and tried again next minute.
+  useEffect(() => {
+    if (accessState !== 'allowed') return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      getAdminProducts().then((result) => applyProducts(result.products, result.total)).catch(() => undefined);
+    }, 60_000);
+    return () => window.clearInterval(timer);
+  }, [accessState]);
+
   useEffect(() => {
     if (!notice) return;
     const timer = window.setTimeout(() => setNotice(null), 4500);
@@ -225,6 +257,7 @@ export const AdminDashboard: React.FC = () => {
 
   const lowStock = useMemo(() => products.filter((product) => product.stockQuantity <= LOW_STOCK)
     .sort((a, b) => a.stockQuantity - b.stockQuantity), [products]);
+  const soldOut = useMemo(() => products.filter(isSoldOut), [products]);
   const flatCategories = useMemo(() => flatten(categories), [categories]);
 
   const toggleTheme = () => {
@@ -251,6 +284,7 @@ export const AdminDashboard: React.FC = () => {
   const navigate = (next: Section, orderStatus = '') => {
     setSection(next);
     setOrderStatusFilter(orderStatus);
+    setInventoryFilter('all');
     setEditingProduct(undefined);
     setEditingCategory(undefined);
     setViewingOrder(undefined);
@@ -259,7 +293,7 @@ export const AdminDashboard: React.FC = () => {
   const navCounts: Partial<Record<Section, { value: number; tone?: Tone }>> = {
     ...(productTotal !== null && { products: { value: productTotal } }),
     ...(loaded && { categories: { value: flatCategories.length } }),
-    ...(lowStock.length > 0 && { inventory: { value: lowStock.length, tone: 'warning' as const } }),
+    ...(lowStock.length > 0 && { inventory: { value: lowStock.length, tone: soldOut.length > 0 ? 'danger' as const : 'warning' as const } }),
     ...(orderTotal !== null && { orders: { value: orderTotal } }),
     ...(customerTotal !== null && { customers: { value: customerTotal } }),
     ...(newMessages ? { messages: { value: newMessages, tone: 'info' as const } } : {}),
@@ -343,6 +377,7 @@ export const AdminDashboard: React.FC = () => {
             {section === 'overview' && (
               <Overview products={products} productTotal={productTotal} recentOrders={recentOrders} orderTotal={orderTotal}
                 customerTotal={customerTotal} summary={summary} recentMovements={recentMovements} lowStock={lowStock} loaded={loaded} refreshedAt={loadedAt}
+                soldOut={soldOut} onRestock={() => { navigate('inventory'); setInventoryFilter('out'); }}
                 onNavigate={navigate} onEditProduct={setEditingProduct} onViewOrder={setViewingOrder} />
             )}
             {section === 'products' && (
@@ -352,7 +387,7 @@ export const AdminDashboard: React.FC = () => {
             {section === 'categories' && (
               <CategoryManager categories={flatCategories} products={products} loaded={loaded} onEdit={setEditingCategory} onChanged={() => void reload()} notify={notify} />
             )}
-            {section === 'inventory' && <Inventory products={products} loaded={loaded} refreshedAt={loadedAt} onEdit={setEditingProduct} />}
+            {section === 'inventory' && <Inventory products={products} loaded={loaded} refreshedAt={loadedAt} onEdit={setEditingProduct} initialFilter={inventoryFilter} />}
             {section === 'orders' && <OrderManager initialStatus={orderStatusFilter} refreshedAt={loadedAt} timeZone={summary?.timeZone} onView={setViewingOrder}
               onChanged={() => void reload()} notify={notify} />}
             {section === 'customers' && <CustomerManager refreshedAt={loadedAt} onViewOrder={setViewingOrder} notify={notify} />}
@@ -556,17 +591,35 @@ const RefundsToMake: React.FC<{ refreshedAt: Date | null }> = ({ refreshedAt }) 
   );
 };
 
+/** The red alert at the top of Overview while any live piece is out of stock. */
+const SoldOutAlert: React.FC<{ products: ApiProduct[]; onRestock: () => void }> = ({ products, onRestock }) => {
+  if (products.length === 0) return null;
+  const shown = products.slice(0, 3).map((product) => product.name).join(', ');
+  const more = products.length > 3 ? ` and ${products.length - 3} more` : '';
+  return (
+    <div className="admin-callout is-danger admin-soldout" role="alert">
+      <CircleSlash size={18} aria-hidden="true" />
+      <div>
+        <strong>{products.length === 1 ? '1 piece is out of stock' : `${products.length} pieces are out of stock`}</strong>
+        <span>{shown}{more}. {products.length === 1 ? 'It shows' : 'They show'} “Out of stock” in the shop and can't be bought until you add stock.</span>
+      </div>
+      <button type="button" className="admin-button is-secondary is-small" onClick={onRestock}>Restock</button>
+    </div>
+  );
+};
+
 const Overview: React.FC<{
   products: ApiProduct[]; productTotal: number | null; recentOrders: OrderResponse[]; orderTotal: number | null; customerTotal: number | null;
   summary: SalesSummary | null | undefined; recentMovements: StockMovement[] | null | undefined; lowStock: ApiProduct[]; loaded: boolean;
-  refreshedAt: Date | null;
+  refreshedAt: Date | null; soldOut: ApiProduct[]; onRestock: () => void;
   onNavigate: (section: Section, orderStatus?: string) => void; onEditProduct: (product: ApiProduct) => void; onViewOrder: (order: OrderResponse) => void;
-}> = ({ products, productTotal, recentOrders, orderTotal, customerTotal, summary, recentMovements, lowStock, loaded, refreshedAt, onNavigate, onEditProduct, onViewOrder }) => {
+}> = ({ products, productTotal, recentOrders, orderTotal, customerTotal, summary, recentMovements, lowStock, loaded, refreshedAt, soldOut, onRestock, onNavigate, onEditProduct, onViewOrder }) => {
   const liveCount = products.filter((product) => product.isActive).length;
   const byStatus = summary?.ordersByStatus ?? {};
   const toShip = (byStatus.CONFIRMED ?? 0) + (byStatus.PROCESSING ?? 0);
   return (
     <>
+      <SoldOutAlert products={soldOut} onRestock={onRestock} />
       <RefundsToMake refreshedAt={refreshedAt} />
       <div className="admin-stats">
         <StatCard icon={<ShoppingBag size={18} />} label="Orders" value={orderTotal ?? '—'} onClick={() => onNavigate('orders')}
@@ -1834,8 +1887,8 @@ const CategoryForm: React.FC<{ category: CatalogueCategory | null; categories: F
 
 /* ---------- Inventory ---------- */
 
-const Inventory: React.FC<{ products: ApiProduct[]; loaded: boolean; refreshedAt: Date | null; onEdit: (product: ApiProduct) => void }> = ({ products, loaded, refreshedAt, onEdit }) => {
-  const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all');
+const Inventory: React.FC<{ products: ApiProduct[]; loaded: boolean; refreshedAt: Date | null; onEdit: (product: ApiProduct) => void; initialFilter?: InventoryFilter }> = ({ products, loaded, refreshedAt, onEdit, initialFilter = 'all' }) => {
+  const [filter, setFilter] = useState<InventoryFilter>(initialFilter);
   const [historyFor, setHistoryFor] = useState<ApiProduct | null>(null);
   const [changes, setChanges] = useState<{ movements?: StockMovement[]; error?: string } | null>(null);
   useEffect(() => {

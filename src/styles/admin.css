@@ -140,6 +140,8 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #4C2A32 transpa
 .admin-nav-button.is-active svg { color: var(--a-sidebar-accent); }
 .admin-nav-count { min-width: 1.6rem; padding: 0.05rem 0.45rem; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: var(--a-sidebar-text); font-size: 0.75rem; font-weight: 600; text-align: center; font-variant-numeric: tabular-nums; }
 .admin-nav-count.is-warning { background: rgba(242, 184, 96, 0.18); color: #f4c47e; }
+/* Something has sold out: a white pill, the brightest thing in the sidebar. */
+.admin-nav-count.is-danger { background: #ffffff; color: #9b1b30; }
 .admin-sidebar-footer { display: grid; gap: 0.5rem; margin-top: auto; padding-top: 0.75rem; border-top: 1px solid var(--a-sidebar-border); }
 .admin-user-card { display: flex; align-items: center; gap: 0.65rem; padding: 0.35rem 0.25rem 0 0.5rem; }
 .admin-avatar { flex: none; display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; background: linear-gradient(135deg, #FBE3DC, #E8B4A8); color: #4A0E18; font-size: 0.75rem; font-weight: 700; }
@@ -379,6 +381,13 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #4C2A32 transpa
 .admin-callout { display: flex; align-items: flex-start; gap: 0.5rem; padding: 0.65rem 0.8rem; border-radius: var(--a-radius-sm); font-size: 0.8125rem; font-weight: 500; }
 .admin-page .admin-callout.is-warning { background: var(--a-warning-bg); color: var(--a-warning); }
 .admin-page .admin-callout.is-info { background: var(--a-info-bg); color: var(--a-info); }
+.admin-page .admin-callout.is-danger { background: var(--a-danger-bg); color: var(--a-danger); }
+/* The sold-out alert: what has sold out, and a button straight to restocking it. */
+.admin-soldout { align-items: center; gap: 0.75rem; margin-bottom: 1.25rem; padding: 0.85rem 1rem; border: 1px solid color-mix(in srgb, var(--a-danger) 30%, transparent); }
+.admin-soldout > div { flex: 1; min-width: 0; display: grid; gap: 0.15rem; }
+.admin-soldout strong { font-weight: 700; }
+.admin-page .admin-soldout span { color: var(--a-text-2); font-weight: 400; }
+@media (max-width: 560px) { .admin-soldout { flex-wrap: wrap; } .admin-soldout .admin-button { margin-left: 1.75rem; } }
 .admin-refunds { margin-bottom: 1rem; }
 .admin-refunds ul { margin: 0.35rem 0 0; padding: 0; list-style: none; font-weight: 400; }
 .admin-refunds li + li { margin-top: 0.25rem; }

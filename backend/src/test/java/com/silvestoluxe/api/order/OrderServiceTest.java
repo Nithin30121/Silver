@@ -114,7 +114,22 @@ class OrderServiceTest {
                 () -> service.checkout(customerId.toString(), checkout(new CheckoutItem(ring.getId(), 2))));
 
         assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals("Only 1 of Moon Ring left. Please lower the quantity.", exception.getReason());
         assertEquals(1, ring.getStockQuantity());
+        verifyNoInteractions(stock, events);
+    }
+
+    @Test
+    void checkoutSaysWhenAPieceHasSoldOut() {
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 0);
+        signedInCustomer();
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> service.checkout(customerId.toString(), checkout(new CheckoutItem(ring.getId(), 1))));
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals("Sorry, Moon Ring has just sold out. Please remove it from your bag.", exception.getReason());
         verifyNoInteractions(stock, events);
     }
 

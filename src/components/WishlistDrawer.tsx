@@ -114,17 +114,22 @@ export const WishlistDrawer: React.FC = () => {
                         </div>
                       </div>
 
-                      <button
-                        className="btn-text"
-                        style={{ fontSize: '0.6875rem', alignSelf: 'flex-start' }}
-                        onClick={() => {
-                          addToCart(product);
-                          toggleWishlist(product.id);
-                        }}
-                      >
-                        <ShoppingBag size={12} />
-                        <span>Move to Bag</span>
-                      </button>
+                      {/* An out-of-stock piece stays saved here until it is back. */}
+                      {product.stockQuantity <= 0 ? (
+                        <span className="stock-note is-out">Out of stock</span>
+                      ) : (
+                        <button
+                          className="btn-text"
+                          style={{ fontSize: '0.6875rem', alignSelf: 'flex-start' }}
+                          onClick={() => {
+                            addToCart(product);
+                            toggleWishlist(product.id);
+                          }}
+                        >
+                          <ShoppingBag size={12} />
+                          <span>Move to Bag</span>
+                        </button>
+                      )}
                     </div>
 
                     {/* Remove */}

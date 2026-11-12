@@ -7,6 +7,7 @@ import { useBuyNow } from '../lib/useBuyNow';
 import { productEnquiryLink } from '../lib/whatsapp';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { ProductReviews } from './ProductReviews';
+import { StockStatus } from './StockStatus';
 import {
   Heart, 
   ShoppingBag, 
@@ -22,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
-  const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo, catalogueStatus, catalogueWaking } = useShop();
+  const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo, catalogueStatus, catalogueWaking, refreshStock } = useShop();
   const buyNow = useBuyNow();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -38,6 +39,10 @@ export const ProductDetailPage: React.FC = () => {
     setActiveImageIndex(0);
     setQuantity(1);
   }, [currentProduct]);
+
+  // Opening a piece fetches its latest stock, so a piece that just sold out says so straight away.
+  const openedProductId = currentProduct?.id;
+  React.useEffect(() => { if (openedProductId) refreshStock(); }, [openedProductId, refreshStock]);
 
   // Opened from its own address, the piece appears once the catalogue has loaded.
   if (!currentProduct && catalogueStatus === 'loading') {
@@ -66,6 +71,10 @@ export const ProductDetailPage: React.FC = () => {
 
 
   const wishlisted = isWishlisted(currentProduct.id);
+  const stock = currentProduct.stockQuantity;
+  const soldOut = stock <= 0;
+  // Never more than is left, even if stock drops while the page is open.
+  const shownQuantity = Math.max(1, Math.min(quantity, stock));
   const enquiryLink = productEnquiryLink(currentProduct);
 
 
@@ -177,6 +186,9 @@ export const ProductDetailPage: React.FC = () => {
               </span>
             </div>
 
+            {/* Stock: out of stock, only a few left, or in stock. It updates as the shop refreshes the catalogue. */}
+            <StockStatus quantity={stock} />
+
             {/* Short Description */}
             <p style={{ fontSize: '0.95rem', lineHeight: '1.75', color: 'var(--color-text-muted)' }}>
               {currentProduct.description}
@@ -251,16 +263,18 @@ export const ProductDetailPage: React.FC = () => {
                   style={{ width: '40px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text)' }}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   aria-label="Decrease quantity"
+                  disabled={soldOut}
                 >
                   <Minus size={14} />
                 </button>
                 <span style={{ width: '36px', textAlign: 'center', fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-text)' }}>
-                  {quantity}
+                  {soldOut ? 0 : shownQuantity}
                 </span>
                 <button
                   style={{ width: '40px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text)' }}
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => setQuantity(Math.min(stock, shownQuantity + 1))}
                   aria-label="Increase quantity"
+                  disabled={soldOut || shownQuantity >= stock}
                 >
                   <Plus size={14} />
                 </button>
@@ -270,10 +284,11 @@ export const ProductDetailPage: React.FC = () => {
               <button
                 className="btn-secondary product-add-button"
                 style={{ flex: 1, height: '52px' }}
-                onClick={() => addToCart(currentProduct, selectedSize, quantity)}
+                onClick={() => addToCart(currentProduct, selectedSize, shownQuantity)}
+                disabled={soldOut}
               >
                 <ShoppingBag size={16} />
-                <span>Add to Bag</span>
+                <span>{soldOut ? 'Out of stock' : 'Add to Bag'}</span>
               </button>
 
               {/* Wishlist Button */}
@@ -306,10 +321,11 @@ export const ProductDetailPage: React.FC = () => {
             <button
               className="btn-primary product-buy-now"
               style={{ width: '100%', height: '56px' }}
-              onClick={() => buyNow(currentProduct, selectedSize, quantity)}
+              onClick={() => buyNow(currentProduct, selectedSize, shownQuantity)}
+              disabled={soldOut}
             >
-              <span>Buy Now</span>
-              <ArrowRight size={16} />
+              <span>{soldOut ? 'Out of stock' : 'Buy Now'}</span>
+              {!soldOut && <ArrowRight size={16} />}
             </button>
 
             {/* Opens a WhatsApp chat with the shop, the piece's details already typed in. Hidden until a number is set. */}

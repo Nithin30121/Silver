@@ -37,7 +37,9 @@ export const CartDrawer: React.FC = () => {
     buyNowItem,
     endBuyNow,
     navigateTo,
-    showToast
+    showToast,
+    stockOf,
+    refreshStock
   } = useShop();
   const { status, user } = useAuth();
   // Saved addresses for a signed-in customer; null until loaded (or when they could not be loaded).
@@ -50,6 +52,17 @@ export const CartDrawer: React.FC = () => {
   const items = buyNowItem ? [buyNowItem] : cart;
   const step = buyNowItem && checkoutStep === 'cart' ? 'shipping' : checkoutStep;
   const subtotal = buyNowItem ? buyNowItem.product.price * buyNowItem.quantity : cartSubtotal;
+  // Stock is checked against the latest catalogue, so a piece that sells out while it waits in the bag can't
+  // be ordered. The server checks once more when the order is placed.
+  const quantityOf = (productId: string) => items.filter((item) => item.product.id === productId).reduce((total, item) => total + item.quantity, 0);
+  const stockProblem = (productId: string): string | null => {
+    const left = stockOf(productId);
+    if (left === null) return null;
+    if (left <= 0) return 'Out of stock. Remove it to check out.';
+    if (quantityOf(productId) > left) return `Only ${left} left. Lower the quantity to check out.`;
+    return null;
+  };
+  const blockedByStock = items.some((item) => stockProblem(item.product.id) !== null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -89,6 +102,9 @@ export const CartDrawer: React.FC = () => {
 
   // Each time checkout opens, offer the customer's saved addresses, starting with their default.
   const isAtShipping = step === 'shipping' && status === 'authenticated';
+  // Opening the bag fetches the latest stock, so a piece that sold out meanwhile is marked before checkout.
+  useEffect(() => { if (isCartOpen) refreshStock(); }, [isCartOpen, refreshStock]);
+
   useEffect(() => {
     if (!isAtShipping) return;
     let cancelled = false;
@@ -186,6 +202,8 @@ export const CartDrawer: React.FC = () => {
       setCheckoutStep('confirmation');
       if (buyNowItem) endBuyNow();
       else clearCart();
+      // The order took pieces out of stock; the shop shows the new counts.
+      refreshStock();
       if (paysOnline) void payNow(order);
       if (!usingSavedAddress && saveNewAddress && canSaveAddress) {
         // The order is already placed, so a problem saving the address is only mentioned, never blocking.
@@ -196,6 +214,8 @@ export const CartDrawer: React.FC = () => {
       }
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : 'We could not create your order. Please try again.');
+      // A piece may have sold out meanwhile; fresh stock marks it in the bag.
+      refreshStock();
     } finally {
       setIsSubmitting(false);
     }
@@ -314,6 +334,7 @@ export const CartDrawer: React.FC = () => {
                             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                               Size: {item.selectedSize}
                             </span>
+                            {stockProblem(item.product.id) && <span className="stock-note is-out">{stockProblem(item.product.id)}</span>}
                           </div>
 
                           {/* Quantity Adjuster */}
@@ -333,6 +354,7 @@ export const CartDrawer: React.FC = () => {
                                 style={{ padding: '4px 8px', color: 'var(--color-text)' }}
                                 onClick={() => updateQuantity(item.product.id, item.selectedSize, 1)}
                                 aria-label="Increase quantity"
+                                disabled={(() => { const left = stockOf(item.product.id); return left !== null && quantityOf(item.product.id) >= left; })()}
                               >
                                 <Plus size={12} />
                               </button>
@@ -369,6 +391,7 @@ export const CartDrawer: React.FC = () => {
                   <div>
                     <span className="checkout-buy-now-label">Buying now</span>
                     <strong>{buyNowItem.product.name}</strong>
+                    {stockProblem(buyNowItem.product.id) && <span className="stock-note is-out">{stockProblem(buyNowItem.product.id)}</span>}
                     <span className="checkout-buy-now-meta">
                       Qty {buyNowItem.quantity}
                       {buyNowItem.selectedSize && buyNowItem.selectedSize !== 'Standard' && ` · Size ${buyNowItem.selectedSize}`}
@@ -620,6 +643,12 @@ export const CartDrawer: React.FC = () => {
               Taxes calculated at checkout. Complimentary insured transit included.
             </p>
 
+            {blockedByStock && (
+              <p className="stock-blocker" role="alert">
+                {items.length === 1 ? 'This piece is' : 'Some pieces are'} no longer available in the quantity chosen. Update your bag to continue.
+              </p>
+            )}
+
             {/* Separate keys give the two buttons separate elements. Reusing one element made it a submit
                 button while it was being clicked, so a single tap on Proceed placed the order at once. */}
             {step === 'cart' ? (
@@ -628,6 +657,7 @@ export const CartDrawer: React.FC = () => {
                 type="button"
                 className="btn-primary"
                 style={{ width: '100%' }}
+                disabled={blockedByStock}
                 onClick={() => {
                   if (status !== 'authenticated' || !user) {
                     closeDrawer();
@@ -651,7 +681,7 @@ export const CartDrawer: React.FC = () => {
                 form="checkout-form"
                 className="btn-primary"
                 style={{ width: '100%' }}
-                disabled={isSubmitting || cashOnDeliveryUnavailable}
+                disabled={isSubmitting || cashOnDeliveryUnavailable || blockedByStock}
               >
                 <span>{isSubmitting ? 'Recording Order…' : paysOnline ? 'Continue to Payment' : onlinePayments ? 'Place Order' : 'Record Order Request'}</span>
                 <ShieldCheck size={16} />

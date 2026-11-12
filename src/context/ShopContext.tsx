@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { isAccountView, type AccountTab, type CatalogueCategory, type CartItem, type Product, type ProductCategory, type ViewType } from '../types';
 import { CatalogueRequestError, loadCatalogue, recordWishlistAdd, type ApiProduct } from '../services/catalogService';
 import { pageTitle, parseRoute, routePath, type Route } from '../lib/routes';
@@ -33,6 +33,13 @@ interface ShopContextType {
   /** True while the catalogue is still loading because the server is waking up. */
   catalogueWaking: boolean;
   reloadCatalogue: () => Promise<void>;
+  /** Fetches the latest stock and prices in the background, without a loading screen. */
+  refreshStock: () => void;
+  /**
+   * How many of a piece can still be bought, from the latest catalogue: 0 when it is out of stock or no
+   * longer in the shop, null while the catalogue hasn't loaded (so nothing is blocked by mistake).
+   */
+  stockOf: (productId: string) => number | null;
   products: Product[];
   currentProduct: Product | null;
   cart: CartItem[];
@@ -124,6 +131,7 @@ function mapProduct(apiProduct: ApiProduct, categoriesById: Map<string, Catalogu
     originalPrice: apiProduct.originalPrice != null && Number(apiProduct.originalPrice) > Number(apiProduct.price)
       ? Number(apiProduct.originalPrice) : undefined,
     inStock: apiProduct.stockQuantity > 0,
+    stockQuantity: Math.max(0, apiProduct.stockQuantity),
     isNew: false,
     isFeatured: true,
     images,
@@ -133,7 +141,8 @@ function mapProduct(apiProduct: ApiProduct, categoriesById: Map<string, Catalogu
     finish: 'Artisan finished',
     weightGrams: apiProduct.weightGrams == null ? undefined : Number(apiProduct.weightGrams),
     availableSizes: [],
-    details: apiProduct.sku ? [`Reference: ${apiProduct.sku}`, `Availability: ${apiProduct.stockQuantity} in stock`] : [`Availability: ${apiProduct.stockQuantity} in stock`],
+    details: [...(apiProduct.sku ? [`Reference: ${apiProduct.sku}`] : []),
+      `Availability: ${apiProduct.stockQuantity > 0 ? `${apiProduct.stockQuantity} in stock` : 'Out of stock'}`],
     careGuide: CARE_GUIDE,
     shippingInfo: 'Complimentary insured delivery. Dispatch availability is confirmed at checkout.',
   };
@@ -179,6 +188,8 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [categories]);
   const products = useMemo(() => apiProducts.map((product) => mapProduct(product, categoryIndex.categoriesById, categoryIndex.rootsByCategoryId)), [apiProducts, categoryIndex]);
 
+  // When the catalogue last arrived, so the stock shown is never more than a minute or so old.
+  const catalogueLoadedAt = useRef(0);
   const reloadCatalogue = useCallback(async () => {
     setCatalogueStatus('loading');
     setCatalogueError(null);
@@ -187,6 +198,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const catalogue = await loadCatalogue(undefined, () => setCatalogueWaking(true));
       setCategories(catalogue.categories);
       setApiProducts(catalogue.products);
+      catalogueLoadedAt.current = Date.now();
       setCatalogueStatus('ready');
     } catch (error) {
       setCatalogueStatus('error');
@@ -199,6 +211,36 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => { void reloadCatalogue(); }, [reloadCatalogue]);
+
+  // Stock changes as people buy, so the shop quietly fetches it again: every minute while the page is open
+  // and in view, and whenever the customer comes back to the tab. A failed refresh keeps what is shown.
+  const refreshing = useRef(false);
+  const refreshStock = useCallback(() => {
+    if (refreshing.current || catalogueLoadedAt.current === 0) return;
+    refreshing.current = true;
+    loadCatalogue()
+      .then((catalogue) => {
+        setCategories(catalogue.categories);
+        setApiProducts(catalogue.products);
+        catalogueLoadedAt.current = Date.now();
+      })
+      .catch(() => undefined)
+      .finally(() => { refreshing.current = false; });
+  }, []);
+  useEffect(() => {
+    const STALE_AFTER = 60_000;
+    const refreshIfStale = () => {
+      if (document.visibilityState === 'visible' && Date.now() - catalogueLoadedAt.current >= STALE_AFTER) refreshStock();
+    };
+    const timer = window.setInterval(refreshIfStale, STALE_AFTER);
+    document.addEventListener('visibilitychange', refreshIfStale);
+    window.addEventListener('focus', refreshIfStale);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener('visibilitychange', refreshIfStale);
+      window.removeEventListener('focus', refreshIfStale);
+    };
+  }, [refreshStock]);
   useEffect(() => { try { localStorage.setItem('silvesto_cart', JSON.stringify(cart)); } catch { /* storage unavailable */ } }, [cart]);
   useEffect(() => { try { localStorage.setItem('silvesto_wishlist', JSON.stringify(wishlist)); } catch { /* storage unavailable */ } }, [wishlist]);
   useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [currentView, selectedProductId, accountOrderNumber]);
@@ -289,21 +331,50 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ? products.find((product) => product.id === selectedProductId || product.slug === selectedProductId) ?? null : null;
 
   useEffect(() => { document.title = pageTitle(currentView, currentProduct?.name); }, [currentView, currentProduct?.name]);
+  const stockOf = (productId: string): number | null => {
+    if (catalogueLoadedAt.current === 0) return null;
+    return products.find((product) => product.id === productId)?.stockQuantity ?? 0;
+  };
+  // A bag saved before stock was tracked has no count on its pieces, so the live catalogue comes first.
+  const availableOf = (product: Product) => stockOf(product.id) ?? product.stockQuantity ?? Number.POSITIVE_INFINITY;
+  const inBag = (productId: string) => cart.filter((item) => item.product.id === productId).reduce((total, item) => total + item.quantity, 0);
+
+  // The shop never adds more than is left. The server checks again when the order is placed.
   const addToCart = (product: Product, size?: string, quantity = 1) => {
+    const available = availableOf(product);
+    if (available <= 0) { showToast(`Sorry, "${product.name}" is out of stock.`); return; }
+    const room = available - inBag(product.id);
+    if (room <= 0) {
+      showToast(`Your bag already has all ${available} of "${product.name}" that are left.`);
+      setIsCartOpen(true);
+      return;
+    }
+    const adding = Math.min(quantity, room);
     const selectedSize = size || product.availableSizes?.[0] || 'Standard';
     setCart((previous) => {
       const index = previous.findIndex((item) => item.product.id === product.id && item.selectedSize === selectedSize);
-      return index < 0 ? [...previous, { product, selectedSize, quantity }] : previous.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: item.quantity + quantity } : item);
+      return index < 0 ? [...previous, { product, selectedSize, quantity: adding }] : previous.map((item, itemIndex) => itemIndex === index ? { ...item, quantity: item.quantity + adding } : item);
     });
-    showToast(`Added "${product.name}" to your shopping bag.`);
+    showToast(adding < quantity
+      ? `Only ${available} of "${product.name}" left, so ${adding === 1 ? '1 was' : `${adding} were`} added to your bag.`
+      : `Added "${product.name}" to your shopping bag.`);
     setIsCartOpen(true);
   };
   const buyNow = (product: Product, size?: string, quantity = 1) => {
-    setBuyNowItem({ product, selectedSize: size || product.availableSizes?.[0] || 'Standard', quantity });
+    const available = availableOf(product);
+    if (available <= 0) { showToast(`Sorry, "${product.name}" is out of stock.`); return; }
+    setBuyNowItem({ product, selectedSize: size || product.availableSizes?.[0] || 'Standard', quantity: Math.min(quantity, available) });
     setIsCartOpen(true);
   };
   const removeFromCart = (productId: string, size?: string) => { setCart((previous) => previous.filter((item) => !(item.product.id === productId && item.selectedSize === size))); showToast('Item removed from shopping bag.'); };
-  const updateQuantity = (productId: string, size: string | undefined, delta: number) => setCart((previous) => previous.map((item) => item.product.id === productId && item.selectedSize === size ? { ...item, quantity: item.quantity + delta } : item).filter((item) => item.quantity > 0));
+  const updateQuantity = (productId: string, size: string | undefined, delta: number) => {
+    const available = stockOf(productId);
+    if (delta > 0 && available !== null && inBag(productId) + delta > available) {
+      showToast(available === 0 ? 'Sorry, this piece is out of stock.' : `Only ${available} of this piece left.`);
+      return;
+    }
+    setCart((previous) => previous.map((item) => item.product.id === productId && item.selectedSize === size ? { ...item, quantity: item.quantity + delta } : item).filter((item) => item.quantity > 0));
+  };
   const toggleWishlist = (productId: string) => {
     if (wishlist.includes(productId)) { setWishlist((previous) => previous.filter((id) => id !== productId)); showToast('Removed from your wishlist.'); return; }
     setWishlist((previous) => [...previous, productId]);
@@ -314,7 +385,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return <ShopContext.Provider value={{
     currentView, selectedProductId, selectedCategory: effectiveCategory, selectedRootCategoryId: effectiveRootId, selectedGender, navigateTo, returnView,
     accountTab, accountOrderNumber, contactOrderNumber,
-    categories, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue, products, currentProduct,
+    categories, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue, refreshStock, stockOf, products, currentProduct,
     cart, cartCount: cart.reduce((total, item) => total + item.quantity, 0), cartSubtotal: cart.reduce((total, item) => total + item.product.price * item.quantity, 0), addToCart, removeFromCart, updateQuantity, clearCart: () => setCart([]),
     buyNowItem, buyNow, endBuyNow: () => setBuyNowItem(null), isCartOpen, setIsCartOpen,
     wishlist, wishlistCount: wishlist.length, toggleWishlist, isWishlisted: (productId) => wishlist.includes(productId), isWishlistOpen, setIsWishlistOpen,
