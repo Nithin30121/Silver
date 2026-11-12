@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import type { Product } from '../types';
 import { AnimatedModal } from './AnimatedModal';
+import { StockStatus } from './StockStatus';
 import { PriceTag } from './PriceTag';
 import { useBuyNow } from '../lib/useBuyNow';
 import { X, ShoppingBag, Heart, ArrowRight } from 'lucide-react';
@@ -27,9 +28,13 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
     addToCart,
     isWishlisted,
     toggleWishlist,
-    navigateTo
+    navigateTo,
+    stockOf
   } = useShop();
   const buyNow = useBuyNow();
+  // The latest stock, so a piece that sells out while quick view is open says so.
+  const stock = stockOf(product.id) ?? product.stockQuantity ?? 0;
+  const soldOut = stock <= 0;
 
   const [selectedSize, setSelectedSize] = useState<string>(product.availableSizes?.[0] ?? 'Standard');
 
@@ -68,6 +73,7 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
           <div style={{ marginBottom: '1rem' }}>
             <PriceTag price={product.price} originalPrice={product.originalPrice} size="modal" />
           </div>
+          <div style={{ marginBottom: '1rem' }}><StockStatus quantity={stock} /></div>
 
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: '1.65', marginBottom: '1.5rem' }}>
             {product.subtitle}. {product.description}
@@ -110,9 +116,10 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
                 addToCart(product, selectedSize, 1);
                 setQuickViewProduct(null);
               }}
+              disabled={soldOut}
             >
               <ShoppingBag size={14} />
-              <span>Add to Bag</span>
+              <span>{soldOut ? 'Out of stock' : 'Add to Bag'}</span>
             </button>
 
             <button
@@ -139,9 +146,10 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
               setQuickViewProduct(null);
               buyNow(product, selectedSize, 1);
             }}
+            disabled={soldOut}
           >
-            <span>Buy Now</span>
-            <ArrowRight size={14} />
+            <span>{soldOut ? 'Out of stock' : 'Buy Now'}</span>
+            {!soldOut && <ArrowRight size={14} />}
           </button>
 
           <button

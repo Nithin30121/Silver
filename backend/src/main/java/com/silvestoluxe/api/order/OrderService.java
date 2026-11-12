@@ -109,7 +109,9 @@ public class OrderService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, product.getName() + " is no longer available.");
             }
             if (product.getStockQuantity() < quantity) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, product.getName() + " does not have enough stock available.");
+                throw new ResponseStatusException(HttpStatus.CONFLICT, product.getStockQuantity() <= 0
+                        ? "Sorry, " + product.getName() + " has just sold out. Please remove it from your bag."
+                        : "Only " + product.getStockQuantity() + " of " + product.getName() + " left. Please lower the quantity.");
             }
             subtotal = subtotal.add(product.getPrice().multiply(BigDecimal.valueOf(quantity)));
         }

@@ -26,6 +26,8 @@ export interface Product {
   price: number;
   originalPrice?: number;
   inStock: boolean;
+  /** Pieces left to sell, from the server; 0 means out of stock. */
+  stockQuantity: number;
   isNew?: boolean;
   isFeatured?: boolean;
   images: string[];

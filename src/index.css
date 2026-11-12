@@ -3934,3 +3934,117 @@ textarea.contact-input {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   Stock: out-of-stock labels, the stock line on product pages, and blocked buying
+   ========================================================================== */
+.product-badge-tag.is-sold-out {
+  background-color: var(--color-error);
+  border-color: var(--color-error);
+  color: #FFFFFF;
+}
+
+.product-card.is-sold-out .product-img-primary,
+.product-card.is-sold-out .product-img-alternate {
+  filter: grayscale(0.55);
+  opacity: 0.78;
+}
+
+.stock-note {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stock-note.is-out {
+  color: var(--color-error);
+}
+
+.product-info .stock-note {
+  margin-top: 0.35rem;
+}
+
+.drawer-panel .stock-note {
+  display: block;
+  margin-top: 0.35rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.stock-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  border: 1px solid transparent;
+}
+
+.stock-status svg {
+  flex: none;
+  margin-top: 0.15rem;
+}
+
+.stock-status strong {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.stock-status span {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--color-text-muted);
+}
+
+.stock-status.is-out {
+  color: var(--color-error);
+  background-color: rgba(var(--rgb-error), 0.07);
+  border-color: rgba(var(--rgb-error), 0.35);
+}
+
+.stock-status.is-low {
+  color: var(--color-warning);
+  background-color: rgba(var(--rgb-warning), 0.08);
+  border-color: rgba(var(--rgb-warning), 0.3);
+}
+
+.stock-status.is-in {
+  padding: 0;
+  color: var(--color-success);
+}
+
+.stock-blocker {
+  margin-bottom: 0.85rem;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--color-error);
+  background-color: rgba(var(--rgb-error), 0.07);
+  border: 1px solid rgba(var(--rgb-error), 0.35);
+}
+
+/* A sold-out piece's buttons read "Out of stock" in a quiet, clearly unavailable style. */
+.btn-secondary:disabled,
+.product-buy-now:disabled,
+.product-quick-add button:disabled {
+  cursor: not-allowed;
+  color: var(--color-text-muted);
+  background: var(--color-graphite);
+  border-color: rgba(var(--rgb-line), 0.3);
+  box-shadow: none;
+  transform: none;
+  opacity: 1;
+}
+
+.product-buy-row button:disabled,
+.drawer-panel button[aria-label='Increase quantity']:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}

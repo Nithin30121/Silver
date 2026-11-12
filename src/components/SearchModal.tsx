@@ -128,6 +128,7 @@ export const SearchModal: React.FC = () => {
                     <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--color-text)' }}>{product.name}</h4>
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                       {product.material} • <strong style={{ color: 'var(--color-silver-highlight)' }}>₹{product.price.toLocaleString('en-IN')}</strong>
+                      {product.stockQuantity <= 0 && <> • <span className="stock-note is-out">Out of stock</span></>}
                       {product.originalPrice !== undefined && <s style={{ marginLeft: '0.4rem' }}><span className="visually-hidden">was </span>₹{product.originalPrice.toLocaleString('en-IN')}</s>}
                     </span>
                   </div>

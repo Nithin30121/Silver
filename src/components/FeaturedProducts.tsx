@@ -18,13 +18,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
   const { navigateTo, isWishlisted, toggleWishlist, addToCart, setQuickViewProduct } = useShop();
   const wishlisted = isWishlisted(product.id);
   const heartRef = useBumpOnIncrease<HTMLSpanElement>(wishlisted ? 1 : 0);
+  const soldOut = product.stockQuantity <= 0;
 
   return (
     <motion.div className="reveal-cell" {...revealOnScroll((index % 4) * 0.08)}>
-      <motion.article className="product-card" aria-label={product.name} whileHover={{ y: -6 }} transition={gentleSpring}>
+      <motion.article className={`product-card ${soldOut ? 'is-sold-out' : ''}`} aria-label={soldOut ? `${product.name}, out of stock` : product.name}
+        whileHover={{ y: -6 }} transition={gentleSpring}>
         <div className="product-img-wrapper">
-          {/* Badges */}
-          {product.isNew && <span className="product-badge-tag">NEW</span>}
+          {/* Badges: an out-of-stock piece says so instead of NEW. */}
+          {soldOut ? <span className="product-badge-tag is-sold-out">Out of stock</span>
+            : product.isNew && <span className="product-badge-tag">NEW</span>}
 
           {/* Wishlist Button */}
           <button
@@ -89,8 +92,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
                   textTransform: 'uppercase'
                 }}
                 onClick={() => addToCart(product)}
+                disabled={soldOut}
+                aria-disabled={soldOut}
               >
-                Quick Add
+                {soldOut ? 'Out of stock' : 'Quick Add'}
               </motion.button>
               <motion.button
                 {...pressable}
@@ -128,6 +133,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
           <div className="product-price-row">
             <PriceTag price={product.price} originalPrice={product.originalPrice} />
           </div>
+          {soldOut && <span className="stock-note is-out">Out of stock</span>}
 
           {/* Available Sizes Tagging */}
           {product.availableSizes && product.availableSizes.length > 0 && (
