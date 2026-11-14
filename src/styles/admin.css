@@ -121,7 +121,7 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #4C2A32 transpa
 .admin-content { width: 100%; max-width: 1280px; margin: 0 auto; padding: 2rem 2.5rem 4rem; }
 .admin-mobilebar, .admin-scrim, .admin-icon-button.admin-menu-close { display: none; }
 
-.admin-brand { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--a-text); font-family: var(--font-serif); font-size: 1.35rem; letter-spacing: 0.16em; text-decoration: none; }
+.admin-brand { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--a-text); font-family: var(--font-display); font-size: 1.35rem; letter-spacing: 0.16em; text-decoration: none; }
 .admin-brand span { padding: 0.15rem 0.5rem; border: 1px solid color-mix(in srgb, var(--a-accent) 40%, transparent); border-radius: 999px; color: var(--a-accent-text); font-family: var(--font-sans); font-size: 0.625rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
 
 /* ---------- Sidebar ---------- */

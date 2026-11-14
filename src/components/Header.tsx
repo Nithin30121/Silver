@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { toAccountError } from '../services/authService';
@@ -19,10 +19,22 @@ export const Header: React.FC = () => {
   const signOutCustomer = useCustomerSignOut();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedCategoryId, setExpandedCategoryId] = useState<string | null>(null);
+  // Women before Men, as on the brand's hero; any other top-level categories follow.
   const rootCategories = useMemo(() => {
     const audiences = categories.filter((category) => category.categoryType === 'audience');
-    return audiences.length > 0 ? audiences : categories;
+    const rank = (slug: string) => (slug === 'women' ? 0 : slug === 'men' ? 1 : 2);
+    return [...(audiences.length > 0 ? audiences : categories)].sort((a, b) => rank(a.slug) - rank(b.slug));
   }, [categories]);
+  // On the home page the header sits on the red hero with the logo centred; once the page scrolls it becomes the
+  // slim ruby bar used everywhere else.
+  const [atTop, setAtTop] = useState(() => typeof window === 'undefined' || window.scrollY < 40);
+  useEffect(() => {
+    const update = () => setAtTop(window.scrollY < 40);
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+  const overHero = currentView === 'home';
+  const heroLook = overHero && atTop && !mobileMenuOpen;
   const isSignedIn = status === 'authenticated';
   // Only a convenience: the dashboard and its API check the admin role again on the server.
   const isAdmin = isSignedIn && profile?.role === 'admin';
@@ -36,12 +48,14 @@ export const Header: React.FC = () => {
 
   return <>
 
-    <header className="header-wrapper">
+    <header className={`header-wrapper ${overHero ? 'is-over-hero' : ''} ${heroLook ? 'is-hero' : ''}`}>
       <div className="container header-container">
         <button className="mobile-menu-trigger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle navigation menu">
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
-        <a href="#home" className="brand-logo" onClick={(event) => { event.preventDefault(); navigateTo('home'); }}>SILVORA</a>
+        <a href="#home" className="brand-logo" aria-label="SILVORA Luxe, home" onClick={(event) => { event.preventDefault(); navigateTo('home'); }}>
+          SILVORA<span className="brand-logo-sub" aria-hidden="true">LUXE</span>
+        </a>
 
         <nav className="nav-container" aria-label="Main Navigation">
           <ul className="nav-links">
@@ -61,11 +75,7 @@ export const Header: React.FC = () => {
                   onClick={(event) => { event.preventDefault(); navigateToCategory(root.id, child.id); }}>{child.name}</a>)}
               </div>
             </li>)}
-            <li className="nav-item">
-              <a href="#collections" className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
-                onClick={(event) => { event.preventDefault(); navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }); }}>COLLECTIONS</a>
-            </li>
-            <li className="nav-item"><a href="#story" className={`nav-link ${currentView === 'story' ? 'active' : ''}`} onClick={(event) => { event.preventDefault(); navigateTo('story'); }}>OUR STORY</a></li>
+            {/* Collections and Our Story live in the phone menu and the footer. */}
             <li className="nav-item"><a href="/custom-design" className={`nav-link ${currentView === 'custom' ? 'active' : ''}`} onClick={(event) => { event.preventDefault(); navigateTo('custom'); }}>CUSTOM DESIGN</a></li>
           </ul>
         </nav>
