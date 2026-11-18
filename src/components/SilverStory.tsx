@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useSyncExternalStore } from 'react';
 import { motion, useInView, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 import { luxeEase, revealOnScroll } from '../lib/motion';
 import '../styles/silver-story.css';
@@ -6,7 +6,18 @@ import '../styles/silver-story.css';
 interface StoryPhotoProps {
   name: 'flatlay' | 'wrist';
   alt: string;
+  /** A different photo for phones, where this photo sits on its own below the 925 square. */
+  phone?: { file: string; alt: string };
 }
+
+/** Phones: the squares stack, so a photo is no longer beside its words. Matches the stacking rule in the CSS. */
+const PHONE_QUERY = '(max-width: 768px)';
+const subscribeToPhone = (onChange: () => void) => {
+  const query = window.matchMedia(PHONE_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+};
+const useIsPhone = () => useSyncExternalStore(subscribeToPhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
 
 /**
  * How each photo drifts. The picture is enlarged a little inside its square and slides down within it as the page
@@ -16,18 +27,23 @@ interface StoryPhotoProps {
 const DRIFT = {
   flatlay: { scale: 1.14, at: [0, 1], y: ['-7%', '7%'] },
   wrist: { scale: 1.07, at: [0, 0.5], y: ['-7%', '0%'] },
+  // The phone photo has words near its left edge, so it is enlarged less and drifts less, and they are never cut.
+  phoneWords: { scale: 1.035, at: [0, 0.5], y: ['-3.5%', '0%'] },
 } as const;
 
 /** A photo with parallax depth. It follows the scroll, so scrolling back up plays it in reverse. */
-const StoryPhoto: React.FC<StoryPhotoProps> = ({ name, alt }) => {
+const StoryPhoto: React.FC<StoryPhotoProps> = ({ name, alt, phone }) => {
   const frame = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
-  const drift = DRIFT[name];
+  const onPhone = useIsPhone() && Boolean(phone);
   // 0 as the photo's top reaches the bottom of the screen, 1 once its bottom has left the top.
   const { scrollYProgress } = useScroll({ target: frame, offset: ['start end', 'end start'] });
   const progress = useSpring(scrollYProgress, { stiffness: 140, damping: 30, restDelta: 0.0005 });
-  const y = useTransform(progress, [...drift.at], [...drift.y]);
-  const file = `/images/silver_${name === 'flatlay' ? 'satin_flatlay' : 'hand_bracelet'}`;
+  const usualY = useTransform(progress, [...DRIFT[name].at], [...DRIFT[name].y]);
+  const phoneY = useTransform(progress, [...DRIFT.phoneWords.at], [...DRIFT.phoneWords.y]);
+  const drift = onPhone ? DRIFT.phoneWords : DRIFT[name];
+  const y = onPhone ? phoneY : usualY;
+  const file = onPhone && phone ? phone.file : `/images/silver_${name === 'flatlay' ? 'satin_flatlay' : 'hand_bracelet'}`;
 
   return (
     <figure ref={frame} className={`silver-story-photo is-${name}`}>
@@ -35,7 +51,7 @@ const StoryPhoto: React.FC<StoryPhotoProps> = ({ name, alt }) => {
         src={`${file}.webp`}
         srcSet={`${file}_800.webp 800w, ${file}.webp 1254w`}
         sizes="(max-width: 768px) 100vw, 50vw"
-        alt={alt}
+        alt={onPhone && phone ? phone.alt : alt}
         width={1254} height={1254} loading="lazy" decoding="async"
         style={reduceMotion ? undefined : { scale: drift.scale, y }}
       />
@@ -127,6 +143,10 @@ export const SilverStory: React.FC = () => (
       <StoryPhoto
         name="wrist"
         alt="A hand raised against a soft blue sky, wearing a silver bracelet of round and marquise stones with a slider clasp"
+        phone={{
+          file: '/images/silver_hand_statement',
+          alt: 'A hand raised against a soft blue sky, wearing a silver bracelet of round and marquise stones, beside the words: Silver is not a substitute for gold.',
+        }}
       />
     </div>
   </section>
