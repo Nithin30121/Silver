@@ -176,8 +176,22 @@
   .silver-story-photo.is-wrist { order: 3; }
   .silver-story-panel.is-statement { order: 4; }
 
-  .is-hallmark .silver-story-copy,
   .is-statement .silver-story-copy {
     padding: 15cqi 8cqi 16cqi 9cqi;
+  }
+
+  /* The 925 square on a phone: a larger 925 close under the photo, then the paragraph, with the 925's left edge and
+     the paragraph lined up (the 9 has a little space before it, so the words sit a touch further in). */
+  .is-hallmark .silver-story-copy {
+    padding: 3.7cqi 8cqi 19.5cqi 5.5cqi;
+  }
+
+  .is-hallmark .silver-story-number {
+    margin-bottom: 7.8cqi;
+    font-size: 45.7cqi;
+  }
+
+  .is-hallmark .silver-story-text {
+    margin-left: 1.85cqi;
   }
 }
