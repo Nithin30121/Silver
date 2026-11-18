@@ -14,16 +14,23 @@ interface ProductCardProps {
 
 const pressable = { whileTap: { scale: 0.95 }, transition: gentleSpring };
 
+/** Phones: a tap anywhere on a card opens the piece (on larger screens the photo and the name do). */
+const PHONE_QUERY = '(max-width: 768px)';
+
 export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) => {
   const { navigateTo, isWishlisted, toggleWishlist, addToCart, setQuickViewProduct } = useShop();
   const wishlisted = isWishlisted(product.id);
   const heartRef = useBumpOnIncrease<HTMLSpanElement>(wishlisted ? 1 : 0);
   const soldOut = product.stockQuantity <= 0;
+  const openProduct = () => navigateTo('product', { productId: product.id });
+  // A short line under the name: the piece's own description where it has one, else its material.
+  const shortLine = product.description?.trim() || product.material;
 
   return (
     <motion.div className="reveal-cell" {...revealOnScroll((index % 4) * 0.08)}>
       <motion.article className={`product-card ${soldOut ? 'is-sold-out' : ''}`} aria-label={soldOut ? `${product.name}, out of stock` : product.name}
-        whileHover={{ y: -6 }} transition={gentleSpring}>
+        whileHover={{ y: -6 }} transition={gentleSpring}
+        onClick={() => { if (window.matchMedia(PHONE_QUERY).matches) openProduct(); }}>
         <div className="product-img-wrapper">
           {/* Badges: an out-of-stock piece says so instead of NEW. */}
           {soldOut ? <span className="product-badge-tag is-sold-out">Out of stock</span>
@@ -53,7 +60,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
           {/* Product Images with Hover Transition */}
           <div
             style={{ width: '100%', height: '100%', cursor: 'pointer' }}
-            onClick={() => navigateTo('product', { productId: product.id })}
+            onClick={(event) => { event.stopPropagation(); openProduct(); }}
           >
             <img
               src={product.images[0]}
@@ -75,8 +82,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
             )}
           </div>
 
-          {/* Quick Actions Hover Drawer */}
-          <div className="product-quick-add">
+          {/* Quick Actions Hover Drawer (larger screens only; phones open the piece instead) */}
+          <div className="product-quick-add" onClick={(event) => event.stopPropagation()}>
             <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
               <motion.button
                 {...pressable}
@@ -123,12 +130,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
           <h3
             className="product-title"
             style={{ cursor: 'pointer' }}
-            onClick={() => navigateTo('product', { productId: product.id })}
+            onClick={(event) => { event.stopPropagation(); openProduct(); }}
           >
             {product.name}
           </h3>
 
           <span className="product-subtitle">{product.material}</span>
+          {/* Phones show this one line instead of the material line above. */}
+          <span className="product-short-line">{shortLine}</span>
 
           <div className="product-price-row">
             <PriceTag price={product.price} originalPrice={product.originalPrice} />
@@ -171,7 +180,7 @@ export const FeaturedProducts: React.FC = () => {
   const featured = products.filter((p) => p.isFeatured).slice(0, 4);
 
   return (
-    <section className="section-padding" style={{ backgroundColor: 'var(--color-ink)', borderBottom: '1px solid rgba(var(--rgb-line), 0.2)' }} aria-labelledby="selection-heading">
+    <section className="section-padding featured-section" aria-labelledby="selection-heading">
       <div className="container">
         {/* Section Header */}
         <motion.div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }} {...revealOnScroll()}>
