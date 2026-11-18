@@ -37,6 +37,14 @@ export const GenderCategories: React.FC = () => {
         <motion.div className="gender-categories-header" {...revealOnScroll()}>
           <span className="eyebrow">DISCOVER YOUR STYLE</span>
           <h2 id="gender-categories-heading" className="headline-editorial">Jewellery, <em>Defined by You.</em></h2>
+          {/* Phones only: a gold rule with a four-pointed star between the heading and the line under it. */}
+          <div className="gender-categories-rule" aria-hidden="true">
+            <span />
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 0C12.7 7.3 16.7 11.3 24 12C16.7 12.7 12.7 16.7 12 24C11.3 16.7 7.3 12.7 0 12C7.3 11.3 11.3 7.3 12 0Z" />
+            </svg>
+            <span />
+          </div>
           <p className="gender-categories-intro">Distinctive silver ornaments for every expression of style.</p>
         </motion.div>
         <div className="gender-panels-grid">

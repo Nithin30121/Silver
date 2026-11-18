@@ -176,8 +176,15 @@
   .silver-story-photo.is-wrist { order: 3; }
   .silver-story-panel.is-statement { order: 4; }
 
+  /* The paragraph under the hand photo fills its square: larger words across nearly the full width, four lines. */
   .is-statement .silver-story-copy {
-    padding: 15cqi 8cqi 16cqi 9cqi;
+    padding: 8.4cqi 13.5cqi 10.4cqi 4.4cqi;
+  }
+
+  .is-statement .silver-story-text {
+    max-width: none;
+    font-size: 7.8cqi;
+    line-height: 1.18;
   }
 
   /* The 925 square on a phone: a larger 925 close under the photo, then the paragraph, with the 925's left edge and
