@@ -7,7 +7,6 @@ import { SilverStory } from './components/SilverStory';
 import { FeaturedProducts } from './components/FeaturedProducts';
 import { CatalogPage } from './components/CatalogPage';
 import { ProductDetailPage } from './components/ProductDetailPage';
-import { StoryPage } from './components/StoryPage';
 import { CarePage } from './components/CarePage';
 import { CustomDesignPage } from './components/CustomDesignPage';
 import { ShippingPage, ReturnPolicyPage, ContactPage, FAQPage } from './components/SupportingPages';
@@ -93,7 +92,6 @@ const MainContent: React.FC = () => {
         {currentView === 'men' && <CatalogPage />}
         {currentView === 'women' && <CatalogPage />}
         {currentView === 'product' && <ProductDetailPage />}
-        {currentView === 'story' && <StoryPage />}
         {currentView === 'care' && <CarePage />}
         {currentView === 'custom' && <CustomDesignPage />}
         {currentView === 'shipping' && <ShippingPage />}

@@ -65,7 +65,6 @@ export const Header: React.FC = () => {
               <a href="#collections" className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
                 onClick={(event) => { event.preventDefault(); navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }); }}>COLLECTIONS</a>
             </li>
-            <li className="nav-item"><a href="#story" className={`nav-link ${currentView === 'story' ? 'active' : ''}`} onClick={(event) => { event.preventDefault(); navigateTo('story'); }}>OUR STORY</a></li>
             <li className="nav-item"><a href="/custom-design" className={`nav-link ${currentView === 'custom' ? 'active' : ''}`} onClick={(event) => { event.preventDefault(); navigateTo('custom'); }}>CUSTOM DESIGN</a></li>
           </ul>
         </nav>
@@ -108,7 +107,6 @@ export const Header: React.FC = () => {
               </div>}
             </div>)}
             <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }))}>Collections</button>
-            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('story'))}>Our Story</button>
             <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('custom'))}>Custom Design</button>
             <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('care'))}>Jewellery Care</button>
             <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('shipping'))}>Shipping &amp; Returns</button>
