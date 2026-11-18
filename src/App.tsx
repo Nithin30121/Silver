@@ -4,7 +4,6 @@ import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { SilverStory } from './components/SilverStory';
-import { CollectionGrid } from './components/CollectionGrid';
 import { FeaturedProducts } from './components/FeaturedProducts';
 import { CatalogPage } from './components/CatalogPage';
 import { ProductDetailPage } from './components/ProductDetailPage';
@@ -46,7 +45,6 @@ const MainContent: React.FC = () => {
             <SilverStory />
             <GenderCategories />
             <FeaturedProducts />
-            <CollectionGrid />
 
             {/* Editorial Brand Assurance Banner */}
             <section style={{ backgroundColor: 'var(--color-graphite)', borderTop: '1px solid rgba(var(--rgb-line), 0.2)', borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', padding: '5rem 0' }}>
