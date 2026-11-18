@@ -89,19 +89,10 @@ export const CatalogPage: React.FC = () => {
             {availableSubcategories.map((sub) => (
               <button
                 key={sub.id}
+                type="button"
+                className={`catalog-pill${activeCategory === sub.id ? ' is-active' : ''}`}
+                aria-pressed={activeCategory === sub.id}
                 onClick={() => setActiveCategory(sub.id)}
-                style={{
-                  padding: '0.65rem 1.45rem',
-                  fontSize: '0.75rem',
-                  letterSpacing: '0.14em',
-                  textTransform: 'uppercase',
-                  fontWeight: 500,
-                  border: activeCategory === sub.id ? '1px solid var(--color-silver-deep)' : '1px solid rgba(var(--rgb-line), 0.25)',
-                  backgroundColor: activeCategory === sub.id ? 'rgba(var(--rgb-panel), 0.95)' : 'rgba(var(--rgb-ink), 0.6)',
-                  color: activeCategory === sub.id ? 'var(--color-silver-highlight)' : 'var(--color-text-muted)',
-                  boxShadow: activeCategory === sub.id ? '0 0 15px rgba(var(--rgb-line), 0.2)' : 'none',
-                  transition: 'var(--transition-fast)'
-                }}
               >
                 {sub.label}
               </button>
