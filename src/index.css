@@ -3542,22 +3542,6 @@ textarea.contact-input {
   }
 }
 
-/* Our Story thank-you note, with the gift-box photo beside it */
-.story-thanks {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-  gap: 3.5rem;
-  align-items: center;
-  margin-bottom: 5rem;
-}
-
-@media (max-width: 768px) {
-  .story-thanks {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 2.5rem;
-  }
-}
-
 /* Custom Design: a photo beside each text panel, stacked on phones with the photo first */
 .custom-split {
   display: grid;

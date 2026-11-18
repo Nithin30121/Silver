@@ -73,11 +73,6 @@ export const Footer: React.FC = () => {
             <h4 className="footer-heading">Client Services</h4>
             <ul className="footer-links">
               <li>
-                <a href="#story" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('story'); }}>
-                  Our Story
-                </a>
-              </li>
-              <li>
                 <a href="/custom-design" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('custom'); }}>
                   Custom Design
                 </a>
