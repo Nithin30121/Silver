@@ -18,7 +18,6 @@ export interface CatalogueCategory {
 export interface Product {
   id: string;
   name: string;
-  subtitle: string;
   slug: string;
   category: ProductCategory;
   categoryIds: string[];

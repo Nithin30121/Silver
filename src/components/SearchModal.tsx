@@ -22,7 +22,6 @@ export const SearchModal: React.FC = () => {
     return products.filter((p) => {
       return (
         p.name.toLowerCase().includes(q) ||
-        p.subtitle.toLowerCase().includes(q) ||
         p.category.toLowerCase().includes(q) ||
         p.description.toLowerCase().includes(q) ||
         p.purity.toLowerCase().includes(q)

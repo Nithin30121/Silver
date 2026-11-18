@@ -640,7 +640,7 @@ export const CartDrawer: React.FC = () => {
             </div>
 
             <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginBottom: '1.25rem' }}>
-              Taxes calculated at checkout. Complimentary insured transit included.
+              Complimentary insured transit included.
             </p>
 
             {blockedByStock && (

@@ -173,17 +173,11 @@ export const ProductDetailPage: React.FC = () => {
               <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(2rem, 3.5vw, 3rem)', lineHeight: '1.15', marginBottom: '0.5rem', color: 'var(--color-text)' }}>
                 {currentProduct.name}
               </h1>
-              <p style={{ fontSize: '0.9375rem', color: 'var(--color-text-muted)' }}>
-                {currentProduct.subtitle}
-              </p>
             </div>
 
             {/* Price Row */}
             <div style={{ display: 'flex', alignItems: 'flex-end', flexWrap: 'wrap', gap: '0.5rem 1rem', paddingBottom: '1.5rem', borderBottom: '1px solid rgba(var(--rgb-line), 0.2)' }}>
               <PriceTag price={currentProduct.price} originalPrice={currentProduct.originalPrice} size="page" />
-              <span style={{ fontSize: '0.75rem', color: 'var(--color-silver-accent)', textTransform: 'uppercase', letterSpacing: '0.08em', paddingBottom: '0.35rem' }}>
-                Includes GST & Insured Transit
-              </span>
             </div>
 
             {/* Stock: out of stock, only a few left, or in stock. It updates as the shop refreshes the catalogue. */}

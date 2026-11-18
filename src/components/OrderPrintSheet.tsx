@@ -50,7 +50,7 @@ export const OrderPrintSheet: React.FC<{ order: OrderResponse; kind: OrderPrintK
       <table>
         <thead>
           <tr>
-            <th>Item</th><th>SKU</th><th className="is-right">Qty</th>
+            <th>Item</th>{isSlip && <th>SKU</th>}<th className="is-right">Qty</th>
             {isSlip ? <th className="is-right">Packed</th> : <><th className="is-right">Price</th><th className="is-right">Total</th></>}
           </tr>
         </thead>
@@ -58,7 +58,7 @@ export const OrderPrintSheet: React.FC<{ order: OrderResponse; kind: OrderPrintK
           {order.items?.map((item, index) => (
             <tr key={`${item.productId ?? 'item'}-${index}`}>
               <td>{item.productName}</td>
-              <td>{item.productSku || '—'}</td>
+              {isSlip && <td>{item.productSku || '—'}</td>}
               <td className="is-right">{item.quantity}</td>
               {isSlip ? <td className="is-right"><span className="print-sheet-box" /></td>
                 : <><td className="is-right">{money(item.unitPrice)}</td><td className="is-right">{money(item.lineTotal)}</td></>}
@@ -67,16 +67,16 @@ export const OrderPrintSheet: React.FC<{ order: OrderResponse; kind: OrderPrintK
         </tbody>
         {!isSlip && (
           <tfoot>
-            {order.subtotal !== undefined && <tr><td colSpan={4}>Subtotal</td><td className="is-right">{money(order.subtotal)}</td></tr>}
+            {order.subtotal !== undefined && <tr><td colSpan={3}>Subtotal</td><td className="is-right">{money(order.subtotal)}</td></tr>}
             {order.shippingAmount !== undefined && (
-              <tr><td colSpan={4}>Shipping</td><td className="is-right">{Number(order.shippingAmount) === 0 ? 'Free' : money(order.shippingAmount)}</td></tr>
+              <tr><td colSpan={3}>Shipping</td><td className="is-right">{Number(order.shippingAmount) === 0 ? 'Free' : money(order.shippingAmount)}</td></tr>
             )}
-            <tr className="is-total"><td colSpan={4}>Total</td><td className="is-right">{money(order.totalAmount)}</td></tr>
+            <tr className="is-total"><td colSpan={3}>Total</td><td className="is-right">{money(order.totalAmount)}</td></tr>
           </tfoot>
         )}
       </table>
       <p className="print-sheet-note">
-        {isSlip ? 'Thank you for shopping with SILVORA.' : 'This order summary is not a GST tax invoice.'}
+        Thank you for shopping with SILVORA.
       </p>
     </div>,
     document.body

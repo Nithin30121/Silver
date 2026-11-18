@@ -76,7 +76,7 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
           <div style={{ marginBottom: '1rem' }}><StockStatus quantity={stock} /></div>
 
           <p style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', lineHeight: '1.65', marginBottom: '1.5rem' }}>
-            {product.subtitle}. {product.description}
+            {product.description}
           </p>
 
           {/* Sizes */}
