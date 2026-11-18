@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 import { toAccountError } from '../services/authService';
-import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { Search, ShoppingBag, Heart, User, Menu, X, ChevronDown, LayoutDashboard, LogIn, LogOut, UserPlus } from 'lucide-react';
 import { motion } from 'motion/react';
 import { drawerSlide, useBumpOnIncrease } from '../lib/motion';
 import { useCustomerSignOut } from './auth/authHelpers';
@@ -65,7 +65,6 @@ export const Header: React.FC = () => {
               <a href="#collections" className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
                 onClick={(event) => { event.preventDefault(); navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }); }}>COLLECTIONS</a>
             </li>
-            <li className="nav-item"><a href="#story" className={`nav-link ${currentView === 'story' ? 'active' : ''}`} onClick={(event) => { event.preventDefault(); navigateTo('story'); }}>OUR STORY</a></li>
             <li className="nav-item"><a href="/custom-design" className={`nav-link ${currentView === 'custom' ? 'active' : ''}`} onClick={(event) => { event.preventDefault(); navigateTo('custom'); }}>CUSTOM DESIGN</a></li>
           </ul>
         </nav>
@@ -92,41 +91,53 @@ export const Header: React.FC = () => {
     <div className={`drawer-backdrop ${mobileMenuOpen ? 'open' : ''}`} onClick={() => setMobileMenuOpen(false)}>
       <motion.div className="drawer-panel mobile-nav-drawer" onClick={(event) => event.stopPropagation()}
         style={{ left: 0, right: 'auto' }} {...drawerSlide(mobileMenuOpen, 'left')}>
-        <div className="drawer-header"><span className="brand-logo" style={{ fontSize: '1.25rem' }}>SILVORA</span><button onClick={() => setMobileMenuOpen(false)} aria-label="Close menu"><X size={20} /></button></div>
-        <div className="drawer-body" style={{ padding: '1.5rem' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('home'))}>Home</button>
-            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }))}>New Arrivals</button>
-            {rootCategories.map((root) => <div key={root.id}>
-              <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', paddingBottom: '0.5rem', borderBottom: '1px solid var(--color-border)', fontSize: '0.9375rem', textTransform: 'uppercase', fontWeight: 500, letterSpacing: '0.1em' }}
-                onClick={() => setExpandedCategoryId(expandedCategoryId === root.id ? null : root.id)}>
-                <span>{root.name}</span><ChevronDown size={16} style={{ transform: expandedCategoryId === root.id ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
-              </button>
-              {expandedCategoryId === root.id && <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.75rem 0 0.5rem 1rem' }}>
-                <button className="btn-text" style={{ fontSize: '0.8125rem', textAlign: 'left' }} onClick={() => handleMobileNav(() => navigateToCategory(root.id))}>All {root.name}</button>
-                {root.children.map((child) => <button key={child.id} className="btn-text" style={{ fontSize: '0.8125rem', textAlign: 'left' }} onClick={() => handleMobileNav(() => navigateToCategory(root.id, child.id))}>{child.name}</button>)}
-              </div>}
-            </div>)}
-            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }))}>Collections</button>
-            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('story'))}>Our Story</button>
-            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('custom'))}>Custom Design</button>
-            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('care'))}>Jewellery Care</button>
-            <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('shipping'))}>Shipping &amp; Returns</button>
-            <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => setIsWishlistOpen(true))}>
-                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
-              </button>
-              {isSignedIn ? <>
-                <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('account'))}>My Account</button>
-                {isAdmin && <a className="btn-text" href="/admin" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}>Admin Dashboard</a>}
-                <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={handleMobileSignOut}>Sign Out</button>
-              </> : <>
-                <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('login'))}>Sign In</button>
-                <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('signup'))}>Create Account</button>
-              </>}
-            </div>
-          </div>
+        <div className="drawer-header mobile-nav-head">
+          <span className="mobile-nav-brand">SILVORA</span>
+          <button className="mobile-nav-close" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu"><X size={22} strokeWidth={1.6} /></button>
         </div>
+        {/* The menu itself sits on ivory: the shop's pages in a serif list, then the account links with small icons. */}
+        <nav className="drawer-body mobile-nav-body" aria-label="Menu">
+          <ul className="mobile-nav-list">
+            <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('home'))}>Home</button></li>
+            <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }))}>New Arrivals</button></li>
+            {rootCategories.map((root) => {
+              const open = expandedCategoryId === root.id;
+              return <li key={root.id}>
+                <button className="mobile-nav-link" aria-expanded={open} onClick={() => setExpandedCategoryId(open ? null : root.id)}>
+                  <span>{root.name}</span><ChevronDown size={18} strokeWidth={1.6} className="mobile-nav-chevron" aria-hidden="true" />
+                </button>
+                {open && <ul className="mobile-nav-sub">
+                  <li><button className="mobile-nav-sublink" onClick={() => handleMobileNav(() => navigateToCategory(root.id))}>All {root.name}</button></li>
+                  {root.children.map((child) => <li key={child.id}>
+                    <button className="mobile-nav-sublink" onClick={() => handleMobileNav(() => navigateToCategory(root.id, child.id))}>{child.name}</button>
+                  </li>)}
+                </ul>}
+              </li>;
+            })}
+            <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }))}>Collections</button></li>
+            <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('custom'))}>Custom Design</button></li>
+            <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('care'))}>Jewellery Care</button></li>
+            <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('shipping'))}>Shipping &amp; Returns</button></li>
+          </ul>
+
+          <p className="mobile-nav-label">Your account</p>
+          <ul className="mobile-nav-list is-account">
+            <li>
+              <button className="mobile-nav-link" onClick={() => handleMobileNav(() => setIsWishlistOpen(true))}>
+                <Heart size={18} strokeWidth={1.6} aria-hidden="true" /><span>Wishlist</span>
+                {wishlistCount > 0 && <span className="mobile-nav-count" aria-label={`${wishlistCount} saved`}>{wishlistCount}</span>}
+              </button>
+            </li>
+            {isSignedIn ? <>
+              <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('account'))}><User size={18} strokeWidth={1.6} aria-hidden="true" /><span>My Account</span></button></li>
+              {isAdmin && <li><a className="mobile-nav-link" href="/admin"><LayoutDashboard size={18} strokeWidth={1.6} aria-hidden="true" /><span>Admin Dashboard</span></a></li>}
+              <li><button className="mobile-nav-link" onClick={handleMobileSignOut}><LogOut size={18} strokeWidth={1.6} aria-hidden="true" /><span>Sign Out</span></button></li>
+            </> : <>
+              <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('login'))}><LogIn size={18} strokeWidth={1.6} aria-hidden="true" /><span>Sign In</span></button></li>
+              <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('signup'))}><UserPlus size={18} strokeWidth={1.6} aria-hidden="true" /><span>Create Account</span></button></li>
+            </>}
+          </ul>
+        </nav>
       </motion.div>
     </div>
   </>;
