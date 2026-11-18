@@ -152,6 +152,192 @@
 
 .mobile-nav-drawer.drawer-panel {
   background-color: var(--color-black);
+  /* It opens from the left, so its edge line belongs on the right. */
+  border-left: 0;
+  border-right: 1px solid rgba(43, 26, 29, 0.08);
+}
+
+/* Phone menu: a deep ruby top bar with the wordmark and a light close button, over an ivory menu. */
+.mobile-nav-head {
+  padding: 1.1rem 1rem 1.1rem 1.5rem;
+}
+
+.mobile-nav-brand {
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  color: var(--brand-blush);
+}
+
+.mobile-nav-close {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  color: var(--brand-blush);
+  background: none;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.mobile-nav-close:hover,
+.mobile-nav-close:focus-visible {
+  background-color: rgba(255, 248, 246, 0.12);
+}
+
+.mobile-nav-close:focus-visible {
+  outline: 2px solid var(--brand-blush);
+  outline-offset: 2px;
+}
+
+.mobile-nav-drawer .mobile-nav-body {
+  padding: 0.75rem 1.5rem 2.5rem;
+  background-color: #F9F6F1;
+  color: var(--brand-ink);
+}
+
+.mobile-nav-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.mobile-nav-list > li {
+  border-bottom: 1px solid rgba(43, 26, 29, 0.08);
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 3.4rem;
+  padding: 0.85rem 0;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  color: var(--brand-ink);
+  text-align: left;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.2s ease, padding-left 0.25s ease;
+}
+
+.mobile-nav-link[aria-expanded='true'] {
+  color: var(--brand-ruby);
+}
+
+/* Pointer hover only, so a tapped row on a phone doesn't stay highlighted. */
+@media (hover: hover) {
+  .mobile-nav-link:hover {
+    color: var(--brand-ruby);
+    padding-left: 0.25rem;
+  }
+
+  .mobile-nav-sublink:hover {
+    color: var(--brand-ruby);
+  }
+}
+
+.mobile-nav-link:focus-visible,
+.mobile-nav-sublink:focus-visible {
+  outline: 2px solid var(--brand-ruby);
+  outline-offset: 2px;
+}
+
+.mobile-nav-chevron {
+  flex: none;
+  color: var(--brand-ruby);
+  transition: transform 0.25s ease;
+}
+
+.mobile-nav-link[aria-expanded='true'] .mobile-nav-chevron {
+  transform: rotate(180deg);
+}
+
+/* Men and Women open into their collections, set in a little under a thin gold line. */
+.mobile-nav-sub {
+  margin: -0.2rem 0 0.95rem 0.15rem;
+  padding: 0 0 0 1rem;
+  list-style: none;
+  border-left: 1px solid #B9A27A;
+}
+
+.mobile-nav-sublink {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5E4A4D;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+/* The account group: a small ruby label with a gold line, then compact rows with icons. */
+.mobile-nav-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 2.1rem 0 0.35rem;
+  font-family: var(--font-sans);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--brand-ruby);
+}
+
+.mobile-nav-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #B9A27A, transparent);
+}
+
+.mobile-nav-list.is-account .mobile-nav-link {
+  justify-content: flex-start;
+  min-height: 3rem;
+  padding: 0.75rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.mobile-nav-list.is-account .mobile-nav-link svg {
+  flex: none;
+  color: var(--brand-ruby);
+}
+
+.mobile-nav-count {
+  display: grid;
+  place-items: center;
+  min-width: 1.4rem;
+  height: 1.4rem;
+  margin-left: auto;
+  padding: 0 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--brand-blush);
+  background-color: var(--brand-ruby);
+  border-radius: 999px;
 }
 
 /* The navbar is always deep ruby, with a soft shadow so it sits above the page. */
