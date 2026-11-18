@@ -121,7 +121,6 @@ function mapProduct(apiProduct: ApiProduct, categoriesById: Map<string, Catalogu
   return {
     id: apiProduct.id,
     name: apiProduct.name,
-    subtitle: apiProduct.sku ? `Reference ${apiProduct.sku}` : 'Certified 925 sterling silver',
     slug: apiProduct.slug,
     category: primaryCategory?.slug ?? 'collection',
     categoryIds: apiProduct.categoryIds,
@@ -141,8 +140,7 @@ function mapProduct(apiProduct: ApiProduct, categoriesById: Map<string, Catalogu
     finish: 'Artisan finished',
     weightGrams: apiProduct.weightGrams == null ? undefined : Number(apiProduct.weightGrams),
     availableSizes: [],
-    details: [...(apiProduct.sku ? [`Reference: ${apiProduct.sku}`] : []),
-      `Availability: ${apiProduct.stockQuantity > 0 ? `${apiProduct.stockQuantity} in stock` : 'Out of stock'}`],
+    details: [`Availability: ${apiProduct.stockQuantity > 0 ? `${apiProduct.stockQuantity} in stock` : 'Out of stock'}`],
     careGuide: CARE_GUIDE,
     shippingInfo: 'Complimentary insured delivery. Dispatch availability is confirmed at checkout.',
   };

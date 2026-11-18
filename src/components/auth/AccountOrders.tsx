@@ -256,7 +256,7 @@ const OrderDetails: React.FC<OrderDetailsProps> = ({ order, onBack, onChange }) 
                 {product ? (
                   <button type="button" className="account-item-name" onClick={() => navigateTo('product', { productId: product.id })}>{item.productName}</button>
                 ) : <span className="account-item-name">{item.productName}</span>}
-                <span className="account-muted">{item.quantity} × {money(item.unitPrice)}{item.productSku ? ` · ${item.productSku}` : ''}</span>
+                <span className="account-muted">{item.quantity} × {money(item.unitPrice)}</span>
               </span>
               <span className="account-item-total">{money(item.lineTotal)}</span>
             </li>
