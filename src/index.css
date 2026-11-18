@@ -772,6 +772,94 @@ img {
   }
 }
 
+/* Phone navbar: the menu on the left, SILVORA centred, and search, account and bag on the right. The wishlist and
+   admin icons move into the menu, so the bar stays calm and the wordmark has room. The two side columns share the
+   leftover width equally, which keeps the wordmark in the true centre of the screen. */
+@media (max-width: 768px) {
+  :root {
+    --header-height: 64px;
+  }
+
+  .header-container {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    column-gap: 0.5rem;
+  }
+
+  .mobile-menu-trigger {
+    grid-column: 1;
+    justify-self: start;
+    margin-left: -0.2rem;
+  }
+
+  .brand-logo {
+    grid-column: 2;
+    justify-self: center;
+    font-size: 1.3rem;
+    letter-spacing: 0.24em;
+    /* Letter spacing also trails the last letter; the same space on the left keeps the word optically centred. */
+    padding-left: 0.24em;
+  }
+
+  .nav-container {
+    display: none;
+  }
+
+  .nav-actions {
+    grid-column: 3;
+    justify-self: end;
+    gap: 0.5rem;
+    margin-right: -0.2rem;
+  }
+
+  .mobile-menu-trigger,
+  .nav-action-btn {
+    padding: 0.2rem;
+  }
+
+  /* The icons look small and airy, but each still answers a comfortable tap around it. */
+  .nav-action-btn::after {
+    content: '';
+    position: absolute;
+    inset: -0.45rem;
+  }
+
+  .nav-action-btn.is-wishlist,
+  .nav-action-btn.is-admin {
+    display: none;
+  }
+
+  .nav-action-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 360px) {
+  .brand-logo {
+    font-size: 1.2rem;
+    letter-spacing: 0.22em;
+    padding-left: 0.22em;
+  }
+
+  .nav-actions {
+    gap: 0.45rem;
+  }
+}
+
+@media (max-width: 340px) {
+  .brand-logo {
+    font-size: 1.05rem;
+    letter-spacing: 0.18em;
+    padding-left: 0.18em;
+  }
+
+  .nav-actions {
+    gap: 0.3rem;
+  }
+}
+
 .badge-count {
   position: absolute;
   top: -2px;
