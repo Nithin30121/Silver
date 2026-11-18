@@ -7,7 +7,7 @@ import { Image as ImageIcon, FileText, BadgeCheck, Gem, Check, ArrowRight } from
 const OFFERS = [
   'Custom designs based on your reference pictures.',
   'Personalised jewellery made according to your preferences.',
-  'Customisation available in pure gold and pure silver.',
+  'Customisation available in pure gold.',
   'Quotes provided according to the design, material, weight and specifications.',
   'Every design and quotation will be discussed with you before we proceed.',
 ];
@@ -23,7 +23,7 @@ const sectionTitle: React.CSSProperties = { fontFamily: 'var(--font-serif)', fon
 const bodyText: React.CSSProperties = { fontSize: '0.9375rem', lineHeight: '1.8', color: 'var(--color-text-muted)' };
 const panel: React.CSSProperties = { padding: '2rem', backgroundColor: 'var(--color-ink)', border: '1px solid rgba(var(--rgb-line), 0.2)' };
 
-/** Custom Design: personalised gold and silver pieces made from the customer's own references. */
+/** Custom Design: personalised gold pieces made from the customer's own references. The page names gold only. */
 export const CustomDesignPage: React.FC = () => {
   const { navigateTo } = useShop();
   // Opens a WhatsApp chat with the shop; until the shop's number is set, the button leads to the contact page.
@@ -46,7 +46,7 @@ export const CustomDesignPage: React.FC = () => {
       <div className="container" style={{ maxWidth: '1120px', marginTop: '4rem', display: 'flex', flexDirection: 'column', gap: '3.5rem' }}>
         <div className="custom-split custom-split--photo-right">
           <figure className="custom-photo">
-            <img src="/images/custom_silk_flatlay.webp" alt="Gold and silver rings, earrings and pendants arranged on ivory silk"
+            <img src="/images/custom_silk_flatlay.webp" alt="Rings, earrings and pendants arranged on ivory silk"
               decoding="async" style={{ objectPosition: '78% 50%' }} />
           </figure>
           <section style={panel}>
@@ -58,7 +58,7 @@ export const CustomDesignPage: React.FC = () => {
               Show us what you love, and let us bring it to life.
             </p>
             <p style={bodyText}>
-              We offer personalised jewellery customisation in <strong style={{ color: 'var(--color-text)' }}>pure gold and pure silver</strong>, crafted
+              We offer personalised jewellery customisation in <strong style={{ color: 'var(--color-text)' }}>pure gold</strong>, crafted
               according to your preferred design and requirements.
             </p>
             <p style={{ ...bodyText, marginTop: '1rem' }}>
@@ -69,7 +69,7 @@ export const CustomDesignPage: React.FC = () => {
 
         <div className="custom-split">
           <figure className="custom-photo">
-            <img src="/images/custom_marble_collection.webp" alt="Gold and silver rings, earrings, bracelets and necklaces laid out on white marble"
+            <img src="/images/custom_marble_collection.webp" alt="Rings, earrings, bracelets and necklaces laid out on white marble"
               loading="lazy" decoding="async" />
           </figure>
           <section style={panel}>
@@ -112,7 +112,7 @@ export const CustomDesignPage: React.FC = () => {
           <div className="custom-cta-body">
             <h2 style={sectionTitle}>Let's Create Something That's Uniquely Yours.</h2>
             <p style={{ ...bodyText, maxWidth: '640px', margin: '0 auto' }}>
-              Your dream design is just one conversation away. Whether it's pure gold or pure silver, let's bring your imagination to life.
+              Your dream design is just one conversation away. Let's bring your imagination to life.
             </p>
             <p style={{ fontFamily: 'var(--font-serif)', fontSize: '1.3rem', fontStyle: 'italic', color: 'var(--color-text)', margin: '1.5rem 0' }}>
               Have a design in mind? Let's talk!
