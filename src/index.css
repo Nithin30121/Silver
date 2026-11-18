@@ -1801,11 +1801,34 @@ img {
     letter-spacing: 0.1em;
   }
 
+  /* A plain heart, with no circle behind it: white with a soft shadow, so it reads on dark photos and light ones. */
+  .product-wishlist-btn,
+  .product-wishlist-btn:hover,
+  .product-wishlist-btn.active {
+    background: none;
+    border: 0;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
   .product-wishlist-btn {
-    top: 0.55rem;
-    right: 0.55rem;
-    width: 32px;
-    height: 32px;
+    top: 0.35rem;
+    right: 0.35rem;
+    width: 38px;
+    height: 38px;
+    border-radius: 0;
+    color: #FFFFFF;
+    filter: drop-shadow(0 0 1px rgba(23, 18, 14, 0.55)) drop-shadow(0 1px 3px rgba(23, 18, 14, 0.35));
+  }
+
+  .product-wishlist-btn:hover,
+  .product-wishlist-btn.active {
+    color: var(--brand-ruby);
+  }
+
+  .product-wishlist-btn svg {
+    width: 21px;
+    height: 21px;
   }
 
   .product-info {
