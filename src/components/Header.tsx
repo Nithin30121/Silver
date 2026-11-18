@@ -72,11 +72,11 @@ export const Header: React.FC = () => {
 
         <div className="nav-actions">
           <button className="nav-action-btn" onClick={() => setIsSearchOpen(true)} aria-label="Search catalog" title="Search"><Search size={19} style={{ strokeWidth: 1.6 }} /></button>
-          <button className="nav-action-btn" onClick={() => setIsWishlistOpen(true)} aria-label="View wishlist" title="Saved Pieces">
+          <button className="nav-action-btn is-wishlist" onClick={() => setIsWishlistOpen(true)} aria-label="View wishlist" title="Saved Pieces">
             <Heart size={19} style={{ strokeWidth: 1.6 }} />
             <CountBadge count={wishlistCount} label={`${wishlistCount} items in wishlist`} />
           </button>
-          {isAdmin && <a className="nav-action-btn" href="/admin" aria-label="Open the admin dashboard" title="Admin Dashboard"><LayoutDashboard size={19} style={{ strokeWidth: 1.6 }} /></a>}
+          {isAdmin && <a className="nav-action-btn is-admin" href="/admin" aria-label="Open the admin dashboard" title="Admin Dashboard"><LayoutDashboard size={19} style={{ strokeWidth: 1.6 }} /></a>}
           <button className="nav-action-btn" onClick={() => navigateTo(isSignedIn ? 'account' : 'login')}
             aria-label={isSignedIn ? `My account (signed in as ${displayName})` : 'Sign in or create an account'} title={isSignedIn ? 'My Account' : 'Sign In'}>
             <User size={19} style={{ strokeWidth: 1.6, color: isSignedIn ? 'var(--color-silver-highlight)' : undefined }} />
@@ -113,6 +113,9 @@ export const Header: React.FC = () => {
             <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('care'))}>Jewellery Care</button>
             <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('shipping'))}>Shipping &amp; Returns</button>
             <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => setIsWishlistOpen(true))}>
+                Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
+              </button>
               {isSignedIn ? <>
                 <button className="btn-text" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }} onClick={() => handleMobileNav(() => navigateTo('account'))}>My Account</button>
                 {isAdmin && <a className="btn-text" href="/admin" style={{ textAlign: 'left', width: '100%', fontSize: '0.9375rem' }}>Admin Dashboard</a>}
