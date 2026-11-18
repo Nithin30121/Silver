@@ -194,4 +194,11 @@
   .is-hallmark .silver-story-text {
     margin-left: 1.85cqi;
   }
+
+  /* On a phone the photo above already carries "Silver is not a substitute for gold.", so this square keeps only
+     its paragraph instead of repeating the heading and its gold line straight after it. */
+  .is-statement .silver-story-title,
+  .is-statement .silver-story-rule {
+    display: none;
+  }
 }
