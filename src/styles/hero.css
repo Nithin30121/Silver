@@ -11,7 +11,8 @@
   --lux-ease: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   isolation: isolate;
-  min-height: max(36rem, calc(100svh - var(--header-height) - 2.5rem));
+  /* Exactly the first screen below the navbar, so nothing of the next section peeks in underneath. */
+  min-height: max(36rem, calc(100svh - var(--header-height)));
   overflow: hidden;
   background:
     radial-gradient(ellipse 60% 52% at 50% 40%, rgba(232, 180, 168, 0.16) 0%, rgba(255, 255, 255, 0) 64%), #FFFFFF;
@@ -353,7 +354,7 @@
 
 @media (max-width: 768px) {
   .lux-hero {
-    min-height: max(34rem, calc(100svh - var(--header-height) - 2rem));
+    min-height: max(34rem, calc(100svh - var(--header-height)));
   }
 
   .lux-hero-wordmark {
