@@ -3,15 +3,23 @@ import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { revealOnScroll } from '../lib/motion';
 
-// Close-ups of the rings from the Men and Women campaign photos, cut to the card's tall shape.
-const fallbackImages = ['/images/men_ring_card.webp', '/images/women_ring_card.webp'];
+// Men: an engraved signet ring beside a curb chain. Women: a marquise-flower ring beside a tennis bracelet. Both are shot
+// in the card's tall shape, with room at the bottom for the words.
+const fallbackImages = ['/images/style_men_signet', '/images/style_women_flower_ring'];
+
+/** Every card photo comes full size (1043px wide) and at 640px for phones and narrow cards. */
+const cardPhoto = (base: string) => ({
+  src: `${base}.webp`,
+  srcSet: `${base}_640.webp 640w, ${base}.webp 1043w`,
+  sizes: '(max-width: 600px) 92vw, (max-width: 1100px) 46vw, 23vw',
+});
 
 /** Collections the shop is preparing. They are shown, not linked, until their products are in the catalogue. */
 const comingSoon = [
   { key: 'puja', title: ['Pure Silver', 'Puja Essentials'], line: '“Devotion in Silver.”', tone: 'is-quote',
-    image: '/images/coming_puja_essentials.webp', alt: 'Engraved pure silver puja bowl with an Om motif beside white flowers' },
+    image: '/images/coming_puja_bowl', alt: 'A pure silver puja bowl engraved with flowers around an Om medallion, on a footed base' },
   { key: 'rose', title: ['Rose Aura :', 'Fine 18K Jewellery'], line: 'Rose Gold 18K & 14K Carat Jewellery.', tone: 'is-note',
-    image: '/images/coming_rose_aura.webp', alt: 'Rose gold flower pendant on a fine chain resting on black satin' },
+    image: '/images/coming_rose_aura_pendant', alt: 'A rose gold flower pendant set with clear stones, on a fine chain over white satin' },
 ];
 
 export const GenderCategories: React.FC = () => {
@@ -38,7 +46,9 @@ export const GenderCategories: React.FC = () => {
               onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); browse(); } }}
               aria-label={`Explore ${root.name} fine silver collection`}>
               <div className="gender-panel-media">
-                <img src={root.imageUrl || fallbackImages[index % fallbackImages.length]} alt={`${root.name} fine 925 sterling silver collection`} loading="lazy" width={556} height={806} />
+                {root.imageUrl
+                  ? <img src={root.imageUrl} alt={`${root.name} fine 925 sterling silver collection`} loading="lazy" width={1043} height={1508} />
+                  : <img {...cardPhoto(fallbackImages[index % fallbackImages.length])} alt={`${root.name} fine 925 sterling silver collection`} loading="lazy" width={1043} height={1508} />}
                 <div className="gender-panel-scrim" aria-hidden="true" />
               </div>
               <div className="gender-panel-overlay">
@@ -54,10 +64,11 @@ export const GenderCategories: React.FC = () => {
           {comingSoon.map((card, index) => (
             <motion.div key={card.key} className="reveal-cell" {...revealOnScroll((roots.length + index) * 0.12)}>
               <article className="gender-panel is-coming-soon" aria-label={`${card.title.join(' ')}, coming soon`}>
-                <span className="gender-soon-label">COMING SOON</span>
+                {/* The photo fills the card; the label sits in its open top and the words in its open bottom. */}
                 <div className="gender-soon-media">
-                  <img src={card.image} alt={card.alt} loading="lazy" width={442} height={350} />
+                  <img {...cardPhoto(card.image)} alt={card.alt} loading="lazy" width={1043} height={1508} />
                 </div>
+                <span className="gender-soon-label">COMING SOON</span>
                 <div className="gender-soon-info">
                   <h3 className="gender-soon-title">{card.title[0]}<br />{card.title[1]}</h3>
                   <p className={`gender-soon-line ${card.tone}`}>{card.line}</p>
