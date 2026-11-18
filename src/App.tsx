@@ -3,6 +3,7 @@ import { ShopProvider, useShop } from './context/ShopContext';
 import { AuthProvider } from './context/AuthContext';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
+import { SilverStory } from './components/SilverStory';
 import { CollectionGrid } from './components/CollectionGrid';
 import { FeaturedProducts } from './components/FeaturedProducts';
 import { CatalogPage } from './components/CatalogPage';
@@ -42,6 +43,7 @@ const MainContent: React.FC = () => {
         {currentView === 'home' && (
           <>
             <Hero />
+            <SilverStory />
             <GenderCategories />
             <FeaturedProducts />
             <CollectionGrid />

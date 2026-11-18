@@ -1,0 +1,183 @@
+/* ==========================================================================
+   SILVORA | Silver story (the section straight after the hero)
+   Two rows of two squares: a photo beside ivory words, then words beside a photo. Each square of words sizes its
+   type to its own width (cqi), so the proportions of the design hold from a phone to a wide screen.
+   ========================================================================== */
+.silver-story {
+  --story-ivory: #F9F6F1;
+  --story-ink: #17120E;
+  --story-text: #2A241F;
+  --story-gold-line: #B9A27A;
+  --story-gold: #8C6A2C;
+  background: var(--story-ivory);
+  color: var(--story-ink);
+  /* 925 and 92.5% in full-height figures, as in the brand artwork, not the font's default old-style ones. */
+  font-variant-numeric: lining-nums;
+}
+
+.silver-story-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* Square rows, up to a sensible height on very wide screens; a row grows if its words ever need more room. */
+  grid-auto-rows: minmax(min(50vw, 54rem), auto);
+}
+
+.silver-story-photo {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  background: #E9E4DC;
+}
+
+.silver-story-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* If a wide screen trims the wrist photo, keep the fingertips and let the arm run off the bottom. Its parallax
+   enlargement grows from the top edge too, so the fingertips stay in the frame. */
+.silver-story-photo.is-wrist img {
+  object-position: 50% 0%;
+  transform-origin: 50% 0%;
+}
+
+.silver-story-panel {
+  /* The square is the measure: cqi below is a percentage of its width. The padding sits on the words inside it,
+     so it is measured against the square too. */
+  container-type: inline-size;
+  display: flex;
+  align-items: center;
+  background: var(--story-ivory);
+}
+
+.silver-story-copy {
+  width: 100%;
+}
+
+.is-hallmark .silver-story-copy {
+  padding: 6cqi 8cqi 9cqi 11cqi;
+}
+
+.is-statement .silver-story-copy {
+  padding: 6cqi 8cqi 7cqi 15.5cqi;
+}
+
+.silver-story-number {
+  margin: 0 0 6.5cqi;
+  font-family: var(--font-serif);
+  font-size: 41cqi;
+  font-weight: 400;
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+  color: var(--story-ink);
+}
+
+/* The rolling 925: three windows one digit tall, each with a strip of digits sliding up behind it. The windows
+   clip only above and below, so a wide digit passing through is never cut at the sides. */
+.silver-story-number.is-rolling {
+  display: flex;
+}
+
+.silver-story-digit {
+  position: relative;
+  display: block;
+  height: 0.8em;
+  clip-path: inset(0 -0.3em);
+}
+
+.silver-story-digit-size {
+  display: block;
+  visibility: hidden;
+}
+
+.silver-story-reel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.silver-story-reel span {
+  display: block;
+  height: 0.8em;
+}
+
+.silver-story-text {
+  margin: 0;
+  max-width: 15.2em;
+  font-family: var(--font-serif);
+  font-size: 5.3cqi;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--story-text);
+}
+
+.silver-story-title {
+  margin: 0;
+  max-width: 5.9em;
+  font-family: var(--font-serif);
+  font-size: 12.5cqi;
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.01em;
+  color: var(--story-ink);
+}
+
+.silver-story-title em {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.silver-story-rule {
+  display: flex;
+  align-items: center;
+  gap: 2.4cqi;
+  width: 63cqi;
+  margin: 7cqi 0 7.5cqi;
+}
+
+.silver-story-rule span {
+  flex: 1;
+  height: 1px;
+  background: var(--story-gold-line);
+}
+
+.silver-story-star {
+  flex: none;
+  width: 3.3cqi;
+  height: 3.3cqi;
+  fill: var(--story-gold);
+}
+
+.is-statement .silver-story-text {
+  max-width: 12.6em;
+  font-size: 5.5cqi;
+  line-height: 1.24;
+}
+
+/* Phones: one column, still alternating photo and words. */
+@media (max-width: 768px) {
+  .silver-story-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+
+  .silver-story-photo {
+    aspect-ratio: 1;
+  }
+
+  .silver-story-photo.is-flatlay { order: 1; }
+  .silver-story-panel.is-hallmark { order: 2; }
+  .silver-story-photo.is-wrist { order: 3; }
+  .silver-story-panel.is-statement { order: 4; }
+
+  .is-hallmark .silver-story-copy,
+  .is-statement .silver-story-copy {
+    padding: 15cqi 8cqi 16cqi 9cqi;
+  }
+}
