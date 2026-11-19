@@ -1810,22 +1810,58 @@ img {
   .featured-section .product-grid {
     position: relative;
     margin: 0 -1.25rem;
-    padding: 1.25rem 1.25rem 3rem;
+    /* Slim margins so the cards are large, with the same space above and below so they sit centred in the band. */
+    padding: 1.25rem 0.75rem;
     column-gap: 0.6rem;
     row-gap: 0.75rem;
     background-color: #E1E6E5;
   }
 
-  /* More than four picked pieces: the grey band keeps the height of two rows (plus a peek of the next) and the
-     cards scroll inside it. */
-  .featured-section .product-grid.is-scrolling {
-    max-height: var(--pieces-height, none);
-    overflow-y: auto;
+  /* Every piece in one row you swipe left through: two cards across with the next one peeking in at the edge, so it's
+     clear there's more. Each swipe settles on a card. */
+  .featured-section .product-grid.is-swiping {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: calc((100% - 2 * 0.6rem - 0.75rem) / 2);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 0.75rem;
+    scrollbar-width: none;
   }
 
-  .featured-section .product-grid.is-scrolling:focus-visible {
+  .featured-section .product-grid.is-swiping::-webkit-scrollbar {
+    display: none;
+  }
+
+  .featured-section .product-grid.is-swiping > * {
+    scroll-snap-align: start;
+  }
+
+  .featured-section .product-grid.is-swiping:focus-visible {
     outline: 2px solid var(--brand-ruby-deep);
     outline-offset: -2px;
+  }
+
+  /* A tall photo fills most of each card; the name, short line and price sit packed together at the bottom. Any spare
+     height (when a neighbouring card has a longer name) goes to the photo, not to empty space under the price. */
+  .featured-section .product-card {
+    padding-bottom: 0.8rem;
+  }
+
+  .featured-section .product-img-wrapper {
+    flex: 1 0 auto;
+    aspect-ratio: 4 / 5;
+  }
+
+  .featured-section .product-img-primary {
+    position: absolute;
+    inset: 0;
+  }
+
+  .featured-section .product-info {
+    gap: 0.2rem;
+    padding: 0.7rem 0.6rem 0;
   }
 
   .product-card {
