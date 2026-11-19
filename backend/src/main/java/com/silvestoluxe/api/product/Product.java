@@ -29,6 +29,8 @@ public class Product {
     @Column(precision = 10, scale = 3) private BigDecimal weightGrams;
     @Column(nullable = false) private int stockQuantity;
     @Column(nullable = false) private boolean isActive;
+    /** Picked by the owner for the home page's Considered Pieces section. */
+    @Column(nullable = false) private boolean isFeatured;
     @CreationTimestamp @Column(nullable = false, updatable = false) private Instant createdAt;
     @UpdateTimestamp @Column(nullable = false) private Instant updatedAt;
 
@@ -64,6 +66,8 @@ public class Product {
     public void setStockQuantity(int stockQuantity) { this.stockQuantity = stockQuantity; }
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
+    public boolean isFeatured() { return isFeatured; }
+    public void setFeatured(boolean featured) { isFeatured = featured; }
     public Set<Category> getCategories() { return categories; }
     public void setCategories(Set<Category> categories) { this.categories = categories; }
     public List<ProductImage> getImages() { return images; }

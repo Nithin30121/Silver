@@ -27,7 +27,9 @@ public final class ProductDtos {
             @DecimalMin(value = "0.000") BigDecimal weightGrams,
             @Min(0) int stockQuantity,
             boolean isActive,
-            Set<UUID> categoryIds) { }
+            Set<UUID> categoryIds,
+            /** Shown in the home page's Considered Pieces. Left out keeps the current choice (a new piece starts unpicked). */
+            Boolean isFeatured) { }
 
     public record Status(boolean isActive) { }
 
@@ -35,7 +37,7 @@ public final class ProductDtos {
 
     public record Response(UUID id, String name, String slug, String sku, String description,
                            BigDecimal price, BigDecimal originalPrice, String imageUrl, BigDecimal weightGrams, int stockQuantity,
-                           boolean isActive, Set<UUID> categoryIds, List<ImageResponse> images) { }
+                           boolean isActive, Set<UUID> categoryIds, List<ImageResponse> images, boolean isFeatured) { }
 
     /** actorName is the admin who changed stock, or the customer whose checkout reserved it. */
     public record StockMovementResponse(UUID id, UUID productId, String productName, String productSku,

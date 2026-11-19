@@ -132,7 +132,7 @@ function mapProduct(apiProduct: ApiProduct, categoriesById: Map<string, Catalogu
     inStock: apiProduct.stockQuantity > 0,
     stockQuantity: Math.max(0, apiProduct.stockQuantity),
     isNew: false,
-    isFeatured: true,
+    isFeatured: apiProduct.isFeatured === true,
     images,
     description: apiProduct.description,
     material: '925 Sterling Silver',

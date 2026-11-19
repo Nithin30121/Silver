@@ -51,7 +51,7 @@ class ProductPriceValidationTest {
 
     private static List<String> priceProblems(String price) {
         ProductDtos.Upsert request = new ProductDtos.Upsert("Moon Ring", "moon-ring", null, null, new BigDecimal(price), null, null,
-                null, 5, true, Set.of());
+                null, 5, true, Set.of(), null);
         return validator.validate(request).stream()
                 .filter(violation -> violation.getPropertyPath().toString().equals("price"))
                 .map(ConstraintViolation::getMessage)

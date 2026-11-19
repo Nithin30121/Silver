@@ -130,6 +130,7 @@ public class ProductService {
         product.setWeightGrams(request.weightGrams());
         product.setStockQuantity(request.stockQuantity());
         product.setActive(request.isActive());
+        if (request.isFeatured() != null) product.setFeatured(request.isFeatured());
         Set<Category> assigned = new LinkedHashSet<>();
         if (request.categoryIds() != null) request.categoryIds().forEach(id -> assigned.add(category(id)));
         product.setCategories(assigned);
@@ -152,6 +153,7 @@ public class ProductService {
         return new Response(product.getId(), product.getName(), product.getSlug(), product.getSku(), product.getDescription(),
                 product.getPrice(), product.getOriginalPrice(), product.getImageUrl(), product.getWeightGrams(), product.getStockQuantity(), product.isActive(),
                 product.getCategories().stream().map(Category::getId).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
-                product.getImages().stream().map(image -> new ImageResponse(image.getId(), image.getImageUrl(), image.getAltText(), image.getDisplayOrder())).toList());
+                product.getImages().stream().map(image -> new ImageResponse(image.getId(), image.getImageUrl(), image.getAltText(), image.getDisplayOrder())).toList(),
+                product.isFeatured());
     }
 }

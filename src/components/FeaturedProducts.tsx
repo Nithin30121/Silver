@@ -177,7 +177,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0 }) 
 
 export const FeaturedProducts: React.FC = () => {
   const { products, navigateTo, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue } = useShop();
-  const featured = products.filter((p) => p.isFeatured).slice(0, 4);
+  // The pieces the owner picked come first; any places left fill with the other pieces, A to Z as loaded.
+  const featured = [...products.filter((p) => p.isFeatured), ...products.filter((p) => !p.isFeatured)].slice(0, 4);
 
   return (
     <section className="section-padding featured-section" aria-labelledby="selection-heading">

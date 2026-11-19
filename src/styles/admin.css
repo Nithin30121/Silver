@@ -298,6 +298,7 @@ html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #4C2A32 transpa
 .admin-badge.is-danger { background: var(--a-danger-bg); color: var(--a-danger); }
 .admin-badge.is-info { background: var(--a-info-bg); color: var(--a-info); }
 .admin-badge.is-neutral { background: var(--a-neutral-bg); color: var(--a-text-2); }
+.admin-badge-stack { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; }
 .admin-tag { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 6px; background: var(--a-neutral-bg); color: var(--a-text-2); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
 
 /* ---------- Search and filters ---------- */

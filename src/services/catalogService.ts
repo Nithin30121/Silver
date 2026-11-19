@@ -26,6 +26,8 @@ export interface ApiProduct {
   isActive: boolean;
   categoryIds: string[];
   images: ApiImage[];
+  /** Picked by the owner for the home page's Considered Pieces; missing from servers older than this choice. */
+  isFeatured?: boolean;
 }
 
 interface ProductPage {
