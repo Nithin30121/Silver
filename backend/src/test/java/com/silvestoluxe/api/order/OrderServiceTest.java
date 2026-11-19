@@ -134,6 +134,22 @@ class OrderServiceTest {
     }
 
     @Test
+    void checkoutRefusesAPieceWithNoPriceWithoutRecordingAnything() {
+        Product ring = TestProducts.product("Dragon Bracelet", new BigDecimal("0.00"), 3);
+        signedInCustomer();
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> service.checkout(customerId.toString(), checkout(PaymentMethod.COD, new CheckoutItem(ring.getId(), 1))));
+
+        assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+        assertEquals("Dragon Bracelet isn't available to order yet. Please remove it from your bag.", exception.getReason());
+        assertEquals(3, ring.getStockQuantity());
+        verify(orders, never()).saveAndFlush(any());
+        verifyNoInteractions(stock, events);
+    }
+
+    @Test
     void cancellingReturnsStockOnceAndEmailsTheCustomer() {
         Product ring = TestProducts.product("Moon Ring", new BigDecimal("1000.00"), 2);
         CustomerOrder order = orderFor(ring, 3, OrderStatus.CONFIRMED);

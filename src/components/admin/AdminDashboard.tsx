@@ -1565,6 +1565,7 @@ const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueC
     event.preventDefault();
     const { price, stockQuantity } = form;
     if (price === null || stockQuantity === null) { setError('Enter a price and a stock quantity.'); return; }
+    if (price <= 0) { setError('Enter a price above ₹0. A piece priced at ₹0 could be ordered for free.'); return; }
     const input: ProductInput = { ...form, price, stockQuantity };
     setSaving(true); setError('');
     let id = savedId;
@@ -1633,7 +1634,7 @@ const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueC
 
         <FormSection title="Price and stock">
           <Field label="Price">
-            <span className="admin-affix"><span>₹</span><NumberInput required min="0" step="0.01" inputMode="decimal" placeholder="e.g. 2500"
+            <span className="admin-affix"><span>₹</span><NumberInput required min="0.01" step="0.01" inputMode="decimal" placeholder="e.g. 2500"
               value={form.price} onValueChange={(value) => update('price', value)} /></span>
           </Field>
           <Field label="Original price" hint={originalPriceHint(form.price, form.originalPrice)}>
