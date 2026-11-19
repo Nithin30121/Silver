@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useSyncExternalStore } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import type { Product } from '../types';
@@ -190,35 +190,15 @@ function useIsPhone() {
 const byFeaturedPosition = (a: Product, b: Product) =>
   (a.featuredPosition ?? Number.MAX_SAFE_INTEGER) - (b.featuredPosition ?? Number.MAX_SAFE_INTEGER);
 
-/** How much of the third row of cards shows below the first two, so it's clear the band scrolls. */
-const NEXT_ROW_PEEK = 44;
-
 export const FeaturedProducts: React.FC = () => {
   const { products, navigateTo, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue } = useShop();
   const isPhone = useIsPhone();
   // The pieces the owner picked come first, in the order of their numbers, then every other piece, A to Z as loaded.
   const ordered = [...products.filter((p) => p.isFeatured).sort(byFeaturedPosition), ...products.filter((p) => !p.isFeatured)];
-  // Phones list every piece, stacked in a band that scrolls on its own, so ticking one never pushes another out;
-  // larger screens keep a row of the first four.
+  // Phones list every piece in one row you swipe through, so ticking one never pushes another out; larger screens
+  // keep a row of the first four.
   const featured = isPhone ? ordered : ordered.slice(0, 4);
-  const scrolls = isPhone && featured.length > 4;
-  const gridRef = useRef<HTMLDivElement>(null);
-  const shownIds = featured.map((product) => product.id).join();
-
-  // The scrolling band is as tall as two rows of cards plus a peek of the third, measured because names can wrap.
-  useLayoutEffect(() => {
-    const grid = gridRef.current;
-    if (!grid) return;
-    if (!scrolls) { grid.style.removeProperty('--pieces-height'); return; }
-    const fit = () => {
-      const thirdRow = grid.children[4] as HTMLElement | undefined;
-      if (thirdRow) grid.style.setProperty('--pieces-height', `${thirdRow.offsetTop + NEXT_ROW_PEEK}px`);
-    };
-    fit();
-    const watcher = new ResizeObserver(fit);
-    Array.from(grid.children).slice(0, 5).forEach((cell) => watcher.observe(cell));
-    return () => watcher.disconnect();
-  }, [scrolls, shownIds]);
+  const swipes = isPhone && featured.length > 2;
 
   return (
     <section className="section-padding featured-section" aria-labelledby="selection-heading">
@@ -249,10 +229,10 @@ export const FeaturedProducts: React.FC = () => {
             <button className="btn-text" style={{ marginTop: '0.75rem' }} onClick={() => void reloadCatalogue()}>Try Again</button>
           </div>
         ) : featured.length > 0 ? (
-          <div ref={gridRef} className={`product-grid${scrolls ? ' is-scrolling' : ''}`}
-            {...(scrolls && { role: 'region', 'aria-label': 'Considered pieces, scroll for more', tabIndex: 0 })}>
-            {/* Pieces further down a scrolling band appear as it scrolls, so they skip the fade-in. */}
-            {featured.map((product, index) => <ProductCard key={product.id} product={product} index={index} reveal={!scrolls || index < 4} />)}
+          <div className={`product-grid${swipes ? ' is-swiping' : ''}`}
+            {...(swipes && { role: 'region', 'aria-label': 'Considered pieces, swipe for more', tabIndex: 0 })}>
+            {/* Pieces further along the row appear as it is swiped, so they skip the fade-in. */}
+            {featured.map((product, index) => <ProductCard key={product.id} product={product} index={index} reveal={!swipes || index < 2} />)}
           </div>
         ) : (
           <p style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }}>New pieces will appear here when they are published.</p>
