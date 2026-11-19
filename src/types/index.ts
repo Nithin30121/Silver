@@ -29,6 +29,8 @@ export interface Product {
   stockQuantity: number;
   isNew?: boolean;
   isFeatured?: boolean;
+  /** Its place in Considered Pieces, 1 first. */
+  featuredPosition?: number;
   images: string[];
   description: string;
   material: string;

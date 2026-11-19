@@ -62,7 +62,44 @@ class ProductServiceTest {
     }
 
     private static ProductDtos.Upsert upsert(BigDecimal price, BigDecimal originalPrice, Boolean isFeatured) {
-        return new ProductDtos.Upsert("Moon Ring", "moon-ring", "MR-1", "", price, originalPrice, null, null, 3, true, java.util.Set.of(), isFeatured);
+        return new ProductDtos.Upsert("Moon Ring", "moon-ring", "MR-1", "", price, originalPrice, null, null, 3, true,
+                java.util.Set.of(), isFeatured, null);
+    }
+
+    private static ProductDtos.Upsert picked(Boolean isFeatured, Integer position) {
+        return new ProductDtos.Upsert("Moon Ring", "moon-ring", "MR-1", "", new BigDecimal("2000.00"), null, null, null, 3, true,
+                java.util.Set.of(), isFeatured, position);
+    }
+
+    @Test
+    void aPiecePickedWithoutAPositionGoesToTheEndOfConsideredPieces() {
+        ProductRepository products = mock(ProductRepository.class);
+        when(products.save(any(Product.class))).thenAnswer(call -> call.getArgument(0));
+        when(products.lastFeaturedPosition()).thenReturn(3);
+
+        ProductDtos.Response ring = service(products, mock(ProductImageRepository.class)).create(picked(true, null), UUID.randomUUID());
+
+        assertEquals(true, ring.isFeatured());
+        assertEquals(4, ring.featuredPosition());
+    }
+
+    @Test
+    void aChosenPositionIsKeptAndUnpickingClearsIt() {
+        ProductRepository products = mock(ProductRepository.class);
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("2000.00"), 3);
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+        ProductService service = service(products, mock(ProductImageRepository.class));
+
+        service.update(ring.getId(), picked(true, 2), UUID.randomUUID());
+        assertEquals(2, ring.getFeaturedPosition());
+
+        // Saving again with the box left empty keeps its place rather than moving it to the end.
+        service.update(ring.getId(), picked(true, null), UUID.randomUUID());
+        assertEquals(2, ring.getFeaturedPosition());
+
+        service.update(ring.getId(), picked(false, 2), UUID.randomUUID());
+        assertEquals(false, ring.isFeatured());
+        assertEquals(null, ring.getFeaturedPosition());
     }
 
     @Test
@@ -94,6 +131,7 @@ class ProductServiceTest {
         ProductRepository products = mock(ProductRepository.class);
         Product ring = TestProducts.product("Moon Ring", new BigDecimal("2000.00"), 3);
         ring.setFeatured(true);
+        ring.setFeaturedPosition(5);
         when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
 
         service(products, mock(ProductImageRepository.class))
@@ -101,6 +139,7 @@ class ProductServiceTest {
 
         assertEquals(new BigDecimal("2200.00"), ring.getPrice());
         assertEquals(true, ring.isFeatured());
+        assertEquals(5, ring.getFeaturedPosition());
     }
 
     @Test

@@ -102,19 +102,19 @@ const originalPriceHint = (price: number | null, originalPrice: number | null) =
   return `Shows ${money(originalPrice)} crossed out, ${percent}% off.`;
 };
 
-/** Considered Pieces on a laptop shows four pieces: the picked ones first, then others from A to Z. Phones list
-    every picked piece in a band that scrolls. */
+/** Considered Pieces lists picked pieces first, by their position, then the others from A to Z. Phones show every
+    piece in a band that scrolls; laptops show the first four. */
 const CONSIDERED_PIECES = 4;
 const consideredPiecesHint = (picked: boolean, isLive: boolean, othersPicked: number) => {
   if (picked && !isLive) return 'This piece is hidden, so it only appears there once Show in shop is on.';
-  if (picked && othersPicked >= CONSIDERED_PIECES) return `${othersPicked} other pieces are picked too. Phones show them all in a list that scrolls; laptops show the first ${CONSIDERED_PIECES} from A to Z.`;
+  if (picked && othersPicked >= CONSIDERED_PIECES) return `${othersPicked} other pieces are picked too. Phones list every pick in order; laptops show only the first ${CONSIDERED_PIECES} by position.`;
   const count = othersPicked === 0 ? 'No other piece is picked yet.' : `${othersPicked} other ${othersPicked === 1 ? 'piece is' : 'pieces are'} picked.`;
-  return `Adds this piece to Considered Pieces on the home page. Phones show every picked piece; laptops show the first ${CONSIDERED_PIECES}, and any places left fill with other pieces from A to Z. ${count}`;
+  return `Lists this piece among the picks at the top of Considered Pieces on the home page. Phones show every piece, picked ones first; laptops show the first ${CONSIDERED_PIECES}. ${count}`;
 };
 
 const emptyProduct = (): ProductDraft => ({
   name: '', slug: '', sku: '', description: '', price: null, originalPrice: null, imageUrl: '', weightGrams: null,
-  stockQuantity: null, isActive: true, categoryIds: [], isFeatured: false
+  stockQuantity: null, isActive: true, categoryIds: [], isFeatured: false, featuredPosition: null
 });
 const emptyCategory = (): CategoryInput => ({
   name: '', slug: '', parentId: null, categoryType: 'collection', description: '', imageUrl: '', displayOrder: 0, isActive: true
@@ -1432,8 +1432,12 @@ const ProductManager: React.FC<{
   // Every product is loaded, so searching happens here as you type.
   const needle = search.trim().toLowerCase();
   const pickedCount = products.filter((product) => product.isFeatured).length;
-  const visible = products.filter((product) => (filter === 'all' || (filter === 'picked' ? product.isFeatured === true : (filter === 'live') === product.isActive))
+  const matching = products.filter((product) => (filter === 'all' || (filter === 'picked' ? product.isFeatured === true : (filter === 'live') === product.isActive))
     && (!needle || [product.name, product.sku, product.slug].some((value) => value?.toLowerCase().includes(needle))));
+  // The Considered Pieces filter lists the picks in the order the home page shows them.
+  const visible = filter === 'picked'
+    ? [...matching].sort((a, b) => (a.featuredPosition ?? Number.MAX_SAFE_INTEGER) - (b.featuredPosition ?? Number.MAX_SAFE_INTEGER))
+    : matching;
   return (
     <section className="admin-card">
       <div className="admin-card-toolbar">
@@ -1539,7 +1543,7 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist
       <td data-label="Status">
         <span className="admin-badge-stack">
           <LiveBadge isActive={product.isActive} />
-          {product.isFeatured && <Badge tone="info">Considered Pieces</Badge>}
+          {product.isFeatured && <Badge tone="info">Considered Pieces{product.featuredPosition ? ` · ${product.featuredPosition}` : ''}</Badge>}
         </span>
       </td>
       <td className="admin-row-actions">
@@ -1558,9 +1562,15 @@ type PickedPhoto = { file: File; url: string };
 
 const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]; categories: CatalogueCategory[]; onClose: () => void; onSaved: () => void }> = ({ product, products, categories, onClose, onSaved }) => {
   const formId = useId();
-  const [form, setForm] = useState<ProductDraft>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), originalPrice: product.originalPrice == null ? null : Number(product.originalPrice), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds], isFeatured: product.isFeatured === true }) : emptyProduct());
+  const [form, setForm] = useState<ProductDraft>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), originalPrice: product.originalPrice == null ? null : Number(product.originalPrice), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds], isFeatured: product.isFeatured === true, featuredPosition: product.featuredPosition ?? null }) : emptyProduct());
+  const otherPicks = products.filter((item) => item.id !== product?.id && item.isFeatured);
   // Only live pieces can appear on the home page, so only they take up its places.
-  const othersPicked = products.filter((item) => item.id !== product?.id && item.isFeatured && item.isActive).length;
+  const othersPicked = otherPicks.filter((item) => item.isActive).length;
+  // A new pick goes after every piece already picked.
+  const nextPosition = Math.max(0, ...otherPicks.map((item) => item.featuredPosition ?? 0)) + 1;
+  const pickForConsideredPieces = (on: boolean) => setForm((current) => ({
+    ...current, isFeatured: on, featuredPosition: on ? current.featuredPosition ?? nextPosition : null,
+  }));
   // Photos already on the product, and new ones picked here that upload when the product is saved.
   const [photos, setPhotos] = useState<ProductPhoto[]>(() => product?.images.filter((image) => image.imageUrl) ?? []);
   const [picked, setPicked] = useState<PickedPhoto[]>([]);
@@ -1743,8 +1753,15 @@ const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]
         <FormSection title="Visibility">
           <Switch checked={form.isActive} onChange={(value) => update('isActive', value)} label="Show in shop"
             description="Hidden products stay saved, but customers can't see or buy them." />
-          <Switch checked={form.isFeatured} onChange={(value) => update('isFeatured', value)} label="Show in Considered Pieces"
+          <Switch checked={form.isFeatured} onChange={pickForConsideredPieces} label="Show in Considered Pieces"
             description={consideredPiecesHint(form.isFeatured, form.isActive, othersPicked)} />
+          {form.isFeatured && (
+            <Field label="Position in Considered Pieces"
+              hint="1 shows first. A new pick gets the next free number, so it stacks after the others. Change the number to move it.">
+              <NumberInput min="1" max="9999" step="1" inputMode="numeric" placeholder={`e.g. ${nextPosition}`}
+                value={form.featuredPosition} onValueChange={(value) => update('featuredPosition', value)} />
+            </Field>
+          )}
         </FormSection>
       </form>
     </Modal>
