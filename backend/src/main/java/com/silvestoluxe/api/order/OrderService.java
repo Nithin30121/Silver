@@ -108,6 +108,11 @@ public class OrderService {
             if (!product.isActive()) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, product.getName() + " is no longer available.");
             }
+            // A piece left at no price (for example saved before prices had to be above zero) is never sold for free.
+            if (product.getPrice() == null || product.getPrice().signum() <= 0) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        product.getName() + " isn't available to order yet. Please remove it from your bag.");
+            }
             if (product.getStockQuantity() < quantity) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, product.getStockQuantity() <= 0
                         ? "Sorry, " + product.getName() + " has just sold out. Please remove it from your bag."

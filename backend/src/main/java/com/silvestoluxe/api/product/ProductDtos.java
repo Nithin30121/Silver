@@ -19,7 +19,8 @@ public final class ProductDtos {
             @NotBlank @Pattern(regexp = "^[a-z0-9]+(?:-[a-z0-9]+)*$") String slug,
             String sku,
             String description,
-            @NotNull @DecimalMin(value = "0.00") BigDecimal price,
+            /** Above zero: a piece priced at nothing could be ordered for free. */
+            @NotNull @DecimalMin(value = "0.00", inclusive = false, message = "Enter a price above ₹0.") BigDecimal price,
             /** The crossed-out price before a discount; kept only when higher than price. */
             @DecimalMin(value = "0.00") BigDecimal originalPrice,
             String imageUrl,
