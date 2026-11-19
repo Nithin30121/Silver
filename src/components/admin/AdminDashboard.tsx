@@ -102,13 +102,14 @@ const originalPriceHint = (price: number | null, originalPrice: number | null) =
   return `Shows ${money(originalPrice)} crossed out, ${percent}% off.`;
 };
 
-/** The home page's Considered Pieces shows four pieces: the picked ones first, then others from A to Z. */
+/** Considered Pieces on a laptop shows four pieces: the picked ones first, then others from A to Z. Phones list
+    every picked piece in a band that scrolls. */
 const CONSIDERED_PIECES = 4;
 const consideredPiecesHint = (picked: boolean, isLive: boolean, othersPicked: number) => {
   if (picked && !isLive) return 'This piece is hidden, so it only appears there once Show in shop is on.';
-  if (picked && othersPicked >= CONSIDERED_PIECES) return `${othersPicked} other pieces are already picked, and only the first ${CONSIDERED_PIECES} from A to Z show. Untick one to make room.`;
+  if (picked && othersPicked >= CONSIDERED_PIECES) return `${othersPicked} other pieces are picked too. Phones show them all in a list that scrolls; laptops show the first ${CONSIDERED_PIECES} from A to Z.`;
   const count = othersPicked === 0 ? 'No other piece is picked yet.' : `${othersPicked} other ${othersPicked === 1 ? 'piece is' : 'pieces are'} picked.`;
-  return `Adds this piece to Considered Pieces on the home page. It has ${CONSIDERED_PIECES} places; any left over fill with other pieces from A to Z. ${count}`;
+  return `Adds this piece to Considered Pieces on the home page. Phones show every picked piece; laptops show the first ${CONSIDERED_PIECES}, and any places left fill with other pieces from A to Z. ${count}`;
 };
 
 const emptyProduct = (): ProductDraft => ({

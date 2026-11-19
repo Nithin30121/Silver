@@ -1808,11 +1808,24 @@ img {
   }
 
   .featured-section .product-grid {
+    position: relative;
     margin: 0 -1.25rem;
     padding: 1.25rem 1.25rem 3rem;
     column-gap: 0.6rem;
     row-gap: 0.75rem;
     background-color: #E1E6E5;
+  }
+
+  /* More than four picked pieces: the grey band keeps the height of two rows (plus a peek of the next) and the
+     cards scroll inside it. */
+  .featured-section .product-grid.is-scrolling {
+    max-height: var(--pieces-height, none);
+    overflow-y: auto;
+  }
+
+  .featured-section .product-grid.is-scrolling:focus-visible {
+    outline: 2px solid var(--brand-ruby-deep);
+    outline-offset: -2px;
   }
 
   .product-card {
