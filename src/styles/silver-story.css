@@ -209,3 +209,29 @@
     display: none;
   }
 }
+
+/* Older browsers without container units (for example iPhones still on iOS 15) skip every cqi size above. They get the
+   same sizes worked out from the screen width instead: a square of words is half the screen wide on larger screens
+   and the full width on phones. Browsers that know cqi never read this block. */
+@supports not (width: 1cqi) {
+  .is-hallmark .silver-story-copy { padding: 3vw 4vw 4.5vw 5.5vw; }
+  .is-statement .silver-story-copy { padding: 3vw 4vw 3.5vw 7.75vw; }
+  .silver-story-number { margin: 0 0 3.25vw; font-size: 20.5vw; }
+  .silver-story-text { font-size: 2.65vw; }
+  .silver-story-title { font-size: 6.25vw; }
+  .silver-story-rule { gap: 1.2vw; width: 31.5vw; margin: 3.5vw 0 3.75vw; }
+  .silver-story-star { width: 1.65vw; height: 1.65vw; }
+  .is-statement .silver-story-text { font-size: 2.75vw; }
+
+  @media (max-width: 768px) {
+    .is-statement .silver-story-copy { padding: 8.4vw 13.5vw 10.4vw 4.4vw; }
+    .is-hallmark .silver-story-copy { padding: 3.7vw 8vw 19.5vw 5.5vw; }
+    .silver-story-number { margin: 0 0 7.8vw; font-size: 45.7vw; }
+    .is-hallmark .silver-story-text { margin-left: 1.85vw; }
+    .silver-story-text { font-size: 5.3vw; }
+    .silver-story-title { font-size: 12.5vw; }
+    .silver-story-rule { gap: 2.4vw; width: 63vw; margin: 7vw 0 7.5vw; }
+    .silver-story-star { width: 3.3vw; height: 3.3vw; }
+    .is-statement .silver-story-text { font-size: 7.8vw; }
+  }
+}
