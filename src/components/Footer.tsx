@@ -19,12 +19,11 @@ export const Footer: React.FC = () => {
     <footer className="site-footer" aria-label="Footer">
       <div className="container">
         <div className="footer-grid">
-          {/* Brand Col */}
+          {/* Brand Col (on phones just the wordmark) */}
           <div>
             <a
               href="#home"
-              className="brand-logo"
-              style={{ fontSize: '1.45rem', marginBottom: '1.25rem' }}
+              className="brand-logo footer-logo"
               onClick={(e) => {
                 e.preventDefault();
                 navigateTo('home');
@@ -32,18 +31,18 @@ export const Footer: React.FC = () => {
             >
               SILVORA
             </a>
-            <p style={{ fontSize: '0.875rem', lineHeight: '1.75', color: 'var(--color-text-muted)', maxWidth: '340px', marginBottom: '1.5rem' }}>
+            <p className="footer-brand-text">
               Distinctive 925 sterling silver ornaments, crafted for moments that stay with you. Understated luxury through form, whitespace, and authentic noble metal.
             </p>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', fontSize: '0.75rem', color: 'var(--color-text)', fontWeight: 600 }}>
+            <div className="footer-cert">
               <ShieldCheck size={18} style={{ color: 'var(--color-silver-accent)' }} />
               <span>Certified 925 BIS Hallmarked Silver</span>
             </div>
           </div>
 
-          {/* Col 1: Collections */}
-          <div>
+          {/* Col 1: Collections (hidden on phones, where the menu carries these) */}
+          <div className="footer-col-links">
             <h4 className="footer-heading">Collections</h4>
             <ul className="footer-links">
               <li>
@@ -68,8 +67,8 @@ export const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Col 2: Atelier & Care */}
-          <div>
+          {/* Col 2: Atelier & Care (hidden on phones, where the menu carries these) */}
+          <div className="footer-col-links">
             <h4 className="footer-heading">Client Services</h4>
             <ul className="footer-links">
               <li>
@@ -103,7 +102,7 @@ export const Footer: React.FC = () => {
           {/* Col 3: Newsletter */}
           <div>
             <h4 className="footer-heading">The Atelier Gazette</h4>
-            <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.65', marginBottom: '1.25rem' }}>
+            <p className="footer-gazette-text">
               Subscribe to receive private archive previews, craftsmanship notes, and seasonal releases.
             </p>
 
@@ -113,27 +112,17 @@ export const Footer: React.FC = () => {
                 <span>You are now subscribed to the Gazette.</span>
               </div>
             ) : (
-              <form onSubmit={handleSubscribe} style={{ display: 'flex', borderBottom: '1px solid var(--color-silver-deep)' }}>
+              <form className="footer-gazette-form" onSubmit={handleSubscribe}>
                 <input
+                  className="footer-gazette-input"
                   type="email"
                   required
                   placeholder="Your email address"
+                  aria-label="Your email address"
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem 0',
-                    border: 'none',
-                    backgroundColor: 'transparent',
-                    fontSize: '0.8125rem',
-                    color: 'var(--color-text)'
-                  }}
                 />
-                <button
-                  type="submit"
-                  style={{ padding: '0 0.5rem', color: 'var(--color-silver-accent)' }}
-                  aria-label="Subscribe to newsletter"
-                >
+                <button className="footer-gazette-submit" type="submit" aria-label="Subscribe to newsletter">
                   <ArrowRight size={16} />
                 </button>
               </form>
@@ -144,7 +133,7 @@ export const Footer: React.FC = () => {
         {/* Footer Bottom */}
         <div className="footer-bottom">
           <span>&copy; {new Date().getFullYear()} SILVORA. All Rights Reserved. Crafted in Pure 925 Sterling Silver.</span>
-          <div style={{ display: 'flex', gap: '1.5rem' }}>
+          <div className="footer-legal">
             <a href="#returns" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('returns'); }}>Return Policy</a>
             <a href="#privacy" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('faq'); }}>Privacy Policy</a>
             <a href="#terms" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('shipping'); }}>Terms & Conditions</a>
