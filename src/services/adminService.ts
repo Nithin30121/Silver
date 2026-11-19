@@ -29,6 +29,8 @@ export interface ProductInput {
   categoryIds: string[];
   /** Picked for the home page's Considered Pieces section. */
   isFeatured: boolean;
+  /** Its place in Considered Pieces, 1 first. Empty puts a newly picked piece at the end. */
+  featuredPosition: number | null;
 }
 
 export interface CategoryInput {

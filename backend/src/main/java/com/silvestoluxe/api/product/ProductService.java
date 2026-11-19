@@ -130,10 +130,24 @@ public class ProductService {
         product.setWeightGrams(request.weightGrams());
         product.setStockQuantity(request.stockQuantity());
         product.setActive(request.isActive());
-        if (request.isFeatured() != null) product.setFeatured(request.isFeatured());
+        if (request.isFeatured() != null) {
+            product.setFeaturedPosition(featuredPosition(product, request));
+            product.setFeatured(request.isFeatured());
+        }
         Set<Category> assigned = new LinkedHashSet<>();
         if (request.categoryIds() != null) request.categoryIds().forEach(id -> assigned.add(category(id)));
         product.setCategories(assigned);
+    }
+
+    /**
+     * Where a picked piece goes in Considered Pieces: the position asked for; else the one it already has; else the
+     * end, so pieces stack in the order they are picked. Unpicking clears it.
+     */
+    private Integer featuredPosition(Product product, Upsert request) {
+        if (!request.isFeatured()) return null;
+        if (request.featuredPosition() != null) return request.featuredPosition();
+        if (product.isFeatured() && product.getFeaturedPosition() != null) return product.getFeaturedPosition();
+        return products.lastFeaturedPosition() + 1;
     }
 
     private Product find(UUID id) {
@@ -154,6 +168,6 @@ public class ProductService {
                 product.getPrice(), product.getOriginalPrice(), product.getImageUrl(), product.getWeightGrams(), product.getStockQuantity(), product.isActive(),
                 product.getCategories().stream().map(Category::getId).collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new)),
                 product.getImages().stream().map(image -> new ImageResponse(image.getId(), image.getImageUrl(), image.getAltText(), image.getDisplayOrder())).toList(),
-                product.isFeatured());
+                product.isFeatured(), product.getFeaturedPosition());
     }
 }

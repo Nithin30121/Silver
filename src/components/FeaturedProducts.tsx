@@ -186,17 +186,21 @@ function useIsPhone() {
   }, () => window.matchMedia(PHONE_QUERY).matches, () => false);
 }
 
+/** Picked pieces by their number, 1 first; a piece without one goes after them. Equal numbers keep A to Z. */
+const byFeaturedPosition = (a: Product, b: Product) =>
+  (a.featuredPosition ?? Number.MAX_SAFE_INTEGER) - (b.featuredPosition ?? Number.MAX_SAFE_INTEGER);
+
 /** How much of the third row of cards shows below the first two, so it's clear the band scrolls. */
 const NEXT_ROW_PEEK = 44;
 
 export const FeaturedProducts: React.FC = () => {
   const { products, navigateTo, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue } = useShop();
   const isPhone = useIsPhone();
-  const picked = products.filter((p) => p.isFeatured);
-  // The pieces the owner picked come first; any of the four places left fill with the other pieces, A to Z as loaded.
-  const firstFour = [...picked, ...products.filter((p) => !p.isFeatured)].slice(0, 4);
-  // Phones list every picked piece, in a band that scrolls on its own; larger screens keep a row of four.
-  const featured = isPhone && picked.length > 4 ? picked : firstFour;
+  // The pieces the owner picked come first, in the order of their numbers, then every other piece, A to Z as loaded.
+  const ordered = [...products.filter((p) => p.isFeatured).sort(byFeaturedPosition), ...products.filter((p) => !p.isFeatured)];
+  // Phones list every piece, stacked in a band that scrolls on its own, so ticking one never pushes another out;
+  // larger screens keep a row of the first four.
+  const featured = isPhone ? ordered : ordered.slice(0, 4);
   const scrolls = isPhone && featured.length > 4;
   const gridRef = useRef<HTMLDivElement>(null);
   const shownIds = featured.map((product) => product.id).join();

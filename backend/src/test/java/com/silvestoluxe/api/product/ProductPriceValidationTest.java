@@ -49,9 +49,21 @@ class ProductPriceValidationTest {
         assertTrue(priceProblems("2500.00").isEmpty());
     }
 
+    @Test
+    void aConsideredPiecesPositionBelowOneIsRefused() {
+        ProductDtos.Upsert request = new ProductDtos.Upsert("Moon Ring", "moon-ring", null, null, new BigDecimal("2500.00"), null, null,
+                null, 5, true, Set.of(), true, 0);
+        List<String> problems = validator.validate(request).stream()
+                .filter(violation -> violation.getPropertyPath().toString().equals("featuredPosition"))
+                .map(ConstraintViolation::getMessage)
+                .toList();
+
+        assertEquals(List.of("Enter a position of 1 or more."), problems);
+    }
+
     private static List<String> priceProblems(String price) {
         ProductDtos.Upsert request = new ProductDtos.Upsert("Moon Ring", "moon-ring", null, null, new BigDecimal(price), null, null,
-                null, 5, true, Set.of(), null);
+                null, 5, true, Set.of(), null, null);
         return validator.validate(request).stream()
                 .filter(violation -> violation.getPropertyPath().toString().equals("price"))
                 .map(ConstraintViolation::getMessage)

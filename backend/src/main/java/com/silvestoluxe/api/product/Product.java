@@ -31,6 +31,8 @@ public class Product {
     @Column(nullable = false) private boolean isActive;
     /** Picked by the owner for the home page's Considered Pieces section. */
     @Column(nullable = false) private boolean isFeatured;
+    /** Its place in Considered Pieces, 1 first; null when it isn't picked. */
+    private Integer featuredPosition;
     @CreationTimestamp @Column(nullable = false, updatable = false) private Instant createdAt;
     @UpdateTimestamp @Column(nullable = false) private Instant updatedAt;
 
@@ -68,6 +70,8 @@ public class Product {
     public void setActive(boolean active) { isActive = active; }
     public boolean isFeatured() { return isFeatured; }
     public void setFeatured(boolean featured) { isFeatured = featured; }
+    public Integer getFeaturedPosition() { return featuredPosition; }
+    public void setFeaturedPosition(Integer featuredPosition) { this.featuredPosition = featuredPosition; }
     public Set<Category> getCategories() { return categories; }
     public void setCategories(Set<Category> categories) { this.categories = categories; }
     public List<ProductImage> getImages() { return images; }

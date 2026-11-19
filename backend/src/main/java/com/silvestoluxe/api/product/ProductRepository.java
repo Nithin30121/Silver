@@ -16,4 +16,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpec
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select product from Product product where product.id = :id")
     java.util.Optional<Product> findByIdForStockUpdate(@Param("id") UUID id);
+
+    /** The last place taken in Considered Pieces, or 0 when nothing is numbered yet. */
+    @Query("select coalesce(max(product.featuredPosition), 0) from Product product where product.isFeatured = true")
+    int lastFeaturedPosition();
 }

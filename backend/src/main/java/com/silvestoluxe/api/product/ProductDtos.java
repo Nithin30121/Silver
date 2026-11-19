@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.List;
 import java.util.UUID;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -29,7 +30,9 @@ public final class ProductDtos {
             boolean isActive,
             Set<UUID> categoryIds,
             /** Shown in the home page's Considered Pieces. Left out keeps the current choice (a new piece starts unpicked). */
-            Boolean isFeatured) { }
+            Boolean isFeatured,
+            /** Its place in Considered Pieces, 1 first. Left out when picking puts it at the end. */
+            @Min(value = 1, message = "Enter a position of 1 or more.") @Max(value = 9999, message = "Enter a position up to 9999.") Integer featuredPosition) { }
 
     public record Status(boolean isActive) { }
 
@@ -37,7 +40,8 @@ public final class ProductDtos {
 
     public record Response(UUID id, String name, String slug, String sku, String description,
                            BigDecimal price, BigDecimal originalPrice, String imageUrl, BigDecimal weightGrams, int stockQuantity,
-                           boolean isActive, Set<UUID> categoryIds, List<ImageResponse> images, boolean isFeatured) { }
+                           boolean isActive, Set<UUID> categoryIds, List<ImageResponse> images, boolean isFeatured,
+                           Integer featuredPosition) { }
 
     /** actorName is the admin who changed stock, or the customer whose checkout reserved it. */
     public record StockMovementResponse(UUID id, UUID productId, String productName, String productSku,

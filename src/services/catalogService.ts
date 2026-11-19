@@ -28,6 +28,8 @@ export interface ApiProduct {
   images: ApiImage[];
   /** Picked by the owner for the home page's Considered Pieces; missing from servers older than this choice. */
   isFeatured?: boolean;
+  /** Its place in Considered Pieces, 1 first; null when it isn't picked or has no number. */
+  featuredPosition?: number | null;
 }
 
 interface ProductPage {
