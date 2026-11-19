@@ -58,7 +58,49 @@ class ProductServiceTest {
     }
 
     private static ProductDtos.Upsert upsert(BigDecimal price, BigDecimal originalPrice) {
-        return new ProductDtos.Upsert("Moon Ring", "moon-ring", "MR-1", "", price, originalPrice, null, null, 3, true, java.util.Set.of());
+        return upsert(price, originalPrice, null);
+    }
+
+    private static ProductDtos.Upsert upsert(BigDecimal price, BigDecimal originalPrice, Boolean isFeatured) {
+        return new ProductDtos.Upsert("Moon Ring", "moon-ring", "MR-1", "", price, originalPrice, null, null, 3, true, java.util.Set.of(), isFeatured);
+    }
+
+    @Test
+    void aNewPieceIsLeftOutOfConsideredPiecesUnlessItIsPicked() {
+        ProductRepository products = mock(ProductRepository.class);
+        when(products.save(any(Product.class))).thenAnswer(call -> call.getArgument(0));
+        ProductService service = service(products, mock(ProductImageRepository.class));
+
+        assertEquals(false, service.create(upsert(new BigDecimal("2000.00"), null), UUID.randomUUID()).isFeatured());
+        assertEquals(true, service.create(upsert(new BigDecimal("2000.00"), null, true), UUID.randomUUID()).isFeatured());
+    }
+
+    @Test
+    void pickingAndUnpickingAPieceForConsideredPiecesIsSaved() {
+        ProductRepository products = mock(ProductRepository.class);
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("2000.00"), 3);
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+        ProductService service = service(products, mock(ProductImageRepository.class));
+
+        service.update(ring.getId(), upsert(new BigDecimal("2000.00"), null, true), UUID.randomUUID());
+        assertEquals(true, ring.isFeatured());
+
+        service.update(ring.getId(), upsert(new BigDecimal("2000.00"), null, false), UUID.randomUUID());
+        assertEquals(false, ring.isFeatured());
+    }
+
+    @Test
+    void anEditThatLeavesTheChoiceOutKeepsThePieceInConsideredPieces() {
+        ProductRepository products = mock(ProductRepository.class);
+        Product ring = TestProducts.product("Moon Ring", new BigDecimal("2000.00"), 3);
+        ring.setFeatured(true);
+        when(products.findByIdForStockUpdate(ring.getId())).thenReturn(Optional.of(ring));
+
+        service(products, mock(ProductImageRepository.class))
+                .update(ring.getId(), upsert(new BigDecimal("2200.00"), null), UUID.randomUUID());
+
+        assertEquals(new BigDecimal("2200.00"), ring.getPrice());
+        assertEquals(true, ring.isFeatured());
     }
 
     @Test

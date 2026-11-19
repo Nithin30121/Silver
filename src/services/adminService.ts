@@ -27,6 +27,8 @@ export interface ProductInput {
   stockQuantity: number;
   isActive: boolean;
   categoryIds: string[];
+  /** Picked for the home page's Considered Pieces section. */
+  isFeatured: boolean;
 }
 
 export interface CategoryInput {

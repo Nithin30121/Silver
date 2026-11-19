@@ -102,9 +102,18 @@ const originalPriceHint = (price: number | null, originalPrice: number | null) =
   return `Shows ${money(originalPrice)} crossed out, ${percent}% off.`;
 };
 
+/** The home page's Considered Pieces shows four pieces: the picked ones first, then others from A to Z. */
+const CONSIDERED_PIECES = 4;
+const consideredPiecesHint = (picked: boolean, isLive: boolean, othersPicked: number) => {
+  if (picked && !isLive) return 'This piece is hidden, so it only appears there once Show in shop is on.';
+  if (picked && othersPicked >= CONSIDERED_PIECES) return `${othersPicked} other pieces are already picked, and only the first ${CONSIDERED_PIECES} from A to Z show. Untick one to make room.`;
+  const count = othersPicked === 0 ? 'No other piece is picked yet.' : `${othersPicked} other ${othersPicked === 1 ? 'piece is' : 'pieces are'} picked.`;
+  return `Adds this piece to Considered Pieces on the home page. It has ${CONSIDERED_PIECES} places; any left over fill with other pieces from A to Z. ${count}`;
+};
+
 const emptyProduct = (): ProductDraft => ({
   name: '', slug: '', sku: '', description: '', price: null, originalPrice: null, imageUrl: '', weightGrams: null,
-  stockQuantity: null, isActive: true, categoryIds: []
+  stockQuantity: null, isActive: true, categoryIds: [], isFeatured: false
 });
 const emptyCategory = (): CategoryInput => ({
   name: '', slug: '', parentId: null, categoryType: 'collection', description: '', imageUrl: '', displayOrder: 0, isActive: true
@@ -399,7 +408,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
 
       {editingProduct !== undefined && (
-        <ProductForm product={editingProduct} categories={categories} onClose={() => setEditingProduct(undefined)}
+        <ProductForm product={editingProduct} products={products} categories={categories} onClose={() => setEditingProduct(undefined)}
           onSaved={() => { setEditingProduct(undefined); notify('success', 'Product saved.'); void reload(); }} />
       )}
       {editingCategory !== undefined && (
@@ -1406,7 +1415,7 @@ const ProductManager: React.FC<{
   onEdit: (product: ApiProduct | null) => void; onChanged: () => void; notify: Notify;
 }> = ({ products, categories, loaded, onEdit, onChanged, notify }) => {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'live' | 'hidden'>('all');
+  const [filter, setFilter] = useState<'all' | 'live' | 'hidden' | 'picked'>('all');
   const [deleting, setDeleting] = useState<ApiProduct | null>(null);
   // undefined while loading, null when this server doesn't count wishlist adds yet.
   const [wishlistCounts, setWishlistCounts] = useState<Map<string, WishlistCount> | null | undefined>(undefined);
@@ -1421,7 +1430,8 @@ const ProductManager: React.FC<{
   const liveCount = products.filter((product) => product.isActive).length;
   // Every product is loaded, so searching happens here as you type.
   const needle = search.trim().toLowerCase();
-  const visible = products.filter((product) => (filter === 'all' || (filter === 'live') === product.isActive)
+  const pickedCount = products.filter((product) => product.isFeatured).length;
+  const visible = products.filter((product) => (filter === 'all' || (filter === 'picked' ? product.isFeatured === true : (filter === 'live') === product.isActive))
     && (!needle || [product.name, product.sku, product.slug].some((value) => value?.toLowerCase().includes(needle))));
   return (
     <section className="admin-card">
@@ -1431,6 +1441,7 @@ const ProductManager: React.FC<{
           { value: 'all', label: 'All', count: products.length },
           { value: 'live', label: 'Live', count: liveCount },
           { value: 'hidden', label: 'Hidden', count: products.length - liveCount },
+          { value: 'picked', label: 'Considered Pieces', count: pickedCount },
         ]} />
       </div>
       {!loaded ? <LoadingRows /> : visible.length === 0 ? (
@@ -1524,7 +1535,12 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist
       <td data-label="Wishlisted" className="admin-num is-right">
         {wishlist ? <>{wishlist.allTime}<small>{wishlist.recent} in 30 days</small></> : '—'}
       </td>
-      <td data-label="Status"><LiveBadge isActive={product.isActive} /></td>
+      <td data-label="Status">
+        <span className="admin-badge-stack">
+          <LiveBadge isActive={product.isActive} />
+          {product.isFeatured && <Badge tone="info">Considered Pieces</Badge>}
+        </span>
+      </td>
       <td className="admin-row-actions">
         <button className="admin-button is-ghost is-small" onClick={onEdit}><Pencil size={14} /> Edit</button>
         <button className="admin-button is-ghost is-small" onClick={() => void toggle()} disabled={busy}>
@@ -1539,9 +1555,11 @@ const ProductRow: React.FC<{ product: ApiProduct; categoryText: string; wishlist
 /** A photo picked in the product form, with a preview, waiting to upload on save. */
 type PickedPhoto = { file: File; url: string };
 
-const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueCategory[]; onClose: () => void; onSaved: () => void }> = ({ product, categories, onClose, onSaved }) => {
+const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]; categories: CatalogueCategory[]; onClose: () => void; onSaved: () => void }> = ({ product, products, categories, onClose, onSaved }) => {
   const formId = useId();
-  const [form, setForm] = useState<ProductDraft>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), originalPrice: product.originalPrice == null ? null : Number(product.originalPrice), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds] }) : emptyProduct());
+  const [form, setForm] = useState<ProductDraft>(() => product ? ({ name: product.name, slug: product.slug, sku: product.sku || '', description: product.description || '', price: Number(product.price), originalPrice: product.originalPrice == null ? null : Number(product.originalPrice), imageUrl: product.imageUrl || '', weightGrams: product.weightGrams === null ? null : Number(product.weightGrams), stockQuantity: product.stockQuantity, isActive: product.isActive, categoryIds: [...product.categoryIds], isFeatured: product.isFeatured === true }) : emptyProduct());
+  // Only live pieces can appear on the home page, so only they take up its places.
+  const othersPicked = products.filter((item) => item.id !== product?.id && item.isFeatured && item.isActive).length;
   // Photos already on the product, and new ones picked here that upload when the product is saved.
   const [photos, setPhotos] = useState<ProductPhoto[]>(() => product?.images.filter((image) => image.imageUrl) ?? []);
   const [picked, setPicked] = useState<PickedPhoto[]>([]);
@@ -1724,6 +1742,8 @@ const ProductForm: React.FC<{ product: ApiProduct | null; categories: CatalogueC
         <FormSection title="Visibility">
           <Switch checked={form.isActive} onChange={(value) => update('isActive', value)} label="Show in shop"
             description="Hidden products stay saved, but customers can't see or buy them." />
+          <Switch checked={form.isFeatured} onChange={(value) => update('isFeatured', value)} label="Show in Considered Pieces"
+            description={consideredPiecesHint(form.isFeatured, form.isActive, othersPicked)} />
         </FormSection>
       </form>
     </Modal>
