@@ -11,7 +11,9 @@
   --lux-ease: cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   isolation: isolate;
-  /* Exactly the first screen below the navbar, so nothing of the next section peeks in underneath. */
+  /* Exactly the first screen below the navbar, so nothing of the next section peeks in underneath. The vh line is
+     for older phones (iOS before 15.4) that don't know svh; everyone else uses the svh line. */
+  min-height: max(36rem, calc(100vh - var(--header-height)));
   min-height: max(36rem, calc(100svh - var(--header-height)));
   overflow: hidden;
   background:
@@ -354,6 +356,7 @@
 
 @media (max-width: 768px) {
   .lux-hero {
+    min-height: max(34rem, calc(100vh - var(--header-height)));
     min-height: max(34rem, calc(100svh - var(--header-height)));
   }
 
