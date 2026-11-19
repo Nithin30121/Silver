@@ -183,7 +183,7 @@ export const FeaturedProducts: React.FC = () => {
     <section className="section-padding featured-section" aria-labelledby="selection-heading">
       <div className="container">
         {/* Section Header */}
-        <motion.div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }} {...revealOnScroll()}>
+        <motion.div className="featured-head" {...revealOnScroll()}>
           <div>
             <span className="eyebrow">THE SELECTION</span>
             <h2 id="selection-heading" className="headline-editorial">

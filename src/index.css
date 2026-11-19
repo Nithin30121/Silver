@@ -1765,37 +1765,72 @@ img {
   border-bottom: 1px solid rgba(var(--rgb-line), 0.2);
 }
 
+.featured-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
 /* Phones: clean white cards on ivory, like a boutique catalogue: a square photo, then the name, one short line and
    the price, centred. No quick-add drawer; a tap anywhere on the card opens the piece. */
 @media (max-width: 768px) {
+  /* The Selection on a phone: the heading on white, then the cards on a soft cool-grey band that runs to the bottom
+     of the section. */
   .featured-section {
-    background-color: #F9F6F1;
-    /* The heading block sits close to the top of the section. */
+    background-color: #FFFFFF;
     padding-top: 1.125rem;
+    padding-bottom: 0;
   }
 
-  /* The cards run nearly edge to edge (8px from each side, a narrow gap between), while the heading keeps the
-     page's usual side margin. */
+  .featured-head {
+    gap: 1.1rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .featured-head .eyebrow::after {
+    content: '';
+    flex: none;
+    width: 28px;
+    height: 1px;
+    margin-left: -0.24em;
+    background: linear-gradient(90deg, var(--color-accent), transparent);
+  }
+
+  .featured-head .btn-text {
+    gap: 0.6rem;
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+
   .featured-section .product-grid {
-    margin-left: -0.75rem;
-    margin-right: -0.75rem;
-    column-gap: 0.4rem;
+    margin: 0 -1.25rem;
+    padding: 1.25rem 1.25rem 3rem;
+    column-gap: 0.6rem;
     row-gap: 0.75rem;
+    background-color: #E1E6E5;
   }
 
   .product-card {
+    overflow: hidden;
     background-color: #FFFFFF;
     border: 0;
-    padding-bottom: 1.1rem;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(23, 18, 14, 0.04), 0 6px 18px -8px rgba(23, 18, 14, 0.14);
+    padding-bottom: 1rem;
     cursor: pointer;
   }
 
   .product-card:hover {
-    box-shadow: none;
+    box-shadow: 0 1px 2px rgba(23, 18, 14, 0.04), 0 6px 18px -8px rgba(23, 18, 14, 0.14);
   }
 
   .product-img-wrapper {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 13 / 10;
     background-color: #FFFFFF;
   }
 
@@ -1812,7 +1847,7 @@ img {
     letter-spacing: 0.1em;
   }
 
-  /* A plain heart, with no circle behind it: white with a soft shadow, so it reads on dark photos and light ones. */
+  /* A plain ruby heart, with no circle behind it; a soft white halo keeps it readable on dark photos too. */
   .product-wishlist-btn,
   .product-wishlist-btn:hover,
   .product-wishlist-btn.active {
@@ -1828,8 +1863,8 @@ img {
     width: 38px;
     height: 38px;
     border-radius: 0;
-    color: #FFFFFF;
-    filter: drop-shadow(0 0 1px rgba(23, 18, 14, 0.55)) drop-shadow(0 1px 3px rgba(23, 18, 14, 0.35));
+    color: var(--brand-ruby);
+    filter: drop-shadow(0 0 1.5px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 5px rgba(255, 255, 255, 0.6));
   }
 
   .product-wishlist-btn:hover,
@@ -1852,10 +1887,10 @@ img {
   .product-title {
     display: -webkit-box;
     overflow: hidden;
-    font-family: var(--font-sans);
-    font-size: 0.9375rem;
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
     font-weight: 600;
-    line-height: 1.3;
+    line-height: 1.2;
     color: var(--brand-ink);
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -1890,8 +1925,21 @@ img {
   }
 
   .product-card .price-tag-now {
-    font-weight: 500;
+    font-size: 1rem;
+    font-weight: 700;
     color: var(--brand-ink);
+  }
+
+  /* A discount: the crossed-out price and the ruby "% off" tag on one line, above the price. */
+  .product-card .price-tag-was {
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+  }
+
+  .product-card .price-tag-off {
+    padding: 0.1rem 0.35rem;
+    font-size: 0.625rem;
+    border-radius: 3px;
   }
 }
 
