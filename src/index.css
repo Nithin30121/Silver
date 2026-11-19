@@ -982,7 +982,7 @@ img {
     margin-left: -0.2rem;
   }
 
-  .brand-logo {
+  .header-container .brand-logo {
     grid-column: 2;
     justify-self: center;
     white-space: nowrap;
@@ -2086,11 +2086,48 @@ img {
 }
 
 /* Homepage trust banner: three columns, stacked on phones */
+/* The guarantee banner under the selection: hallmark, care guide and return policy. */
+.assurance-section {
+  padding: 5rem 0;
+  background-color: var(--color-graphite);
+  border-top: 1px solid rgba(var(--rgb-line), 0.2);
+  border-bottom: 1px solid rgba(var(--rgb-line), 0.15);
+}
+
 .assurance-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 2.5rem;
   text-align: center;
+}
+
+.assurance-card {
+  padding: 1.5rem 1rem;
+  background-color: rgba(var(--rgb-ink), 0.6);
+  border: 1px solid rgba(var(--rgb-line), 0.15);
+}
+
+.assurance-icon {
+  margin: 0 auto 0.85rem;
+  color: var(--color-silver-accent);
+}
+
+.assurance-title {
+  margin-bottom: 0.45rem;
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  color: var(--color-text);
+}
+
+.assurance-text {
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--color-text-muted);
+}
+
+/* The short titles and lines are for phones. */
+.assurance-short {
+  display: none;
 }
 
 /* The return-policy box opens the Return Policy page. */
@@ -2120,10 +2157,77 @@ img {
   color: var(--color-accent);
 }
 
+/* Phones: the three side by side as soft rose cards, each with a ruby icon, a short serif title and one short line.
+   The middle card is a shade deeper. */
 @media (max-width: 768px) {
+  /* The same space above and below the three cards. */
+  .assurance-section {
+    padding: 1.75rem 0;
+    background-color: #FAF5F3;
+    border-top: 0;
+  }
+
+  .assurance-section .container {
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
+  }
+
   .assurance-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.3rem;
+  }
+
+  .assurance-card,
+  .assurance-link:hover,
+  .assurance-link:focus-visible {
+    background-color: #F9EFEF !important;
+    border-color: #E5C9CD !important;
+  }
+
+  .assurance-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0.35rem 1.05rem;
+    border: 1px solid #E5C9CD;
+    border-radius: 10px;
+  }
+
+  .assurance-card:nth-child(2),
+  .assurance-card.assurance-link:nth-child(2):hover {
+    background-color: #F2DADD !important;
+    border-color: #E3BEC4 !important;
+  }
+
+  .assurance-icon {
+    display: block;
+    width: 24px;
+    height: 24px;
+    margin: 0 0 0.6rem;
+    color: var(--brand-ruby-deep);
+  }
+
+  .assurance-title {
+    margin-bottom: 0.4rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--brand-ruby-deep);
+  }
+
+  .assurance-text {
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    color: #4A4545;
+  }
+
+  .assurance-long,
+  .assurance-link-cue {
+    display: none;
+  }
+
+  .assurance-short {
+    display: inline;
   }
 }
 
@@ -2155,6 +2259,60 @@ img {
     grid-template-columns: 1fr;
     gap: 2rem;
   }
+}
+
+/* Footer pieces (larger screens keep the original look). */
+.site-footer .footer-logo {
+  margin-bottom: 1.25rem;
+  font-size: 1.45rem;
+}
+
+.footer-brand-text {
+  max-width: 340px;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--color-text-muted);
+}
+
+.footer-cert {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.footer-gazette-text {
+  margin-bottom: 1.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+  color: var(--color-text-muted);
+}
+
+.footer-gazette-form {
+  display: flex;
+  border-bottom: 1px solid var(--color-silver-deep);
+}
+
+.footer-gazette-input {
+  flex: 1;
+  padding: 0.75rem 0;
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  background-color: transparent;
+  border: none;
+}
+
+.footer-gazette-submit {
+  padding: 0 0.5rem;
+  color: var(--color-silver-accent);
+}
+
+.footer-legal {
+  display: flex;
+  gap: 1.5rem;
 }
 
 .footer-heading {
@@ -2200,6 +2358,71 @@ img {
     flex-direction: column;
     gap: 1rem;
     text-align: center;
+  }
+}
+
+/* Phones: a short footer like a boutique's: the wordmark, The Atelier Gazette sign-up, then the copyright and the
+   three policy links. The link columns are left to the menu. */
+@media (max-width: 768px) {
+  .site-footer {
+    padding-top: 3.75rem;
+    padding-bottom: 2.5rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 2.4rem;
+    margin-bottom: 3.5rem;
+  }
+
+  .footer-brand-text,
+  .footer-cert,
+  .footer-col-links {
+    display: none;
+  }
+
+  .site-footer .footer-logo {
+    margin-bottom: 0;
+    font-size: 1.6rem;
+    letter-spacing: 0.24em;
+  }
+
+  .footer-heading {
+    margin-bottom: 1.1rem;
+    font-size: 0.8125rem;
+    letter-spacing: 0.22em;
+  }
+
+  .footer-gazette-text {
+    margin-bottom: 1.6rem;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  .footer-gazette-input {
+    font-size: 0.9375rem;
+  }
+
+  .footer-gazette-submit svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .footer-bottom {
+    gap: 1.4rem;
+    padding-top: 2.25rem;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .footer-legal {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 1.6rem;
+  }
+
+  .footer-legal .footer-link {
+    font-size: 0.875rem;
   }
 }
 

@@ -118,6 +118,9 @@ export const Header: React.FC = () => {
             <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('custom'))}>Custom Design</button></li>
             <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('care'))}>Jewellery Care</button></li>
             <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('shipping'))}>Shipping &amp; Returns</button></li>
+            {/* On phones the footer is kept short, so contact and questions live here too. */}
+            <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('contact'))}>Contact Us</button></li>
+            <li><button className="mobile-nav-link" onClick={() => handleMobileNav(() => navigateTo('faq'))}>FAQ</button></li>
           </ul>
 
           <p className="mobile-nav-label">Your account</p>

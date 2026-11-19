@@ -45,40 +45,41 @@ const MainContent: React.FC = () => {
             <GenderCategories />
             <FeaturedProducts />
 
-            {/* Editorial Brand Assurance Banner */}
-            <section style={{ backgroundColor: 'var(--color-graphite)', borderTop: '1px solid rgba(var(--rgb-line), 0.2)', borderBottom: '1px solid rgba(var(--rgb-line), 0.15)', padding: '5rem 0' }}>
+            {/* Editorial Brand Assurance Banner. Phones show the short titles and lines; larger screens the full ones. */}
+            <section className="assurance-section">
               <div className="container">
                 <div className="assurance-grid">
-                  <motion.div style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(var(--rgb-ink), 0.6)', border: '1px solid rgba(var(--rgb-line), 0.15)' }} {...revealOnScroll()}>
-                    <ShieldCheck size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
-                      Certified 925 Hallmark
+                  <motion.div className="assurance-card" {...revealOnScroll()}>
+                    <ShieldCheck size={28} className="assurance-icon" aria-hidden="true" />
+                    <h3 className="assurance-title">
+                      <span className="assurance-long">Certified 925 Hallmark</span><span className="assurance-short">925 Hallmark</span>
                     </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.65' }}>
-                      Each piece bears the genuine 925 hallmark stamp, guaranteeing 92.5% pure silver content.
+                    <p className="assurance-text">
+                      <span className="assurance-long">Each piece bears the genuine 925 hallmark stamp, guaranteeing 92.5% pure silver content.</span>
+                      <span className="assurance-short">Certified purity (92.5% Silver)</span>
                     </p>
                   </motion.div>
 
-                  <motion.a href="/care" className="assurance-link" style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(var(--rgb-ink), 0.6)', border: '1px solid rgba(var(--rgb-line), 0.15)' }} {...revealOnScroll(0.1)}
+                  <motion.a href="/care" className="assurance-card assurance-link" {...revealOnScroll(0.1)}
                     onClick={(event) => { event.preventDefault(); navigateTo('care'); }}>
-                    <Sparkles size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
-                      Jewellery Care Guide
+                    <Sparkles size={28} className="assurance-icon" aria-hidden="true" />
+                    <h3 className="assurance-title">
+                      <span className="assurance-long">Jewellery Care Guide</span><span className="assurance-short">Care Guide</span>
                     </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.65' }}>
-                      At SILVORA LUXE, we believe every piece of jewellery deserves to shine for a lifetime.
+                    <p className="assurance-text">
+                      <span className="assurance-long">At SILVORA LUXE, we believe every piece of jewellery deserves to shine for a lifetime.</span>
+                      <span className="assurance-short">Keep your jewellery radiant for longer.</span>
                     </p>
                     <span className="assurance-link-cue">Read the guide <ArrowRight size={12} aria-hidden="true" /></span>
                   </motion.a>
 
-                  <motion.a href="/return-policy" className="assurance-link" style={{ padding: '1.5rem 1rem', backgroundColor: 'rgba(var(--rgb-ink), 0.6)', border: '1px solid rgba(var(--rgb-line), 0.15)' }} {...revealOnScroll(0.2)}
+                  <motion.a href="/return-policy" className="assurance-card assurance-link" {...revealOnScroll(0.2)}
                     onClick={(event) => { event.preventDefault(); navigateTo('returns'); }}>
-                    <RotateCcw size={28} style={{ color: 'var(--color-silver-accent)', margin: '0 auto 0.85rem' }} />
-                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.35rem', marginBottom: '0.45rem', color: 'var(--color-text)' }}>
-                      Return Policy
-                    </h3>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: '1.65' }}>
-                      To protect the authenticity of our genuine 925 sterling silver products, all return requests are personally reviewed.
+                    <RotateCcw size={28} className="assurance-icon" aria-hidden="true" />
+                    <h3 className="assurance-title">Return Policy</h3>
+                    <p className="assurance-text">
+                      <span className="assurance-long">To protect the authenticity of our genuine 925 sterling silver products, all return requests are personally reviewed.</span>
+                      <span className="assurance-short">Hassle-free returns with authenticity check.</span>
                     </p>
                     <span className="assurance-link-cue">Read the policy <ArrowRight size={12} aria-hidden="true" /></span>
                   </motion.a>
