@@ -100,7 +100,11 @@
 html:has(.admin-page[data-theme='light']) { color-scheme: light; background: #F8EDEA; }
 html:has(.admin-page[data-theme='light']) body,
 html:has(.admin-page[data-theme='light']) #root { background: #F8EDEA; scrollbar-color: #DEC3BE transparent; }
-html:has(.admin-page[data-theme='dark']) body { scrollbar-color: #4C2A32 transparent; }
+/* The page behind the dashboard takes the theme's colour too. iPhone Safari fades the page colour in under its
+   floating bottom bar, so a blush page behind the dark dashboard showed as a whitish band at the bottom. */
+html:has(.admin-page[data-theme='dark']) { color-scheme: dark; background: #12080A; }
+html:has(.admin-page[data-theme='dark']) body,
+html:has(.admin-page[data-theme='dark']) #root { background: #12080A; scrollbar-color: #4C2A32 transparent; }
 
 /* Undo the storefront's editorial defaults inside the dashboard. */
 .admin-page :is(h1, h2, h3) { font-family: var(--font-sans); font-weight: 700; color: var(--a-text); letter-spacing: -0.01em; line-height: 1.25; }
