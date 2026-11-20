@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, Gem, Hammer, PencilLine } from 'lucide-react';
 import { useShop } from '../context/ShopContext';
 import { revealOnScroll } from '../lib/motion';
+import '../styles/custom-banner.css';
 
 const STEPS = [
   { icon: PencilLine, label: 'Share Your Idea' },
