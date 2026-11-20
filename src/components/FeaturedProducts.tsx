@@ -67,7 +67,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0, re
             <img
               src={product.images[0]}
               alt={product.name}
-              className="product-img-primary"
+              className={`product-img-primary${product.images[1] ? ' has-alternate' : ''}`}
               loading="lazy"
               width={600}
               height={800}

@@ -44,11 +44,11 @@ const QuickViewDetails: React.FC<{ product: Product }> = ({ product }) => {
   return (
     <>
       {/* Left: Product Image */}
-      <div style={{ backgroundColor: 'var(--color-band)', height: '100%', minHeight: '380px', position: 'relative' }}>
+      <div style={{ backgroundColor: 'var(--color-ink)', height: '100%', minHeight: '380px', position: 'relative', overflow: 'hidden' }}>
         <img
           src={product.images[0]}
           alt={product.name}
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
         />
         <span className="product-badge-tag" style={{ top: '1rem', left: '1rem' }}>
           {product.purity}
