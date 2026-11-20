@@ -315,7 +315,7 @@ export const CartDrawer: React.FC = () => {
                           <img
                             src={item.product.images[0]}
                             alt={item.product.name}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                           />
                         </div>
 

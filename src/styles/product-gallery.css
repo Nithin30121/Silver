@@ -38,7 +38,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .product-gallery-thumb:hover {
@@ -76,11 +76,12 @@
   box-shadow: 0 16px 40px rgba(var(--rgb-shadow), calc(0.7 * var(--shadow-k)));
 }
 
+/* The whole piece shows: the photo fits inside the white frame instead of being cropped at the sides. */
 .product-gallery-main img {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .product-gallery-main .product-badge-tag {

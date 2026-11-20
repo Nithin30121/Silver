@@ -121,7 +121,7 @@ export const SearchModal: React.FC = () => {
                   <img
                     src={product.images[0]}
                     alt={product.name}
-                    style={{ width: '56px', height: '70px', objectFit: 'cover' }}
+                    style={{ flex: 'none', width: '56px', height: '70px', objectFit: 'contain', backgroundColor: 'var(--color-ink)' }}
                   />
                   <div style={{ flex: 1 }}>
                     <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--color-text)' }}>{product.name}</h4>

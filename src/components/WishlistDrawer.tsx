@@ -90,7 +90,7 @@ export const WishlistDrawer: React.FC = () => {
                       <img
                         src={product.images[0]}
                         alt={product.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                       />
                     </div>
 

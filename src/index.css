@@ -1624,19 +1624,21 @@ img {
   color: var(--color-silver-highlight);
 }
 
+/* White, like the white studio backgrounds of the product photos, so a fitted photo blends into its frame. */
 .product-img-wrapper {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 4;
-  background-color: var(--color-band);
+  background-color: var(--color-ink);
   overflow: hidden;
 }
 
+/* The whole piece shows: the photo fits inside its frame instead of being cropped at the sides. */
 .product-img-primary,
 .product-img-alternate {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: opacity 0.5s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1653,6 +1655,11 @@ img {
 
 .product-card:hover .product-img-primary {
   transform: scale(1.03);
+}
+
+/* A fitted photo leaves see-through space, so the main view steps aside while the second view shows. */
+.product-card:hover .product-img-primary.has-alternate {
+  opacity: 0;
 }
 
 .product-card:hover .product-img-alternate {
