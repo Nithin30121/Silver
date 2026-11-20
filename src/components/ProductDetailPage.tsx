@@ -254,7 +254,7 @@ export const ProductDetailPage: React.FC = () => {
                 }}
               >
                 <button
-                  style={{ width: '40px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text)' }}
+                  style={{ width: '44px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text)' }}
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   aria-label="Decrease quantity"
                   disabled={soldOut}
@@ -265,7 +265,7 @@ export const ProductDetailPage: React.FC = () => {
                   {soldOut ? 0 : shownQuantity}
                 </span>
                 <button
-                  style={{ width: '40px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text)' }}
+                  style={{ width: '44px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text)' }}
                   onClick={() => setQuantity(Math.min(stock, shownQuantity + 1))}
                   aria-label="Increase quantity"
                   disabled={soldOut || shownQuantity >= stock}
@@ -344,7 +344,7 @@ export const ProductDetailPage: React.FC = () => {
                 <span style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text)' }}>
                   BIS Hallmarked
                 </span>
-                <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Authentic 92.5% Silver</span>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Authentic 92.5% Silver</span>
               </div>
 
               <div style={{ textAlign: 'center' }}>
@@ -352,7 +352,7 @@ export const ProductDetailPage: React.FC = () => {
                 <span style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text)' }}>
                   Express Transit
                 </span>
-                <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Insured 2–4 Business Days</span>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Insured 2–4 Business Days</span>
               </div>
 
               <div style={{ textAlign: 'center' }}>
@@ -360,7 +360,7 @@ export const ProductDetailPage: React.FC = () => {
                 <span style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--color-text)' }}>
                   Atelier Guarantee
                 </span>
-                <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Returns Personally Reviewed</span>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Returns Personally Reviewed</span>
               </div>
             </div>
 
