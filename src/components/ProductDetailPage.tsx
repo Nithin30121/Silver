@@ -8,6 +8,7 @@ import { productEnquiryLink } from '../lib/whatsapp';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { ProductReviews } from './ProductReviews';
 import { StockStatus } from './StockStatus';
+import '../styles/product-gallery.css';
 import {
   Heart, 
   ShoppingBag, 
@@ -76,6 +77,7 @@ export const ProductDetailPage: React.FC = () => {
   // Never more than is left, even if stock drops while the page is open.
   const shownQuantity = Math.max(1, Math.min(quantity, stock));
   const enquiryLink = productEnquiryLink(currentProduct);
+  const hasThumbnails = currentProduct.images.length > 1;
 
 
   const relatedProducts = products
@@ -115,55 +117,36 @@ export const ProductDetailPage: React.FC = () => {
           }}
           className="product-detail-grid"
         >
-          {/* Left: Product Gallery */}
-          <div>
-            {/* Primary Large Image */}
-            <div
-              style={{
-                width: '100%',
-                aspectRatio: '3 / 4',
-                backgroundColor: 'var(--color-ink)',
-                border: '1px solid rgba(var(--rgb-line), 0.28)',
-                overflow: 'hidden',
-                position: 'relative',
-                boxShadow: '0 16px 40px rgba(var(--rgb-shadow), calc(0.7 * var(--shadow-k)))'
-              }}
-            >
-              <img
-                src={currentProduct.images[activeImageIndex] || currentProduct.images[0]}
-                alt={`${currentProduct.name} main view`}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                loading="eager"
-              />
-              <span className="product-badge-tag" style={{ top: '1.25rem', left: '1.25rem' }}>
-                {currentProduct.purity}
-              </span>
-            </div>
-
-            {/* Thumbnail Row */}
-            {currentProduct.images.length > 1 && (
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.25rem' }}>
+          {/* Left: Product Gallery — a column of thumbnails beside the large photo */}
+          <div className={`product-gallery${hasThumbnails ? ' has-thumbnails' : ''}`}>
+            {hasThumbnails && (
+              <div className="product-gallery-thumbs" role="group" aria-label="Product photos">
                 {currentProduct.images.map((img, idx) => (
                   <button
-                    key={idx}
+                    key={`${idx}-${img}`}
+                    type="button"
+                    className={`product-gallery-thumb${activeImageIndex === idx ? ' is-active' : ''}`}
                     onClick={() => setActiveImageIndex(idx)}
-                    style={{
-                      width: '84px',
-                      height: '105px',
-                      overflow: 'hidden',
-                      border: activeImageIndex === idx ? '2px solid var(--color-silver-deep)' : '1px solid rgba(var(--rgb-line), 0.25)',
-                      backgroundColor: 'var(--color-ink)',
-                      opacity: activeImageIndex === idx ? 1 : 0.6,
-                      boxShadow: activeImageIndex === idx ? '0 0 15px rgba(var(--rgb-line), 0.25)' : 'none',
-                      transition: 'var(--transition-fast)'
-                    }}
-                    aria-label={`View image ${idx + 1}`}
+                    aria-pressed={activeImageIndex === idx}
+                    aria-label={`Show photo ${idx + 1} of ${currentProduct.images.length}`}
                   >
-                    <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={img} alt="" loading="lazy" />
                   </button>
                 ))}
               </div>
             )}
+
+            {/* Primary Large Image */}
+            <div className="product-gallery-main">
+              <img
+                src={currentProduct.images[activeImageIndex] || currentProduct.images[0]}
+                alt={`${currentProduct.name}, photo ${activeImageIndex + 1}`}
+                loading="eager"
+              />
+              <span className="product-badge-tag">
+                {currentProduct.purity}
+              </span>
+            </div>
           </div>
 
           {/* Right: Product Information and Controls */}
