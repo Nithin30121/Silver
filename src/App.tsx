@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { SilverStory } from './components/SilverStory';
 import { FeaturedProducts } from './components/FeaturedProducts';
+import { CustomDesignBanner } from './components/CustomDesignBanner';
 import { CatalogPage } from './components/CatalogPage';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { CarePage } from './components/CarePage';
@@ -44,6 +45,7 @@ const MainContent: React.FC = () => {
             <SilverStory />
             <GenderCategories />
             <FeaturedProducts />
+            <CustomDesignBanner />
 
             {/* Editorial Brand Assurance Banner. Phones show the short titles and lines; larger screens the full ones. */}
             <section className="assurance-section">
