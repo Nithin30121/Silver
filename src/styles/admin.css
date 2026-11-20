@@ -455,7 +455,8 @@ html:has(.admin-page[data-theme='dark']) #root { background: #12080A; scrollbar-
 /* Product photos: up to four square slots, the saved photos first, then new ones, then an add tile */
 .admin-photo-slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
 .admin-photo-slot { position: relative; aspect-ratio: 1; overflow: hidden; border: 1px solid var(--a-border); border-radius: var(--a-radius-sm); background: var(--a-surface-2); }
-.admin-page .admin-photo-slot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.admin-page .admin-photo-slot img { display: block; width: 100%; height: 100%; object-fit: contain; background: #FFFFFF; }
+.admin-photo-slot.is-preparing { display: grid; place-content: center; justify-items: center; gap: 0.35rem; border: 1.5px dashed var(--a-border-strong); color: var(--a-text-3); font-size: 0.75rem; }
 .admin-photo-slot.is-new { border: 1.5px dashed var(--a-accent); }
 .admin-photo-slot.is-add { display: grid; place-content: center; justify-items: center; gap: 0.3rem; padding: 0.75rem; border: 1.5px dashed var(--a-border-strong); color: var(--a-text-3); text-align: center; cursor: pointer; transition: border-color 0.15s, background-color 0.15s; }
 .admin-photo-slot.is-add:hover, .admin-photo-slot.is-add:focus-within { border-color: var(--a-accent); background: var(--a-accent-soft); }
