@@ -12,6 +12,7 @@ import type { OrderResponse } from '../../services/orderService';
 import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../../lib/orderFormat';
 import { discountPercent } from '../../lib/pricing';
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
+import { preparePhoto } from '../../lib/preparePhoto';
 import { formatINR } from '../../services/silverRateService';
 import {
   AdminApiError, bookShipment, cancelShipment, closeReturnedShipment, createCategory, createProduct, deleteCategory, deleteOrder, deleteProduct, downloadAdminCsv,
@@ -1574,14 +1575,22 @@ const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]
   // Photos already on the product, and new ones picked here that upload when the product is saved.
   const [photos, setPhotos] = useState<ProductPhoto[]>(() => product?.images.filter((image) => image.imageUrl) ?? []);
   const [picked, setPicked] = useState<PickedPhoto[]>([]);
+  // New photos are made square on white before they're added (see lib/preparePhoto); this many are still being made.
+  const [squarePhotos, setSquarePhotos] = useState(true);
+  const [preparing, setPreparing] = useState(0);
   const [photoNote, setPhotoNote] = useState('');
   const [confirmingPhotoId, setConfirmingPhotoId] = useState<string | null>(null);
   const [removingPhotoId, setRemovingPhotoId] = useState<string | null>(null);
   const pickedRef = useRef<PickedPhoto[]>([]);
   useEffect(() => { pickedRef.current = picked; }, [picked]);
   // The previews of picked photos live in memory until they upload or the form closes.
-  useEffect(() => () => pickedRef.current.forEach((photo) => URL.revokeObjectURL(photo.url)), []);
-  const freeSlots = MAX_PRODUCT_PHOTOS - photos.length - picked.length;
+  // Whether the form is still open, so photos that finish preparing after it closes are dropped.
+  const openRef = useRef(true);
+  useEffect(() => {
+    openRef.current = true;
+    return () => { openRef.current = false; pickedRef.current.forEach((photo) => URL.revokeObjectURL(photo.url)); };
+  }, []);
+  const freeSlots = MAX_PRODUCT_PHOTOS - photos.length - picked.length - preparing;
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   // Once the product exists, saving again updates it, so retrying a failed photo upload never creates a duplicate.
@@ -1613,13 +1622,35 @@ const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]
     catch (cause) { setError(`The product was saved, but not all of its photos were. ${cause instanceof Error ? cause.message : ''} Click Save product to upload the rest; nothing will be duplicated.`); }
     finally { setSaving(false); }
   };
-  const pickPhotos = (list: FileList | null) => {
+  const pickPhotos = async (list: FileList | null) => {
     const chosen = Array.from(list || []);
     const room = Math.max(0, freeSlots);
-    setPhotoNote(chosen.length <= room ? '' : room === 1
+    const taken = chosen.slice(0, room);
+    const tooMany = chosen.length <= room ? '' : room === 1
       ? `Only 1 more photo fits, so only the first one you picked was added.`
-      : `Only ${room} more photos fit, so only the first ${room} you picked were added.`);
-    setPicked((current) => [...current, ...chosen.slice(0, room).map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+      : `Only ${room} more photos fit, so only the first ${room} you picked were added.`;
+    setPhotoNote(tooMany);
+    if (!taken.length) return;
+    // Each photo appears as soon as it's ready, in the order picked.
+    setPreparing(taken.length);
+    const keptShape: string[] = [];
+    for (const original of taken) {
+      // If preparing fails for any reason, the photo goes up exactly as it was picked.
+      const { file, outcome } = squarePhotos
+        ? await preparePhoto(original).catch(() => ({ file: original, outcome: 'unchanged' }))
+        : { file: original, outcome: 'unchanged' };
+      if (!openRef.current) return;
+      if (outcome === 'kept') keptShape.push(original.name);
+      setPicked((current) => [...current, { file, url: URL.createObjectURL(file) }]);
+      setPreparing((count) => count - 1);
+    }
+    if (keptShape.length) {
+      const names = keptShape.join(', ');
+      const kept = keptShape.length === 1
+        ? `${names} isn't on a plain white background, so it keeps its shape and wasn't squared.`
+        : `${names} aren't on a plain white background, so they keep their shape and weren't squared.`;
+      setPhotoNote(tooMany ? `${tooMany} ${kept}` : kept);
+    }
   };
   const unpickPhoto = (photo: PickedPhoto) => {
     URL.revokeObjectURL(photo.url);
@@ -1646,7 +1677,7 @@ const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]
       footer={<>
         {error && <FormError text={error} />}
         <button type="button" className="admin-button is-secondary" onClick={close}>{changed ? 'Close' : 'Cancel'}</button>
-        <button type="submit" form={formId} className="admin-button is-primary" disabled={saving}>
+        <button type="submit" form={formId} className="admin-button is-primary" disabled={saving || preparing > 0}>
           {saving ? <><LoaderCircle size={16} className="is-spinning" /> Saving…</> : 'Save product'}
         </button>
       </>}>
@@ -1681,7 +1712,7 @@ const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]
           </Field>
         </FormSection>
 
-        <FormSection title="Photos" description={`Up to ${MAX_PRODUCT_PHOTOS} photos: JPEG, PNG or WebP, 5 MB each. The first is the main photo. New photos upload when you save.`}>
+        <FormSection title="Photos" description={`Up to ${MAX_PRODUCT_PHOTOS} photos: JPEG, PNG or WebP, 5 MB each. The first is the main photo. Best: the whole piece on a plain white background. New photos upload when you save.`}>
           <div className="admin-photo-slots is-wide">
             {photos.map((photo, index) => (
               <div key={photo.id} className="admin-photo-slot">
@@ -1709,13 +1740,19 @@ const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]
                   onClick={() => unpickPhoto(photo)} disabled={saving}><X size={15} /></button>
               </div>
             ))}
+            {Array.from({ length: preparing }, (_, index) => (
+              <div key={`preparing-${index}`} className="admin-photo-slot is-preparing" role="status">
+                <LoaderCircle size={20} className="is-spinning" aria-hidden="true" />
+                <small>Preparing…</small>
+              </div>
+            ))}
             {freeSlots > 0 && (
               <label className="admin-photo-slot is-add">
                 <ImagePlus size={22} aria-hidden="true" />
                 <strong>{freeSlots > 1 ? 'Add photos' : 'Add a photo'}</strong>
                 <small>{freeSlots} of {MAX_PRODUCT_PHOTOS} left</small>
-                <input type="file" multiple={freeSlots > 1} accept="image/jpeg,image/png,image/webp" disabled={saving}
-                  onChange={(e) => { pickPhotos(e.target.files); e.target.value = ''; }} />
+                <input type="file" multiple={freeSlots > 1} accept="image/jpeg,image/png,image/webp" disabled={saving || preparing > 0}
+                  onChange={(e) => { void pickPhotos(e.target.files); e.target.value = ''; }} />
               </label>
             )}
           </div>
@@ -1725,6 +1762,8 @@ const ProductForm: React.FC<{ product: ApiProduct | null; products: ApiProduct[]
               : `${photoCount} of ${MAX_PRODUCT_PHOTOS} photos${freeSlots <= 0 ? '. Remove one to add another.' : '.'}`}
             {photoNote && <> {photoNote}</>}
           </p>
+          <Switch checked={squarePhotos} onChange={setSquarePhotos} disabled={preparing > 0} label="Square new photos on white"
+            description="Recommended. Centres the piece in a square on pure white, trims extra space and makes the file much smaller, so it fits every spot in the shop. Photos on any other background keep their shape. Turn off to upload photos exactly as they are." />
           <Field label="Image link" hint="Optional. Shown only when the product has no uploaded photo." wide>
             <input type="url" value={form.imageUrl} onChange={(e) => update('imageUrl', e.target.value)} placeholder="https://" />
           </Field>
