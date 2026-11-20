@@ -1,0 +1,106 @@
+/* ==========================================================================
+   Product page gallery: a column of thumbnails on the left of the large photo.
+   A piece with a single photo shows just the large photo, full width.
+   ========================================================================== */
+
+.product-gallery {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.product-gallery.has-thumbnails {
+  grid-template-columns: 84px minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.product-gallery-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.product-gallery-thumb {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid rgba(var(--rgb-line), 0.25);
+  background-color: var(--color-ink);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.product-gallery-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-gallery-thumb:hover {
+  opacity: 0.85;
+}
+
+/* The chosen photo: full strength with a 2px frame. The second pixel is drawn inside, so the picture never shifts. */
+.product-gallery-thumb.is-active {
+  opacity: 1;
+  border-color: var(--color-silver-deep);
+  box-shadow: 0 0 15px rgba(var(--rgb-line), 0.25);
+}
+
+.product-gallery-thumb.is-active::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 1px var(--color-silver-deep);
+  pointer-events: none;
+}
+
+.product-gallery-thumb:focus-visible {
+  outline: 2px solid var(--color-silver-deep);
+  outline-offset: 3px;
+  opacity: 1;
+}
+
+.product-gallery-main {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  border: 1px solid rgba(var(--rgb-line), 0.28);
+  background-color: var(--color-ink);
+  box-shadow: 0 16px 40px rgba(var(--rgb-shadow), calc(0.7 * var(--shadow-k)));
+}
+
+.product-gallery-main img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-gallery-main .product-badge-tag {
+  top: 1.25rem;
+  left: 1.25rem;
+}
+
+/* Phones: a slimmer column, so the large photo keeps most of the width. */
+@media (max-width: 768px) {
+  .product-gallery.has-thumbnails {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 0.625rem;
+  }
+
+  .product-gallery-thumbs {
+    gap: 0.625rem;
+  }
+
+  .product-gallery-main .product-badge-tag {
+    top: 0.85rem;
+    left: 0.85rem;
+  }
+}
