@@ -14,7 +14,7 @@ const CountBadge: React.FC<{ count: number; label: string }> = ({ count, label }
 };
 
 export const Header: React.FC = () => {
-  const { currentView, navigateTo, cartCount, wishlistCount, setIsCartOpen, setIsWishlistOpen, setIsSearchOpen, showToast, categories } = useShop();
+  const { currentView, navigateTo, hrefFor, cartCount, wishlistCount, setIsCartOpen, setIsWishlistOpen, setIsSearchOpen, showToast, categories } = useShop();
   const { status, displayName, profile } = useAuth();
   const signOutCustomer = useCustomerSignOut();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -41,28 +41,28 @@ export const Header: React.FC = () => {
         <button className="mobile-menu-trigger" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} aria-label="Toggle navigation menu">
           {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
         </button>
-        <a href="#home" className="brand-logo" onClick={(event) => { event.preventDefault(); navigateTo('home'); }}>SILVORA</a>
+        <a href={hrefFor('home')} className="brand-logo" onClick={(event) => { event.preventDefault(); navigateTo('home'); }}>SILVORA</a>
 
         <nav className="nav-container" aria-label="Main Navigation">
           <ul className="nav-links">
             <li className="nav-item">
-              <a href="#new" className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
+              <a href={hrefFor('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' })} className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
                 onClick={(event) => { event.preventDefault(); navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }); }}>NEW ARRIVALS</a>
             </li>
             {rootCategories.map((root) => <li className="nav-item" key={root.id}>
-              <a href={`#${root.slug}`} className="nav-link" aria-haspopup="true"
+              <a href={hrefFor('collection', { rootCategoryId: root.id, category: 'all' })} className="nav-link" aria-haspopup="true"
                 onClick={(event) => { event.preventDefault(); navigateToCategory(root.id); }}>
                 {root.name.toUpperCase()} <ChevronDown size={13} style={{ strokeWidth: 1.8, marginTop: '1px' }} />
               </a>
               <div className="dropdown-menu">
-                <a href={`#${root.slug}-all`} className="dropdown-link" onClick={(event) => { event.preventDefault(); navigateToCategory(root.id); }}>All {root.name}</a>
+                <a href={hrefFor('collection', { rootCategoryId: root.id, category: 'all' })} className="dropdown-link" onClick={(event) => { event.preventDefault(); navigateToCategory(root.id); }}>All {root.name}</a>
                 {root.children.length > 0 && <div className="dropdown-divider" />}
-                {root.children.map((child) => <a key={child.id} href={`#${root.slug}-${child.slug}`} className="dropdown-link"
+                {root.children.map((child) => <a key={child.id} href={hrefFor('collection', { rootCategoryId: root.id, category: child.id })} className="dropdown-link"
                   onClick={(event) => { event.preventDefault(); navigateToCategory(root.id, child.id); }}>{child.name}</a>)}
               </div>
             </li>)}
             <li className="nav-item">
-              <a href="#collections" className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
+              <a href={hrefFor('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' })} className={`nav-link ${currentView === 'collection' ? 'active' : ''}`}
                 onClick={(event) => { event.preventDefault(); navigateTo('collection', { category: 'all', rootCategoryId: 'all', gender: 'all' }); }}>COLLECTIONS</a>
             </li>
             <li className="nav-item"><a href="/custom-design" className={`nav-link ${currentView === 'custom' ? 'active' : ''}`} onClick={(event) => { event.preventDefault(); navigateTo('custom'); }}>CUSTOM DESIGN</a></li>

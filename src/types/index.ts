@@ -61,8 +61,6 @@ export type ViewType =
   | 'returns'
   | 'contact'
   | 'faq'
-  | 'privacy'
-  | 'terms'
   | 'admin'
   | AccountView;
 

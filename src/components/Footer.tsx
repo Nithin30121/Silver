@@ -3,7 +3,7 @@ import { useShop } from '../context/ShopContext';
 import { ShieldCheck, ArrowRight, Check } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { navigateTo, categories } = useShop();
+  const { navigateTo, hrefFor, categories } = useShop();
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
@@ -22,7 +22,7 @@ export const Footer: React.FC = () => {
           {/* Brand Col (on phones just the wordmark) */}
           <div>
             <a
-              href="#home"
+              href={hrefFor('home')}
               className="brand-logo footer-logo"
               onClick={(e) => {
                 e.preventDefault();
@@ -46,19 +46,19 @@ export const Footer: React.FC = () => {
             <h4 className="footer-heading">Collections</h4>
             <ul className="footer-links">
               <li>
-                <a href="#new" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('collection'); }}>
+                <a href={hrefFor('collection')} className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('collection'); }}>
                   New Arrivals
                 </a>
               </li>
               {categories.filter((category) => category.categoryType === 'audience').flatMap((root) => [
                 <li key={root.id}>
-                  <a href={`#${root.slug}`} className="footer-link" onClick={(event) => { event.preventDefault(); navigateTo('collection', { rootCategoryId: root.id, category: 'all' }); }}>
+                  <a href={hrefFor('collection', { rootCategoryId: root.id, category: 'all' })} className="footer-link" onClick={(event) => { event.preventDefault(); navigateTo('collection', { rootCategoryId: root.id, category: 'all' }); }}>
                     {root.name}
                   </a>
                 </li>,
                 ...root.children.filter((child) => child.categoryType === 'collection').map((child) => (
                   <li key={child.id}>
-                    <a href={`#${root.slug}-${child.slug}`} className="footer-link" onClick={(event) => { event.preventDefault(); navigateTo('collection', { rootCategoryId: root.id, category: child.id }); }}>
+                    <a href={hrefFor('collection', { rootCategoryId: root.id, category: child.id })} className="footer-link" onClick={(event) => { event.preventDefault(); navigateTo('collection', { rootCategoryId: root.id, category: child.id }); }}>
                       {child.name}
                     </a>
                   </li>
@@ -77,7 +77,7 @@ export const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="#care" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('care'); }}>
+                <a href={hrefFor('care')} className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('care'); }}>
                   Jewellery Care
                 </a>
               </li>
@@ -87,17 +87,17 @@ export const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="#shipping" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('shipping'); }}>
+                <a href={hrefFor('shipping')} className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('shipping'); }}>
                   Shipping & Returns
                 </a>
               </li>
               <li>
-                <a href="#contact" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('contact'); }}>
+                <a href={hrefFor('contact')} className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('contact'); }}>
                   Client Concierge
                 </a>
               </li>
               <li>
-                <a href="#faq" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('faq'); }}>
+                <a href={hrefFor('faq')} className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('faq'); }}>
                   Frequently Asked Questions
                 </a>
               </li>
@@ -139,9 +139,9 @@ export const Footer: React.FC = () => {
         <div className="footer-bottom">
           <span>&copy; {new Date().getFullYear()} SILVORA. All Rights Reserved. Crafted in Pure 925 Sterling Silver.</span>
           <div className="footer-legal">
-            <a href="#returns" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('returns'); }}>Return Policy</a>
-            <a href="#privacy" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('faq'); }}>Privacy Policy</a>
-            <a href="#terms" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('shipping'); }}>Terms & Conditions</a>
+            <a href={hrefFor('returns')} className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('returns'); }}>Return Policy</a>
+            <a href={hrefFor('faq')} className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('faq'); }}>Privacy Policy</a>
+            <a href={hrefFor('shipping')} className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('shipping'); }}>Terms & Conditions</a>
           </div>
         </div>
       </div>

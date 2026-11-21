@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
-  const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo, catalogueStatus, catalogueWaking, refreshStock } = useShop();
+  const { currentProduct, products, addToCart, isWishlisted, toggleWishlist, navigateTo, hrefFor, catalogueStatus, catalogueWaking, refreshStock } = useShop();
   const buyNow = useBuyNow();
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -89,10 +89,10 @@ export const ProductDetailPage: React.FC = () => {
       {/* Breadcrumb Navigation */}
       <div className="container" style={{ paddingTop: '2.5rem', paddingBottom: '1.5rem' }}>
         <nav aria-label="Breadcrumb" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--color-text-muted)' }}>
-          <a href="#home" onClick={(e) => { e.preventDefault(); navigateTo('home'); }} style={{ color: 'var(--color-text-muted)' }}>Home</a>
+          <a href={hrefFor('home')} onClick={(e) => { e.preventDefault(); navigateTo('home'); }} style={{ color: 'var(--color-text-muted)' }}>Home</a>
           <ChevronRight size={12} style={{ color: 'var(--color-silver-deep)' }} />
           <a
-            href="#collection"
+            href={hrefFor('collection', { category: currentProduct.categoryIds[0] ?? 'all', gender: 'all' })}
             onClick={(e) => {
               e.preventDefault();
               navigateTo('collection', { category: currentProduct.categoryIds[0] ?? 'all', gender: 'all' });
