@@ -2271,19 +2271,46 @@ img {
   display: none;
 }
 
-/* The return-policy box opens the Return Policy page. */
+/* The boxes that open a page: on hover (or keyboard focus) the card lifts, turns solid white and takes a faint ruby
+   edge and glow, the way the product cards lift. It moves with translate, not transform, because the scroll-in
+   animation keeps its own transform on the card. */
 .assurance-link {
   display: block;
   color: inherit;
   text-decoration: none;
   cursor: pointer;
-  transition: border-color 0.25s ease, background-color 0.25s ease;
+  transition: translate 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.25s ease, background-color 0.25s ease;
 }
 
 .assurance-link:hover,
 .assurance-link:focus-visible {
-  border-color: rgba(var(--rgb-sheen), 0.4) !important;
-  background-color: rgba(var(--rgb-panel), 0.8) !important;
+  translate: 0 -6px;
+  border-color: rgba(var(--rgb-sheen), 0.35) !important;
+  background-color: var(--color-ink) !important;
+  box-shadow: 0 14px 34px rgba(var(--rgb-sheen), 0.14);
+}
+
+.assurance-link:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.assurance-link-cue svg {
+  transition: translate 0.3s ease;
+}
+
+.assurance-link:hover .assurance-link-cue svg,
+.assurance-link:focus-visible .assurance-link-cue svg {
+  translate: 4px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assurance-link:hover,
+  .assurance-link:focus-visible,
+  .assurance-link:hover .assurance-link-cue svg,
+  .assurance-link:focus-visible .assurance-link-cue svg {
+    translate: none;
+  }
 }
 
 .assurance-link-cue {
@@ -2298,8 +2325,8 @@ img {
   color: var(--color-accent);
 }
 
-/* Phones: the three side by side as soft rose cards, each with a ruby icon, a short serif title and one short line.
-   The middle card is a shade deeper. */
+/* Phones: the three side by side as matching rose cards, each with a ruby icon, a short serif title and one short
+   line. */
 @media (max-width: 768px) {
   /* The same space above and below the three cards. */
   .assurance-section {
@@ -2321,8 +2348,15 @@ img {
   .assurance-card,
   .assurance-link:hover,
   .assurance-link:focus-visible {
-    background-color: #F9EFEF !important;
-    border-color: #E5C9CD !important;
+    background-color: #F2DADD !important;
+    border-color: #E3BEC4 !important;
+  }
+
+  /* No lift or glow on phones, where a tap opens the page straight away. */
+  .assurance-link:hover,
+  .assurance-link:focus-visible {
+    translate: none;
+    box-shadow: none;
   }
 
   .assurance-card {
@@ -2330,14 +2364,8 @@ img {
     flex-direction: column;
     align-items: center;
     padding: 1rem 0.35rem 1.05rem;
-    border: 1px solid #E5C9CD;
+    border: 1px solid #E3BEC4;
     border-radius: 10px;
-  }
-
-  .assurance-card:nth-child(2),
-  .assurance-card.assurance-link:nth-child(2):hover {
-    background-color: #F2DADD !important;
-    border-color: #E3BEC4 !important;
   }
 
   .assurance-icon {
