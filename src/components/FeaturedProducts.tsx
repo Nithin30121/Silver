@@ -201,8 +201,8 @@ export const FeaturedProducts: React.FC = () => {
   const shown = isPhone ? 2 : 3;
   const swipes = featured.length > shown;
 
-  // Whether the row is at its start or its end, which greys out the matching arrow; at both, nothing is hidden and
-  // the arrows go away. The resize observer reports once as soon as it starts watching, which fills this in.
+  // Whether the row is at its start or its end, which hides the matching arrow; at both, nothing is hidden and the
+  // arrows go away. The resize observer reports once as soon as it starts watching, which fills this in.
   const rowRef = useRef<HTMLDivElement>(null);
   const [rowEdges, setRowEdges] = useState({ atStart: true, atEnd: true });
   useEffect(() => {
@@ -224,6 +224,15 @@ export const FeaturedProducts: React.FC = () => {
     row.scrollBy({ left: direction * row.clientWidth, behavior: calm ? 'auto' : 'smooth' });
   };
   const showArrows = !isPhone && swipes && !(rowEdges.atStart && rowEdges.atEnd);
+  const viewAll = (where: 'head' | 'foot') => (
+    <button
+      className={`btn-text featured-view-all is-${where}`}
+      onClick={() => navigateTo('collection', { category: 'all', gender: 'all' })}
+    >
+      <span>View All Pieces</span>
+      <ArrowRight size={14} />
+    </button>
+  );
 
   return (
     <section className="section-padding featured-section" aria-labelledby="selection-heading">
@@ -237,28 +246,8 @@ export const FeaturedProducts: React.FC = () => {
             </h2>
           </div>
 
-          <div className="featured-head-actions">
-            <button
-              className="btn-text"
-              onClick={() => navigateTo('collection', { category: 'all', gender: 'all' })}
-            >
-              <span>View All Pieces</span>
-              <ArrowRight size={14} />
-            </button>
-
-            {showArrows && (
-              <div className="featured-arrows" role="group" aria-label="Move through Considered Pieces">
-                <button type="button" className="featured-arrow" onClick={() => scrollRow(-1)} disabled={rowEdges.atStart}
-                  aria-label="Previous pieces">
-                  <ChevronLeft size={18} strokeWidth={1.5} aria-hidden="true" />
-                </button>
-                <button type="button" className="featured-arrow" onClick={() => scrollRow(1)} disabled={rowEdges.atEnd}
-                  aria-label="More pieces">
-                  <ChevronRight size={18} strokeWidth={1.5} aria-hidden="true" />
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Phones keep this link under the heading; larger screens show it centred below the row instead. */}
+          {viewAll('head')}
         </motion.div>
 
         {catalogueStatus === 'loading' ? (
@@ -269,11 +258,30 @@ export const FeaturedProducts: React.FC = () => {
             <button className="btn-text" style={{ marginTop: '0.75rem' }} onClick={() => void reloadCatalogue()}>Try Again</button>
           </div>
         ) : featured.length > 0 ? (
-          <div ref={rowRef} className={`product-grid${swipes ? ' is-swiping' : ''}`}
-            {...(swipes && { role: 'region', 'aria-label': 'Considered pieces, scroll sideways for more', tabIndex: 0 })}>
-            {/* Pieces further along the row appear as it scrolls, so they skip the fade-in. */}
-            {featured.map((product, index) => <ProductCard key={product.id} product={product} index={index} reveal={!swipes || index < (isPhone ? 2 : 4)} />)}
-          </div>
+          <>
+            <div className="featured-row">
+              <div ref={rowRef} className={`product-grid${swipes ? ' is-swiping' : ''}`}
+                {...(swipes && { role: 'region', 'aria-label': 'Considered pieces, scroll sideways for more', tabIndex: 0 })}>
+                {/* Pieces further along the row appear as it scrolls, so they skip the fade-in. */}
+                {featured.map((product, index) => <ProductCard key={product.id} product={product} index={index} reveal={!swipes || index < (isPhone ? 2 : 4)} />)}
+              </div>
+
+              {/* Larger screens: square arrows on the row's edges; each hides at its end of the row. */}
+              {showArrows && (
+                <>
+                  <button type="button" className="featured-arrow is-prev" onClick={() => scrollRow(-1)} disabled={rowEdges.atStart}
+                    aria-label="Previous pieces">
+                    <ChevronLeft size={22} strokeWidth={1.5} aria-hidden="true" />
+                  </button>
+                  <button type="button" className="featured-arrow is-next" onClick={() => scrollRow(1)} disabled={rowEdges.atEnd}
+                    aria-label="More pieces">
+                    <ChevronRight size={22} strokeWidth={1.5} aria-hidden="true" />
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="featured-foot">{viewAll('foot')}</div>
+          </>
         ) : (
           <p style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }}>New pieces will appear here when they are published.</p>
         )}
