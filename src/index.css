@@ -1919,6 +1919,12 @@ img {
     box-shadow: 0 1px 2px rgba(23, 18, 14, 0.04), 0 18px 40px -12px rgba(23, 18, 14, 0.22);
   }
 
+  /* No Quick Add or quick-view bar on hover here: the cards stay clean, and the photo or name opens the piece. The shop pages
+     keep the bar. */
+  .featured-section .product-quick-add {
+    display: none;
+  }
+
   /* A square of white with the photo floating in it. */
   .featured-section .product-img-wrapper {
     aspect-ratio: 1 / 1;
