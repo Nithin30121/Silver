@@ -6,6 +6,11 @@ import { pageTitle, parseRoute, routePath, type Route } from '../lib/routes';
 type CatalogueStatus = 'loading' | 'ready' | 'error';
 type RootCategoryId = string | 'all';
 
+interface NavigateParams {
+  productId?: string; category?: ProductCategory | 'all'; rootCategoryId?: RootCategoryId; gender?: 'men' | 'women' | 'all';
+  accountTab?: AccountTab; orderNumber?: string; replace?: boolean;
+}
+
 interface ShopContextType {
   currentView: ViewType;
   selectedProductId: string | null;
@@ -17,10 +22,9 @@ interface ShopContextType {
    * names the order a contact message is about; replace swaps the address instead of adding a
    * browser history step (used for account tabs).
    */
-  navigateTo: (view: ViewType, params?: {
-    productId?: string; category?: ProductCategory | 'all'; rootCategoryId?: RootCategoryId; gender?: 'men' | 'women' | 'all';
-    accountTab?: AccountTab; orderNumber?: string; replace?: boolean;
-  }) => void;
+  navigateTo: (view: ViewType, params?: NavigateParams) => void;
+  /** The address navigateTo(view, params) leads to, for a link's href, so the link also works when opened in a new tab. */
+  hrefFor: (view: ViewType, params?: NavigateParams) => string;
   returnView: ViewType;
   accountTab: AccountTab;
   /** The order open in My Account, by its order number. */
@@ -279,6 +283,23 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToastMessage(message);
     setTimeout(() => setToastMessage((current) => current === message ? null : current), 3200);
   };
+  /** The address for a page: the piece or category the params name, or else the one currently chosen. */
+  const addressFor = (view: ViewType, params: NavigateParams | undefined, accountTabFor?: AccountTab, orderNumber?: string) => {
+    const productId = params?.productId ?? selectedProductId;
+    const product = productId ? products.find((candidate) => candidate.id === productId || candidate.slug === productId) : undefined;
+    const category = params?.category !== undefined ? params.category : effectiveCategory;
+    const rootId = params?.rootCategoryId !== undefined ? params.rootCategoryId : params?.gender === 'all' ? 'all' : effectiveRootId;
+    return routePath({
+      view,
+      productKey: product?.slug || productId || undefined,
+      categoryPath: view === 'collection' ? categoryPathOf(category, rootId) : undefined,
+      accountTab: accountTabFor,
+      orderNumber,
+    });
+  };
+  const hrefFor: ShopContextType['hrefFor'] = (view, params) =>
+    addressFor(view, params, params?.accountTab, view === 'account' || view === 'contact' ? params?.orderNumber : undefined);
+
   const navigateTo: ShopContextType['navigateTo'] = (view, params) => {
     if (!isAccountView(currentView)) setReturnView(currentView);
     setCurrentView(view);
@@ -310,17 +331,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const aboutOrder = view === 'contact' ? params?.orderNumber ?? null : null;
     setContactOrderNumber(aboutOrder);
 
-    const productId = params?.productId ?? selectedProductId;
-    const product = productId ? products.find((candidate) => candidate.id === productId || candidate.slug === productId) : undefined;
-    const category = params?.category !== undefined ? params.category : effectiveCategory;
-    const rootId = params?.rootCategoryId !== undefined ? params.rootCategoryId : params?.gender === 'all' ? 'all' : effectiveRootId;
-    const path = routePath({
-      view,
-      productKey: product?.slug || productId || undefined,
-      categoryPath: view === 'collection' ? categoryPathOf(category, rootId) : undefined,
-      accountTab: tab,
-      orderNumber: view === 'account' ? order ?? undefined : aboutOrder ?? undefined,
-    });
+    const path = addressFor(view, params, tab, view === 'account' ? order ?? undefined : aboutOrder ?? undefined);
     if (path !== window.location.pathname + window.location.search) {
       if (params?.replace) window.history.replaceState(null, '', path);
       else window.history.pushState(null, '', path);
@@ -382,7 +393,7 @@ export const ShopProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return <ShopContext.Provider value={{
-    currentView, selectedProductId, selectedCategory: effectiveCategory, selectedRootCategoryId: effectiveRootId, selectedGender, navigateTo, returnView,
+    currentView, selectedProductId, selectedCategory: effectiveCategory, selectedRootCategoryId: effectiveRootId, selectedGender, navigateTo, hrefFor, returnView,
     accountTab, accountOrderNumber, contactOrderNumber,
     categories, catalogueStatus, catalogueError, catalogueWaking, reloadCatalogue, refreshStock, stockOf, products, currentProduct,
     cart, cartCount: cart.reduce((total, item) => total + item.quantity, 0), cartSubtotal: cart.reduce((total, item) => total + item.product.price * item.quantity, 0), addToCart, removeFromCart, updateQuantity, clearCart: () => setCart([]),
