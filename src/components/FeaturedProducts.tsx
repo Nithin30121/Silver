@@ -1,9 +1,9 @@
-import React, { useSyncExternalStore } from 'react';
+import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import type { Product } from '../types';
 import { gentleSpring, revealOnScroll, useBumpOnIncrease } from '../lib/motion';
-import { Heart, Eye, ArrowRight } from 'lucide-react';
+import { Heart, Eye, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PriceTag } from './PriceTag';
 
 interface ProductCardProps {
@@ -195,10 +195,35 @@ export const FeaturedProducts: React.FC = () => {
   const isPhone = useIsPhone();
   // The pieces the owner picked come first, in the order of their numbers, then every other piece, A to Z as loaded.
   const ordered = [...products.filter((p) => p.isFeatured).sort(byFeaturedPosition), ...products.filter((p) => !p.isFeatured)];
-  // Phones list every piece in one row you swipe through, so ticking one never pushes another out; larger screens
-  // keep a row of the first four.
-  const featured = isPhone ? ordered : ordered.slice(0, 4);
-  const swipes = isPhone && featured.length > 2;
+  // Every piece sits in one row that scrolls sideways, so ticking one never pushes another out. Phones show two at a
+  // time and are swiped; larger screens show four (three on smaller ones), with arrows as well as trackpad swipes.
+  const featured = ordered;
+  const shown = isPhone ? 2 : 3;
+  const swipes = featured.length > shown;
+
+  // Whether the row is at its start or its end, which greys out the matching arrow; at both, nothing is hidden and
+  // the arrows go away. The resize observer reports once as soon as it starts watching, which fills this in.
+  const rowRef = useRef<HTMLDivElement>(null);
+  const [rowEdges, setRowEdges] = useState({ atStart: true, atEnd: true });
+  useEffect(() => {
+    const row = rowRef.current;
+    if (!row) return;
+    const measure = () => setRowEdges({
+      atStart: row.scrollLeft <= 2,
+      atEnd: row.scrollLeft + row.clientWidth >= row.scrollWidth - 2,
+    });
+    row.addEventListener('scroll', measure, { passive: true });
+    const observer = new ResizeObserver(measure);
+    observer.observe(row);
+    return () => { row.removeEventListener('scroll', measure); observer.disconnect(); };
+  }, [swipes, catalogueStatus]);
+  const scrollRow = (direction: 1 | -1) => {
+    const row = rowRef.current;
+    if (!row) return;
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    row.scrollBy({ left: direction * row.clientWidth, behavior: calm ? 'auto' : 'smooth' });
+  };
+  const showArrows = !isPhone && swipes && !(rowEdges.atStart && rowEdges.atEnd);
 
   return (
     <section className="section-padding featured-section" aria-labelledby="selection-heading">
@@ -212,13 +237,28 @@ export const FeaturedProducts: React.FC = () => {
             </h2>
           </div>
 
-          <button
-            className="btn-text"
-            onClick={() => navigateTo('collection', { category: 'all', gender: 'all' })}
-          >
-            <span>View All Pieces</span>
-            <ArrowRight size={14} />
-          </button>
+          <div className="featured-head-actions">
+            <button
+              className="btn-text"
+              onClick={() => navigateTo('collection', { category: 'all', gender: 'all' })}
+            >
+              <span>View All Pieces</span>
+              <ArrowRight size={14} />
+            </button>
+
+            {showArrows && (
+              <div className="featured-arrows" role="group" aria-label="Move through Considered Pieces">
+                <button type="button" className="featured-arrow" onClick={() => scrollRow(-1)} disabled={rowEdges.atStart}
+                  aria-label="Previous pieces">
+                  <ChevronLeft size={18} strokeWidth={1.5} aria-hidden="true" />
+                </button>
+                <button type="button" className="featured-arrow" onClick={() => scrollRow(1)} disabled={rowEdges.atEnd}
+                  aria-label="More pieces">
+                  <ChevronRight size={18} strokeWidth={1.5} aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {catalogueStatus === 'loading' ? (
@@ -229,10 +269,10 @@ export const FeaturedProducts: React.FC = () => {
             <button className="btn-text" style={{ marginTop: '0.75rem' }} onClick={() => void reloadCatalogue()}>Try Again</button>
           </div>
         ) : featured.length > 0 ? (
-          <div className={`product-grid${swipes ? ' is-swiping' : ''}`}
-            {...(swipes && { role: 'region', 'aria-label': 'Considered pieces, swipe for more', tabIndex: 0 })}>
-            {/* Pieces further along the row appear as it is swiped, so they skip the fade-in. */}
-            {featured.map((product, index) => <ProductCard key={product.id} product={product} index={index} reveal={!swipes || index < 2} />)}
+          <div ref={rowRef} className={`product-grid${swipes ? ' is-swiping' : ''}`}
+            {...(swipes && { role: 'region', 'aria-label': 'Considered pieces, scroll sideways for more', tabIndex: 0 })}>
+            {/* Pieces further along the row appear as it scrolls, so they skip the fade-in. */}
+            {featured.map((product, index) => <ProductCard key={product.id} product={product} index={index} reveal={!swipes || index < (isPhone ? 2 : 4)} />)}
           </div>
         ) : (
           <p style={{ color: 'var(--color-text-muted)', padding: '2rem 0' }}>New pieces will appear here when they are published.</p>
