@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import { drawerSlide } from '../lib/motion';
 import { X, Trash2, ShoppingBag } from 'lucide-react';
+import { formatRupees } from '../lib/pricing';
 
 export const WishlistDrawer: React.FC = () => {
   const {
@@ -55,11 +56,7 @@ export const WishlistDrawer: React.FC = () => {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               {wishlistedProducts.map((product) => {
-                const formattedPrice = new Intl.NumberFormat('en-IN', {
-                  style: 'currency',
-                  currency: 'INR',
-                  maximumFractionDigits: 0
-                }).format(product.price);
+                const formattedPrice = formatRupees(product.price);
 
                 return (
                   <div

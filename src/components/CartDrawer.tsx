@@ -9,6 +9,7 @@ import { formatTime, PAYMENT_METHODS } from '../lib/orderFormat';
 import { createAddress, formatAddress, listAddresses, MAX_SAVED_ADDRESSES, type SavedAddress } from '../services/accountService';
 import { INDIAN_STATES, isValidPin, normalisePin } from '../lib/addressValidation';
 import { X, Minus, Plus, Trash2, ArrowRight, ShieldCheck, CheckCircle2, CreditCard, Sparkles, Truck } from 'lucide-react';
+import { formatRupees } from '../lib/pricing';
 
 const NEW_ADDRESS = 'new';
 const LATER_PAYMENT_CHOICES = [
@@ -149,11 +150,7 @@ export const CartDrawer: React.FC = () => {
   const usingSavedAddress = selectedAddressId !== NEW_ADDRESS && Boolean(savedAddresses?.some((address) => address.id === selectedAddressId));
   const canSaveAddress = savedAddresses !== null && savedAddresses.length < MAX_SAVED_ADDRESSES;
 
-  const formattedSubtotal = new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0
-  }).format(subtotal);
+  const formattedSubtotal = formatRupees(subtotal);
 
   const paymentChoices = onlinePayments ? ONLINE_PAYMENT_CHOICES : LATER_PAYMENT_CHOICES;
   const paysOnline = formData.paymentMethod === 'online';
@@ -280,11 +277,7 @@ export const CartDrawer: React.FC = () => {
 
                   {/* Cart Item Rows */}
                   {cart.map((item, idx) => {
-                    const itemTotal = new Intl.NumberFormat('en-IN', {
-                      style: 'currency',
-                      currency: 'INR',
-                      maximumFractionDigits: 0
-                    }).format(item.product.price * item.quantity);
+                    const itemTotal = formatRupees(item.product.price * item.quantity);
 
                     return (
                       <div
