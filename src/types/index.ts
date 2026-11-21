@@ -1,7 +1,5 @@
 /** Category identifiers are database UUIDs, so new collections require no frontend release. */
 export type ProductCategory = string;
-export type GenderCategory = 'men' | 'women' | 'all';
-
 export interface CatalogueCategory {
   id: string;
   name: string;
@@ -87,10 +85,4 @@ export interface CustomerProfile {
   role: 'customer' | 'admin';
   createdAt: string;
   updatedAt: string;
-}
-
-export interface NavigationState {
-  view: ViewType;
-  productId?: string;
-  categoryFilter?: ProductCategory | 'all';
 }

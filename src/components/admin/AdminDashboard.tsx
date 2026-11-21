@@ -10,10 +10,9 @@ import type { CatalogueCategory } from '../../types';
 import type { ApiProduct } from '../../services/catalogService';
 import type { OrderResponse } from '../../services/orderService';
 import { formatDate, humanize, isSecureLink, money, PAYMENT_METHODS } from '../../lib/orderFormat';
-import { discountPercent } from '../../lib/pricing';
+import { discountPercent, formatINR } from '../../lib/pricing';
 import { OrderPrintSheet, type OrderPrintKind } from '../OrderPrintSheet';
 import { preparePhoto } from '../../lib/preparePhoto';
-import { formatINR } from '../../services/silverRateService';
 import {
   AdminApiError, bookShipment, cancelShipment, closeReturnedShipment, createCategory, createProduct, deleteCategory, deleteOrder, deleteProduct, downloadAdminCsv,
   getOrderShipments, refreshShipment, type OrderShipments, type ShipmentState, getAdminCategories, getAdminCustomers, getAdminIdentity,
