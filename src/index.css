@@ -1795,8 +1795,8 @@ img {
 .featured-arrow {
   position: absolute;
   z-index: 4;
-  /* Level with the middle of the cards: the row's 1rem of room above them and 2.5rem below are not card. */
-  top: calc(50% - 0.75rem);
+  /* Level with the middle of the cards, which sit in the middle of the row's band. */
+  top: 50%;
   translate: 0 -50%;
   display: grid;
   place-items: center;
@@ -1832,12 +1832,33 @@ img {
   outline-offset: 3px;
 }
 
-/* Larger screens: a centred heading over plain white cards on a soft blush band, every piece in one row that scrolls
-   sideways, four at a time (three on smaller screens). Each card shows its photo floating in white space, with the
-   name, material and price centred beneath it. Each scroll settles on a card. */
+/* Larger screens, styled like the phone design: a centred heading on white, then the cards on the same soft cool-grey
+   band as phones, running the full width of the screen with equal space above and below the cards. Every piece sits
+   in one row that scrolls sideways, four at a time (three on smaller screens). Each card is white with rounded
+   corners and a soft shadow, its photo floating in white space and the name, material and price centred beneath it.
+   Each scroll settles on a card. */
 @media (min-width: 769px) {
   .featured-section {
-    background-color: #F4ECE7;
+    background-color: #FFFFFF;
+  }
+
+  .featured-row {
+    /* Its own layer, so the band below paints behind the cards but in front of the section's white. */
+    isolation: isolate;
+    margin-top: 2.25rem;
+    padding: 2.75rem 0;
+  }
+
+  /* The grey band, stretched from edge to edge of the screen behind the row. */
+  .featured-row::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(50% - 50vw);
+    right: calc(50% - 50vw);
+    background-color: #E1E6E5;
+    z-index: -1;
   }
 
   .featured-head {
@@ -1866,8 +1887,8 @@ img {
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
     /* Room around the cards for their hover lift and shadow, which a scrolling row would otherwise clip; the negative
-       margins keep the row exactly where the grid was. */
-    margin: 2rem -1rem -2.5rem;
+       margins cancel it, so the cards sit exactly in the middle of the band. */
+    margin: -1rem -1rem -2.5rem;
     padding: 1rem 1rem 2.5rem;
     scroll-padding-inline: 1rem;
   }
@@ -1886,13 +1907,16 @@ img {
   }
 
   .featured-section .product-card {
+    overflow: hidden;
     border: 0;
+    border-radius: 12px;
     background-color: #FFFFFF;
+    box-shadow: 0 1px 2px rgba(23, 18, 14, 0.04), 0 6px 18px -8px rgba(23, 18, 14, 0.14);
     padding-bottom: 1.9rem;
   }
 
   .featured-section .product-card:hover {
-    box-shadow: 0 18px 44px rgba(var(--rgb-shadow), 0.08);
+    box-shadow: 0 1px 2px rgba(23, 18, 14, 0.04), 0 18px 40px -12px rgba(23, 18, 14, 0.22);
   }
 
   /* A square of white with the photo floating in it. */
