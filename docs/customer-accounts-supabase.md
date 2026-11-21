@@ -28,10 +28,9 @@ need to be running.
 |---|---|---|
 | Email, password hash, email-verified status | Supabase Auth (`auth.users`) | Passwords are never stored or seen by this website's code. |
 | Full name, role, timestamps | Supabase Postgres (`public.profiles`) | One row per customer, created automatically by a database trigger. |
-| Login session (access + refresh token) | Browser `localStorage` | Managed by the Supabase client; refreshed automatically. See [Security notes](#10-security-notes-and-known-limitations). |
+| Login session (access + refresh token) | Browser `localStorage` | Managed by the Supabase client; refreshed automatically. See [Security notes](#9-security-notes-and-known-limitations). |
 | Shopping bag and wishlist | Browser `localStorage` | **Unchanged.** Not linked to accounts yet; signing in or out does not touch them. |
 | Product catalogue | `src/data/products.ts` (in the code) | **Unchanged.** Not in the database yet. |
-| Live silver rate cache | Browser `localStorage` | **Unchanged.** See [Silver rate in production](#8-silver-rate-in-production). |
 
 ### Why the database is safe even though the browser talks to it directly
 
@@ -215,24 +214,7 @@ add its origin to the policy or the browser will block it.
 
 ---
 
-## 8. Silver rate in production
-
-During development the header's live silver rate is served by a small endpoint built into the
-Vite dev server (`/api/silver-rate` in `vite.config.ts`). **That endpoint does not exist on a
-static host.** On a deployed site, `src/services/silverRateService.ts` automatically falls back
-to calling `https://api.gold-api.com` directly from the browser (no API key is involved, and that
-API allows browser requests). This was verified with a production build served like a static host.
-
-What you lose compared with development: server-side caching (each visitor's browser fetches the
-rate itself) and the secondary Yahoo Finance source (which cannot be called from browsers). If you
-want those back, or ever switch to a market-data provider that requires a **private API key**,
-deploy the endpoint as a server-side function (for example a Supabase Edge Function or a
-Netlify Function) and keep the key in that function's secrets, never in `VITE_` variables. That
-is a separate deployment task; it is not part of this change.
-
----
-
-## 9. Free-tier limitations
+## 8. Free-tier limitations
 
 - **Supabase Free** projects are **paused after about a week without activity** and must be
   resumed from the dashboard; there are limits on database size, bandwidth and monthly active
@@ -243,7 +225,7 @@ is a separate deployment task; it is not part of this change.
 
 ---
 
-## 10. Security notes and known limitations
+## 9. Security notes and known limitations
 
 - **Session tokens live in `localStorage`.** That is how the Supabase client works in a static site
   with no server. A malicious script running on the page could read them, so the main defences are:
@@ -273,7 +255,7 @@ deliberately keeps one source of truth for each.
 
 ---
 
-## 11. Local development with a local Supabase stack
+## 10. Local development with a local Supabase stack
 
 Requires Docker Desktop. This runs the same Auth, Postgres and email software locally, with a
 local inbox (Mailpit) that catches every email.
@@ -323,7 +305,7 @@ local test data), and `stop` shuts the stack down.
 
 ---
 
-## 12. Troubleshooting
+## 11. Troubleshooting
 
 | Symptom | Likely cause and fix |
 |---|---|
