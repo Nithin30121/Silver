@@ -58,6 +58,7 @@ export type ViewType =
   | 'product' 
   | 'custom'
   | 'care' 
+  | 'hallmark'
   | 'shipping'
   | 'returns'
   | 'contact'

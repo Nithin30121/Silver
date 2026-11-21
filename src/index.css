@@ -4280,6 +4280,66 @@ textarea.contact-input {
   }
 }
 
+/* 925 Hallmark page: the three parts of a hallmark side by side on larger screens. */
+@media (min-width: 900px) {
+  .care-steps.hallmark-parts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* What 925 means, drawn to scale: 92.5% silver, 7.5% alloy. */
+.hallmark-purity {
+  margin-top: 1.75rem;
+}
+
+.hallmark-purity-bar {
+  display: flex;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--rgb-line), 0.45);
+}
+
+.hallmark-purity-silver {
+  flex: 0 0 92.5%;
+  background: linear-gradient(90deg, #C9CCD2, #F4F5F7 55%, #B8BBC2);
+}
+
+.hallmark-purity-alloy {
+  flex: 1;
+  background-color: #B87333;
+}
+
+.hallmark-purity-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+}
+
+.hallmark-purity-legend strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.hallmark-places {
+  display: grid;
+  gap: 0.6rem;
+  margin: 1.25rem 0 0;
+  padding-left: 1.15rem;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--color-text-muted);
+}
+
+.hallmark-places strong {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
 /* Custom Design: a photo beside each text panel, stacked on phones with the photo first */
 .custom-split {
   display: grid;

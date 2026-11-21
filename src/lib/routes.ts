@@ -22,6 +22,7 @@ const PATHS: Partial<Record<ViewType, string>> = {
   women: '/women',
   custom: '/custom-design',
   care: '/care',
+  hallmark: '/hallmark',
   shipping: '/shipping',
   returns: '/return-policy',
   contact: '/contact',
@@ -79,7 +80,7 @@ export function parseRoute(pathname: string, search: string): Route {
 /** The browser tab title for a page. */
 export function pageTitle(view: ViewType, productName?: string): string {
   const titles: Partial<Record<ViewType, string>> = {
-    collection: 'Collection', men: 'Men', women: 'Women', custom: 'Custom Design', care: 'Jewellery Care Guide',
+    collection: 'Collection', men: 'Men', women: 'Women', custom: 'Custom Design', care: 'Jewellery Care Guide', hallmark: '925 Hallmark',
     shipping: 'Shipping & Returns', returns: 'Return Policy', contact: 'Contact Us', faq: 'Questions & Answers', privacy: 'Privacy', terms: 'Terms',
     login: 'Sign In', signup: 'Create an Account', 'forgot-password': 'Reset Your Password',
     'reset-password': 'Choose a New Password', account: 'My Account',
