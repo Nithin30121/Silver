@@ -107,8 +107,6 @@
    strip. Inside them the same names hold blush text and rose gold. */
 .header-wrapper,
 .mobile-nav-drawer,
-.top-utility-bar,
-.announcement-bar,
 .site-footer,
 .custom-cta {
   color-scheme: dark;
@@ -346,15 +344,6 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
 }
 
-/* The ruby strip above the navbar: blush and pale rose text (5.3:1 and up). */
-.top-utility-bar,
-.announcement-bar {
-  --color-text: var(--brand-blush);
-  --color-text-muted: #F1DCDF;
-  --color-silver-accent: #F7D2C9;
-  --rgb-line: 255, 248, 246;
-}
-
 *,
 *::before,
 *::after {
@@ -504,8 +493,7 @@ img {
   color: var(--color-text);
 }
 
-.headline-editorial em,
-.silver-italic {
+.headline-editorial em {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
@@ -526,17 +514,11 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .headline-editorial em,
-  .silver-italic { animation: none; background-position: 50% 0; }
+  .headline-editorial em { animation: none; background-position: 50% 0; }
 }
 
 @media (forced-colors: active) {
-  .headline-editorial em,
-  .silver-italic { background: none; -webkit-text-fill-color: currentColor; }
-}
-
-.text-muted {
-  color: var(--color-text-muted);
+  .headline-editorial em { background: none; -webkit-text-fill-color: currentColor; }
 }
 
 /* Buttons */
@@ -715,24 +697,6 @@ img {
   transform: translateX(2px);
 }
 
-/* Luxury Announcement Bar */
-.announcement-bar {
-  background-color: var(--color-strip);
-  color: var(--color-text-muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  padding: 0.55rem 1rem;
-  text-align: center;
-  border-bottom: 1px solid rgba(var(--rgb-line), 0.16);
-  font-weight: 500;
-}
-
-.announcement-bar span {
-  color: var(--color-silver-accent);
-  margin-right: 0.4rem;
-}
-
 /* Header & Navigation */
 .header-wrapper {
   position: sticky;
@@ -779,13 +743,6 @@ img {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.brand-logo-mark {
-  font-size: 1.2rem;
-  color: var(--color-silver-accent);
-  font-style: italic;
-  font-weight: 400;
 }
 
 .nav-links {
@@ -1755,12 +1712,6 @@ img {
   align-items: center;
   gap: 0.75rem;
   margin-top: 0.2rem;
-}
-
-.product-price {
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--color-accent-bright);
 }
 
 /* The phone-only short line under a card's name. */
@@ -2735,354 +2686,6 @@ img {
   }
 }
 
-/* ==========================================================================
-   Top Utility Bar & Live Silver Rate Indicator
-   ========================================================================== */
-.top-utility-bar {
-  background-color: var(--color-strip);
-  border-bottom: 1px solid rgba(var(--rgb-line), 0.18);
-  padding: 0.4rem 0;
-  position: relative;
-  z-index: 102;
-  font-family: var(--font-sans);
-}
-
-.top-utility-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.25rem;
-}
-
-.top-utility-left {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.top-utility-center {
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-  flex: 1;
-}
-
-.top-utility-center .announcement-highlight {
-  color: var(--color-silver-accent);
-  font-weight: 600;
-  margin-right: 0.35rem;
-}
-
-.top-utility-right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.top-utility-assurance {
-  font-size: 0.68rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--color-silver-highlight);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-/* Silver Rate Trigger Button / Pill */
-.silver-rate-wrapper {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.silver-rate-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  background-color: rgba(var(--rgb-ink), 0.75);
-  border: 1px solid rgba(var(--rgb-line), 0.28);
-  border-radius: 999px;
-  padding: 0.25rem 0.75rem 0.25rem 0.55rem;
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  cursor: pointer;
-  transition: var(--transition-fast);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  user-select: none;
-}
-
-.silver-rate-pill:hover,
-.silver-rate-pill[aria-expanded="true"] {
-  background-color: rgba(var(--rgb-panel), 0.95);
-  border-color: var(--color-silver-accent);
-  box-shadow: 0 2px 12px rgba(var(--rgb-line), 0.2);
-}
-
-.silver-rate-pill.is-stale {
-  border-color: rgba(var(--rgb-line), 0.4);
-  background-color: rgba(var(--rgb-panel), 0.85);
-}
-
-.silver-rate-pill-unavailable {
-  opacity: 0.8;
-  cursor: default;
-}
-
-/* Icon Box & Subtle Live Pulse */
-.silver-rate-icon-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  color: var(--color-silver-accent);
-}
-
-.silver-bullion-icon {
-  width: 14px;
-  height: 14px;
-  stroke: var(--color-silver-accent);
-  transition: transform 0.2s ease;
-}
-
-.silver-rate-pill:hover .silver-bullion-icon {
-  transform: rotate(5deg) scale(1.08);
-}
-
-.silver-rate-live-dot {
-  position: absolute;
-  top: -2px;
-  right: -3px;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-}
-
-.silver-rate-live-dot.is-live {
-  background-color: var(--color-silver-accent);
-  box-shadow: 0 0 6px rgba(var(--rgb-sheen), 0.9);
-  animation: ratePulse 2.4s infinite ease-in-out;
-}
-
-.silver-rate-live-dot.is-stale {
-  background-color: var(--color-text-muted);
-}
-
-@keyframes ratePulse {
-
-  0%,
-  100% {
-    transform: scale(0.9);
-    opacity: 0.6;
-  }
-
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
-    box-shadow: 0 0 8px rgba(var(--rgb-sheen), 1);
-  }
-}
-
-/* Desktop Rate Presentation */
-.silver-rate-desktop-view {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  white-space: nowrap;
-}
-
-.silver-rate-label {
-  font-size: 0.64rem;
-  letter-spacing: 0.16em;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: var(--color-silver-accent);
-}
-
-.silver-rate-separator {
-  color: rgba(var(--rgb-line), 0.35);
-  font-weight: 300;
-}
-
-.silver-rate-price-main {
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--color-accent-bright);
-}
-
-.silver-rate-unit {
-  font-size: 0.68rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-}
-
-.silver-rate-10g-badge {
-  font-size: 0.68rem;
-  color: var(--color-silver-highlight);
-  opacity: 0.9;
-  letter-spacing: 0.04em;
-}
-
-/* Refined Trend Badges - Restrained and Editorial */
-.silver-rate-trend {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  padding: 0.1rem 0.3rem;
-  border-radius: 4px;
-}
-
-.silver-rate-trend.trend-up {
-  color: var(--color-text);
-  background-color: rgba(var(--rgb-line), 0.22);
-  border: 1px solid rgba(var(--rgb-sheen), 0.3);
-}
-
-.silver-rate-trend.trend-down {
-  color: var(--color-polished-silver);
-  background-color: rgba(var(--rgb-line), 0.18);
-  border: 1px solid rgba(var(--rgb-line), 0.25);
-}
-
-.silver-rate-time {
-  font-size: 0.65rem;
-  color: var(--color-text-muted);
-  letter-spacing: 0.05em;
-  margin-left: 0.2rem;
-  padding-left: 0.45rem;
-  border-left: 1px solid rgba(var(--rgb-line), 0.25);
-}
-
-/* Mobile Rate Presentation */
-.silver-rate-mobile-view {
-  display: none;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.72rem;
-  white-space: nowrap;
-}
-
-.silver-rate-mobile-label {
-  font-size: 0.62rem;
-  letter-spacing: 0.14em;
-  font-weight: 600;
-  color: var(--color-silver-accent);
-}
-
-.silver-rate-mobile-price {
-  font-weight: 600;
-  color: var(--color-text);
-  letter-spacing: 0.02em;
-}
-
-.mobile-trend-icon {
-  color: var(--color-silver-accent);
-}
-
-.mobile-trend-icon.trend-down {
-  color: var(--color-text-muted);
-}
-
-.mobile-stale-tag {
-  font-size: 0.6rem;
-  padding: 0 0.25rem;
-  background: rgba(var(--rgb-line), 0.3);
-  color: var(--color-silver-accent);
-  border-radius: 2px;
-}
-
-/* Rate Breakdown Popover Modal */
-.silver-rate-popover {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  width: 320px;
-  background: var(--color-ink);
-  border: 1px solid var(--color-silver-deep);
-  box-shadow: 0 16px 40px rgba(var(--rgb-shadow), calc(0.85 * var(--shadow-k))), 0 0 20px rgba(var(--rgb-line), 0.12);
-  border-radius: 4px;
-  padding: 1.25rem;
-  z-index: 1000;
-  animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-@keyframes popoverFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-6px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.silver-popover-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(var(--rgb-line), 0.2);
-  margin-bottom: 0.85rem;
-}
-
-.popover-eyebrow {
-  font-size: 0.62rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--color-accent);
-  font-weight: 600;
-  display: block;
-  margin-bottom: 0.2rem;
-}
-
-.popover-title {
-  font-family: var(--font-serif);
-  font-size: 1.15rem;
-  color: var(--color-text);
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-.popover-refresh-btn {
-  color: var(--color-text-muted);
-  background: rgba(var(--rgb-panel), 0.8);
-  border: 1px solid rgba(var(--rgb-line), 0.25);
-  border-radius: 4px;
-  padding: 0.35rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-fast);
-}
-
-.popover-refresh-btn:hover {
-  color: var(--color-text);
-  border-color: var(--color-silver-accent);
-  background: var(--color-graphite);
-}
-
-.popover-refresh-btn.spinning svg {
-  animation: spin 0.8s linear infinite;
-}
-
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -3091,111 +2694,6 @@ img {
   to {
     transform: rotate(360deg);
   }
-}
-
-.popover-rate-hero {
-  background: rgba(var(--rgb-base), 0.6);
-  border: 1px solid rgba(var(--rgb-line), 0.15);
-  border-radius: 3px;
-  padding: 0.85rem;
-  text-align: center;
-  margin-bottom: 0.85rem;
-}
-
-.popover-hero-label {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--color-silver-accent);
-  display: block;
-  margin-bottom: 0.3rem;
-}
-
-.popover-hero-price {
-  font-family: var(--font-sans);
-  font-size: 1.35rem;
-  font-weight: 600;
-  color: var(--color-text);
-  letter-spacing: 0.02em;
-}
-
-.popover-hero-unit {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--color-text-muted);
-}
-
-.popover-hero-sub {
-  font-size: 0.68rem;
-  color: var(--color-text-muted);
-  margin-top: 0.3rem;
-  line-height: 1.4;
-}
-
-.popover-matrix {
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  margin-bottom: 0.85rem;
-}
-
-.popover-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 0.72rem;
-  padding: 0.25rem 0;
-  border-bottom: 1px solid rgba(var(--rgb-line), 0.1);
-}
-
-.popover-row .row-key {
-  color: var(--color-text-muted);
-}
-
-.popover-row .row-val {
-  color: var(--color-text);
-  font-weight: 500;
-  letter-spacing: 0.02em;
-}
-
-.popover-stale-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.45rem;
-  background: rgba(var(--rgb-line), 0.15);
-  border: 1px solid rgba(var(--rgb-line), 0.3);
-  padding: 0.5rem 0.65rem;
-  border-radius: 3px;
-  font-size: 0.68rem;
-  color: var(--color-silver-highlight);
-  line-height: 1.4;
-  margin-bottom: 0.85rem;
-}
-
-.popover-footer {
-  padding-top: 0.65rem;
-  border-top: 1px solid rgba(var(--rgb-line), 0.15);
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.popover-source-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.64rem;
-  color: var(--color-text-muted);
-  letter-spacing: 0.04em;
-}
-
-.popover-hallmark-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.65rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--color-silver-accent);
 }
 
 /* ==========================================================================
@@ -3365,51 +2863,8 @@ img {
     transition: none !important;
   }
 
-  .brand-intro-content,
-  .brand-intro-emblem-svg,
-  .silver-rate-live-dot.is-live {
+  .brand-intro-content {
     animation: none !important;
-  }
-}
-
-/* Responsive Overrides for Top Utility Bar & Silver Rate */
-@media (max-width: 992px) {
-  .top-utility-center {
-    display: none;
-  }
-
-  .silver-rate-desktop-view {
-    display: none;
-  }
-
-  .silver-rate-mobile-view {
-    display: inline-flex;
-  }
-
-  .silver-rate-popover {
-    width: 290px;
-    left: 0;
-  }
-}
-
-@media (max-width: 576px) {
-  .top-utility-assurance {
-    display: none;
-  }
-
-  .top-utility-bar {
-    padding: 0.35rem 0;
-  }
-
-  .silver-rate-pill {
-    padding: 0.2rem 0.55rem;
-    gap: 0.4rem;
-  }
-
-  .silver-rate-popover {
-    width: 280px;
-    left: 0;
-    max-width: calc(100vw - 2rem);
   }
 }
 

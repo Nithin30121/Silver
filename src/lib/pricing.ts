@@ -2,6 +2,10 @@
 export const formatRupees = (value: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(value);
 
+/** Rupees with paise, for example ₹92.50, as the admin's silver rate shows them. */
+export const formatINR = (value: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+
 /**
  * The whole-number percentage a product is reduced by, or null when there is no discount. Rounded down,
  * so the shop never claims more off than the customer actually saves.
