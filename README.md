@@ -140,8 +140,9 @@ testing are covered step by step in **[docs/customer-accounts-supabase.md](docs/
 ```bash
 npm run build
 ```
-Generates an optimized production bundle in the `dist/` directory. The site is fully static and can be
-deployed to Netlify (configured in `netlify.toml`) or Cloudflare Pages; see the guide above.
+Generates an optimized production bundle in the `dist/` directory. The live shop's website is hosted on
+Vercel, set up by `vercel.json` (it sends every address to the app and sets the security headers); the shop's
+server runs separately on Render (see `docs/deploy-backend-render.md`).
 
 ---
 

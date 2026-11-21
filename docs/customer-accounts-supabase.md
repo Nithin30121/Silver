@@ -57,7 +57,7 @@ These rules are tested by `supabase/tests/database/profiles_security.test.sql` (
 | `supabase/migrations/*.sql` | Database schema, security policies and triggers. |
 | `supabase/tests/database/*.sql` | Automated database security tests (pgTAP). |
 | `supabase/config.toml` | Settings for the **local** Supabase stack only. |
-| `netlify.toml`, `public/_headers` | Hosting settings and security headers. |
+| `vercel.json` | Hosting settings: every address served by the app, plus the security headers. |
 
 ---
 
@@ -147,7 +147,7 @@ if a label differs):
    - **Redirect URLs**: add every address that should receive email links:
      - `https://www.your-domain.com/` (production, with the trailing slash)
      - `http://localhost:5173/` (local development, optional)
-     - preview deploys, if you use them, e.g. `https://*--your-site.netlify.app/`
+     - your host's preview addresses, if you use them
    The website sends customers back to `<current site address>/`, so that exact URL must be listed.
 4. **Emails → SMTP Settings**: Supabase's built-in email service is for testing only. It has a very
    low hourly sending limit and, on current plans, only delivers to your project's team members.
@@ -171,33 +171,28 @@ if a label differs):
 
 The site is static: `npm run build` produces the `dist/` folder.
 
-### Netlify (configuration already in `netlify.toml`)
+### Vercel (the shop's host; settings in `vercel.json`)
 
 1. Push the repository to GitHub.
-2. In Netlify: **Add new site → Import an existing project**, choose the repository.
-   Build settings are read from `netlify.toml` (`npm run build`, publish `dist`, Node 22).
-3. **Site configuration → Environment variables**: add `VITE_SUPABASE_URL` and
-   `VITE_SUPABASE_PUBLISHABLE_KEY` (same values as `.env.local`).
-4. Deploy. After adding or changing variables, **trigger a new deploy**: Vite bakes them in
-   at build time.
-5. Add your custom domain in Netlify, then update **Site URL** and **Redirect URLs** in
+2. In Vercel: **Add New → Project**, import the repository. Vercel recognises the Vite app
+   (`npm run build`, output `dist`).
+3. **Settings → Environment Variables**: add `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`
+   (same values as `.env.local`) and `VITE_CATALOG_API_URL` (the shop's server on Render, ending in `/api`).
+4. Deploy. After adding or changing variables, **redeploy**: Vite bakes them in at build time.
+5. `vercel.json` sends every address to the app, so pages such as `/admin` and `/collection/men`
+   open directly, and it sets the security headers below.
+6. Add your custom domain in Vercel, then update **Site URL** and **Redirect URLs** in
    Supabase ([step 5](#5-configure-authentication)) to that domain.
 
-### Cloudflare Pages (alternative)
-
-Build command `npm run build`, output directory `dist`, environment variable `NODE_VERSION=22`
-plus the two `VITE_SUPABASE_*` variables. `public/_headers` is honoured automatically; Cloudflare
-serves single-page apps without extra configuration.
-
-> **Note:** Vercel's free *Hobby* plan is for non-commercial use only, so it is not suitable for a
-> shop. Check the current terms of whichever host you choose.
+> **Note:** Vercel's free *Hobby* plan is for non-commercial use only, so a shop needs a paid plan.
+> Check Vercel's current terms.
 
 ### Security headers
 
-`public/_headers` sets a strict **Content-Security-Policy** plus anti-framing and other headers.
-The policy only allows the site's own files, Google Fonts, `*.supabase.co` and
-`api.gold-api.com`. If you later add a service (analytics, a payment gateway, a custom Supabase
-domain), add its origin to the policy or the browser will block it.
+`vercel.json` sets a strict **Content-Security-Policy** plus anti-framing and other headers.
+The policy only allows the site's own files, Google Fonts, the shop's server on Render,
+`*.supabase.co` and Razorpay. If you later add a service (analytics, a custom Supabase domain),
+add its origin to the policy or the browser will block it.
 
 ---
 
@@ -244,7 +239,7 @@ is a separate deployment task; it is not part of this change.
   users, and no automatic backups. Check Supabase's pricing page for current numbers. Upgrade
   before launching to real customers.
 - **Built-in Supabase email** is for testing only (see [step 5](#5-configure-authentication)).
-- **Netlify / Cloudflare Pages** free plans have monthly usage allowances.
+- **Vercel**: the free *Hobby* plan is for non-commercial use only (see [step 6](#6-build-and-deploy)); paid plans have monthly usage allowances.
 
 ---
 
@@ -337,4 +332,4 @@ local test data), and `stop` shuts the stack down.
 | Emails never arrive | Custom SMTP not configured, rate limit reached, or check spam. |
 | Email link opens the wrong site or shows an error | Site URL / Redirect URLs not set to the address you are using (include the trailing `/`). |
 | Signing up shows a database error | The migration was not applied, or was edited after being applied. |
-| Browser console shows "Refused to connect … Content Security Policy" | A new service is not in `public/_headers`; add its origin. |
+| Browser console shows "Refused to connect … Content Security Policy" | A new service is not in the policy in `vercel.json`; add its origin. |
