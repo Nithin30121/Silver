@@ -1810,11 +1810,11 @@ img {
 }
 
 .featured-arrow.is-prev {
-  left: -22px;
+  left: -16px;
 }
 
 .featured-arrow.is-next {
-  right: -22px;
+  right: -16px;
 }
 
 .featured-arrow:hover:not(:disabled) {
@@ -1847,6 +1847,9 @@ img {
     isolation: isolate;
     margin-top: 2.25rem;
     padding: 2.75rem 0;
+    /* Bigger cards: on wide screens the row spreads into the empty space beside the page content, by up to 4rem a
+       side, always keeping 1.5rem clear of the screen edge. (100% here is the page content's width.) */
+    margin-inline: calc(-1 * clamp(0px, (100vw - 100%) / 2 - 1.5rem, 4rem));
   }
 
   /* The grey band, stretched from edge to edge of the screen behind the row. */
@@ -1923,6 +1926,35 @@ img {
      keep the bar. */
   .featured-section .product-quick-add {
     display: none;
+  }
+
+  /* A plain ruby heart with no circle behind it, as on phones. */
+  .featured-section .product-wishlist-btn,
+  .featured-section .product-wishlist-btn:hover,
+  .featured-section .product-wishlist-btn.active {
+    background: none;
+    border: 0;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .featured-section .product-wishlist-btn {
+    top: 0.6rem;
+    right: 0.6rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 0;
+    color: var(--brand-ruby);
+  }
+
+  .featured-section .product-wishlist-btn:hover,
+  .featured-section .product-wishlist-btn.active {
+    color: var(--brand-ruby-deep);
+  }
+
+  .featured-section .product-wishlist-btn svg {
+    width: 21px;
+    height: 21px;
   }
 
   /* A square of white with the photo floating in it. */
