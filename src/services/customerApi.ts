@@ -3,10 +3,8 @@
 // only ever shows or changes the token owner's own orders, addresses and account.
 
 import { fetchWhileWaking } from '../lib/serverRetry';
+import { API_BASE_URL } from '../lib/apiBase';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
-
-const configuredBaseUrl = import.meta.env.VITE_CATALOG_API_URL?.trim();
-export const API_BASE_URL = (configuredBaseUrl || 'http://localhost:8080/api').replace(/\/$/, '');
 
 /** An error whose message is written for customers; fields maps form fields to their problem. */
 export class CustomerApiError extends Error {

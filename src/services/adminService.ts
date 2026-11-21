@@ -1,11 +1,9 @@
 import { fetchWhileWaking } from '../lib/serverRetry';
+import { API_BASE_URL } from '../lib/apiBase';
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient';
 import type { CatalogueCategory } from '../types';
 import type { ApiProduct } from './catalogService';
 import type { OrderResponse } from './orderService';
-
-const configuredBaseUrl = import.meta.env.VITE_CATALOG_API_URL?.trim();
-const API_BASE_URL = (configuredBaseUrl || 'http://localhost:8080/api').replace(/\/$/, '');
 
 export interface AdminIdentity {
   id: string;

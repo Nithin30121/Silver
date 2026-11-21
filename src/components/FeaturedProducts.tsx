@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { useShop } from '../context/ShopContext';
 import type { Product } from '../types';
 import { gentleSpring, revealOnScroll, useBumpOnIncrease } from '../lib/motion';
 import { Heart, Eye, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PriceTag } from './PriceTag';
+import { PHONE_QUERY, useIsPhone } from '../lib/useIsPhone';
 
 interface ProductCardProps {
   product: Product;
@@ -17,8 +18,6 @@ interface ProductCardProps {
 const pressable = { whileTap: { scale: 0.95 }, transition: gentleSpring };
 
 /** Phones: a tap anywhere on a card opens the piece (on larger screens the photo and the name do). */
-const PHONE_QUERY = '(max-width: 768px)';
-
 export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0, reveal = true }) => {
   const { navigateTo, isWishlisted, toggleWishlist, addToCart, setQuickViewProduct } = useShop();
   const wishlisted = isWishlisted(product.id);
@@ -176,15 +175,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, index = 0, re
     </motion.div>
   );
 };
-
-/** Whether the screen is phone-sized, kept up to date as it changes. */
-function useIsPhone() {
-  return useSyncExternalStore((onChange) => {
-    const query = window.matchMedia(PHONE_QUERY);
-    query.addEventListener('change', onChange);
-    return () => query.removeEventListener('change', onChange);
-  }, () => window.matchMedia(PHONE_QUERY).matches, () => false);
-}
 
 /** Picked pieces by their number, 1 first; a piece without one goes after them. Equal numbers keep A to Z. */
 const byFeaturedPosition = (a: Product, b: Product) =>

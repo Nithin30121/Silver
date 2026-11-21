@@ -1,6 +1,7 @@
-import React, { useRef, useSyncExternalStore } from 'react';
+import React, { useRef } from 'react';
 import { motion, useInView, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 import { luxeEase, revealOnScroll } from '../lib/motion';
+import { useIsPhone } from '../lib/useIsPhone';
 import '../styles/silver-story.css';
 
 interface StoryPhotoProps {
@@ -9,15 +10,6 @@ interface StoryPhotoProps {
   /** A different photo for phones, where this photo sits on its own below the 925 square. */
   phone?: { file: string; alt: string };
 }
-
-/** Phones: the squares stack, so a photo is no longer beside its words. Matches the stacking rule in the CSS. */
-const PHONE_QUERY = '(max-width: 768px)';
-const subscribeToPhone = (onChange: () => void) => {
-  const query = window.matchMedia(PHONE_QUERY);
-  query.addEventListener('change', onChange);
-  return () => query.removeEventListener('change', onChange);
-};
-const useIsPhone = () => useSyncExternalStore(subscribeToPhone, () => window.matchMedia(PHONE_QUERY).matches, () => false);
 
 /**
  * How each photo drifts. The picture is enlarged a little inside its square and slides down within it as the page
@@ -35,6 +27,7 @@ const DRIFT = {
 const StoryPhoto: React.FC<StoryPhotoProps> = ({ name, alt, phone }) => {
   const frame = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
+  // Phones stack the squares, so a photo is no longer beside its words; this matches the stacking rule in the CSS.
   const onPhone = useIsPhone() && Boolean(phone);
   // 0 as the photo's top reaches the bottom of the screen, 1 once its bottom has left the top.
   const { scrollYProgress } = useScroll({ target: frame, offset: ['start end', 'end start'] });

@@ -1,8 +1,6 @@
+import { API_BASE_URL } from '../lib/apiBase';
 import { isWakingStatus, pause, WAKE_RETRY_DELAYS_MS } from '../lib/serverRetry';
 import type { CatalogueCategory } from '../types';
-
-const configuredBaseUrl = import.meta.env.VITE_CATALOG_API_URL?.trim();
-const API_BASE_URL = (configuredBaseUrl || 'http://localhost:8080/api').replace(/\/$/, '');
 
 interface ApiImage {
   id: string;

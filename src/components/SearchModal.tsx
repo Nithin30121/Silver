@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useShop } from '../context/ShopContext';
 import { AnimatedModal } from './AnimatedModal';
 import { Search, X, ArrowRight } from 'lucide-react';
+import { formatRupees } from '../lib/pricing';
 
 export const SearchModal: React.FC = () => {
   const { isSearchOpen, setIsSearchOpen, products, categories, navigateTo } = useShop();
@@ -126,9 +127,9 @@ export const SearchModal: React.FC = () => {
                   <div style={{ flex: 1 }}>
                     <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', color: 'var(--color-text)' }}>{product.name}</h4>
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-                      {product.material} • <strong style={{ color: 'var(--color-silver-highlight)' }}>₹{product.price.toLocaleString('en-IN')}</strong>
+                      {product.material} • <strong style={{ color: 'var(--color-silver-highlight)' }}>{formatRupees(product.price)}</strong>
                       {product.stockQuantity <= 0 && <> • <span className="stock-note is-out">Out of stock</span></>}
-                      {product.originalPrice !== undefined && <s style={{ marginLeft: '0.4rem' }}><span className="visually-hidden">was </span>₹{product.originalPrice.toLocaleString('en-IN')}</s>}
+                      {product.originalPrice !== undefined && <s style={{ marginLeft: '0.4rem' }}><span className="visually-hidden">was </span>{formatRupees(product.originalPrice)}</s>}
                     </span>
                   </div>
                   <ArrowRight size={14} style={{ color: 'var(--color-silver-accent)' }} />
