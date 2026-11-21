@@ -9,6 +9,7 @@ import { CustomDesignBanner } from './components/CustomDesignBanner';
 import { CatalogPage } from './components/CatalogPage';
 import { ProductDetailPage } from './components/ProductDetailPage';
 import { CarePage } from './components/CarePage';
+import { HallmarkPage } from './components/HallmarkPage';
 import { CustomDesignPage } from './components/CustomDesignPage';
 import { ShippingPage, ReturnPolicyPage, ContactPage, FAQPage } from './components/SupportingPages';
 import { CartDrawer } from './components/CartDrawer';
@@ -51,7 +52,8 @@ const MainContent: React.FC = () => {
             <section className="assurance-section">
               <div className="container">
                 <div className="assurance-grid">
-                  <motion.div className="assurance-card" {...revealOnScroll()}>
+                  <motion.a href="/hallmark" className="assurance-card assurance-link" {...revealOnScroll()}
+                    onClick={(event) => { event.preventDefault(); navigateTo('hallmark'); }}>
                     <ShieldCheck size={28} className="assurance-icon" aria-hidden="true" />
                     <h3 className="assurance-title">
                       <span className="assurance-long">Certified 925 Hallmark</span><span className="assurance-short">925 Hallmark</span>
@@ -60,7 +62,8 @@ const MainContent: React.FC = () => {
                       <span className="assurance-long">Each piece bears the genuine 925 hallmark stamp, guaranteeing 92.5% pure silver content.</span>
                       <span className="assurance-short">Certified purity (92.5% Silver)</span>
                     </p>
-                  </motion.div>
+                    <span className="assurance-link-cue">About the hallmark <ArrowRight size={12} aria-hidden="true" /></span>
+                  </motion.a>
 
                   <motion.a href="/care" className="assurance-card assurance-link" {...revealOnScroll(0.1)}
                     onClick={(event) => { event.preventDefault(); navigateTo('care'); }}>
@@ -96,6 +99,7 @@ const MainContent: React.FC = () => {
         {currentView === 'women' && <CatalogPage />}
         {currentView === 'product' && <ProductDetailPage />}
         {currentView === 'care' && <CarePage />}
+        {currentView === 'hallmark' && <HallmarkPage />}
         {currentView === 'custom' && <CustomDesignPage />}
         {currentView === 'shipping' && <ShippingPage />}
         {currentView === 'returns' && <ReturnPolicyPage />}

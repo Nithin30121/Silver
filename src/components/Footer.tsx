@@ -82,6 +82,11 @@ export const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
+                <a href="/hallmark" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('hallmark'); }}>
+                  925 Hallmark
+                </a>
+              </li>
+              <li>
                 <a href="#shipping" className="footer-link" onClick={(e) => { e.preventDefault(); navigateTo('shipping'); }}>
                   Shipping & Returns
                 </a>
