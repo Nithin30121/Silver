@@ -695,6 +695,7 @@ img {
 }
 
 .btn-text {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -711,7 +712,7 @@ img {
 .btn-text:hover {
   color: var(--color-accent-bright);
   border-bottom-color: var(--color-accent-bright);
-  padding-left: 2px;
+  transform: translateX(2px);
 }
 
 /* Luxury Announcement Bar */
@@ -2389,6 +2390,8 @@ img {
 }
 
 .footer-link {
+  position: relative;
+  display: inline-block;
   font-size: 0.8125rem;
   color: var(--color-text-muted);
   transition: var(--transition-fast);
@@ -2396,7 +2399,7 @@ img {
 
 .footer-link:hover {
   color: var(--color-silver-highlight);
-  padding-left: 4px;
+  transform: translateX(4px);
 }
 
 .footer-bottom {
@@ -2428,7 +2431,7 @@ img {
   .footer-grid {
     grid-template-columns: 1fr;
     gap: 2.4rem;
-    margin-bottom: 3.5rem;
+    margin-bottom: 2.25rem;
   }
 
   .footer-brand-text,
@@ -4937,3 +4940,87 @@ textarea.contact-input {
   cursor: not-allowed;
   opacity: 0.35;
 }
+
+/* ---------- Spacing, type and touch polish (no colour changes) ---------- */
+
+/* Headings break into even lines, and paragraphs avoid a lone last word ("You." or "longevity." on a line of its
+   own). The 925 story keeps its hand-fitted lines. */
+h1,
+h2,
+h3,
+.headline-editorial {
+  text-wrap: balance;
+}
+
+p:not(.silver-story-text) {
+  text-wrap: pretty;
+}
+
+/* Keyboard users see where they are: a ring in the control's own text colour, shown only for keyboard focus. */
+a:focus-visible,
+button:focus-visible,
+[role='button']:focus-visible,
+select:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* Small controls answer a tap or click of at least 44px without changing how they look. */
+.btn-text::after,
+.product-wishlist-btn::after,
+.mobile-menu-trigger::after,
+.footer-legal .footer-link::after {
+  content: '';
+  position: absolute;
+}
+
+.btn-text::after {
+  inset: -12px -4px;
+}
+
+.product-wishlist-btn::after {
+  inset: -5px;
+}
+
+.mobile-menu-trigger {
+  position: relative;
+}
+
+.mobile-menu-trigger::after {
+  inset: -8px;
+}
+
+.footer-legal .footer-link::after {
+  inset: -12px -6px;
+}
+
+.footer-gazette-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* The bag's small + and − buttons. */
+.drawer-panel button[aria-label='Increase quantity'],
+.drawer-panel button[aria-label='Decrease quantity'] {
+  position: relative;
+}
+
+.drawer-panel button[aria-label='Increase quantity']::after,
+.drawer-panel button[aria-label='Decrease quantity']::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+}
+
+/* Larger screens: the header icons get the same 44px target (on phones they already have their own). */
+@media (min-width: 769px) {
+  .nav-action-btn::after {
+    content: '';
+    position: absolute;
+    inset: -6px;
+  }
+}
+
